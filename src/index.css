@@ -20,3 +20,11 @@
 .hover\:bg-primary:hover {
     background-color: var(--hover-color);
 }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.font-nunito {
+    font-family: 'Nunito', sans-serif;
+  }

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Cryptocurrencies from "./pages/Cryptocurrencies";
 import Compare from "./pages/Compare";
 import ROICalculator from "./pages/ROICalculator";
 import StakingCalculator from "./pages/StakingCalculator";
@@ -14,6 +15,7 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/cryptocurrencies" element={<Cryptocurrencies />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/roi-calculator" element={<ROICalculator />} />
         <Route path="/staking-calculator" element={<StakingCalculator />} />

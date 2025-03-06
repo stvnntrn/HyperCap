@@ -6,10 +6,18 @@ const Navbar = () => {
     <nav className="bg-white text-gray-900 py-4 w-full border-b border-[#EFF2F5]">
       <div className="container mx-auto flex justify-between items-center px-6">
         <div className="flex items-center space-x-8">
-          <Link to="/" className="text-2xl font-bold hover:text-primary mb-1.5">
+          <Link
+            to="/"
+            className="text-3xl font-bold hover:text-primary mb-1 font-nunito"
+          >
             HyperCap
           </Link>
           <ul className="flex space-x-8 font-semibold">
+            <li>
+              <Link to="/cryptocurrencies" className="hover:text-primary">
+                Cryptocurrencies
+              </Link>
+            </li>
             <li>
               <Link to="/compare" className="hover:text-primary">
                 Compare

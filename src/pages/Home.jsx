@@ -343,7 +343,7 @@ const Home = () => {
           </div>
 
           {/* ETH Gas */}
-          <div className="col-span-4/3 h-32 bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 rounded-xl shadow-md border border-cyan-100 hover:shadow-lg transition-all">
+          <div className="col-span-1 h-32 bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 rounded-xl shadow-md border border-cyan-100 hover:shadow-lg transition-all">
             <div className="flex flex-col items-center text-center h-full justify-between py-1">
               <div className="p-2 bg-cyan-500 text-white rounded-lg">
                 <Zap size={16} />
@@ -355,7 +355,7 @@ const Home = () => {
           </div>
 
           {/* Altcoin Season Index */}
-          <div className="col-span-4/3 h-32 bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all">
+          <div className="col-span-1 h-32 bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all">
             <div className="flex flex-col items-center text-center h-full justify-between py-1">
               <div className="p-2 bg-red-500 text-white rounded-lg">
                 <Rocket size={16} />
@@ -369,7 +369,7 @@ const Home = () => {
           </div>
 
           {/* New widget: Global Exchanges */}
-          <div className="col-span-4/3 h-32 bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all">
+          <div className="col-span-1 h-32 bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all">
             <div className="flex flex-col items-center text-center h-full justify-between py-1">
               <div className="p-2 bg-blue-500 text-white rounded-lg">
                 <Globe size={16} />
@@ -378,6 +378,44 @@ const Home = () => {
               <div className="text-lg font-bold">312</div>
               <div className="text-xs text-red-500">-2</div>
             </div>
+          </div>
+
+          {/* Tabs with teal theme */}
+          <div className="flex mb-4 bg-gray-100 p-1 rounded-full w-fit">
+            {[
+              {
+                id: "trending",
+                label: "Trending",
+                icon: <Activity size={16} className="text-teal-600" />,
+              },
+              {
+                id: "gainers",
+                label: "Top Gainers",
+                icon: <TrendingUp size={16} className="text-green-600" />,
+              },
+              {
+                id: "losers",
+                label: "Top Losers",
+                icon: <TrendingDown size={16} className="text-red-600" />,
+              },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
+                  activeTab === tab.id
+                    ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-md"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <span
+                  className={`mr-2 ${activeTab === tab.id ? "text-white" : ""}`}
+                >
+                  {tab.icon}
+                </span>
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>

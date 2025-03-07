@@ -5,10 +5,14 @@ import {
   AlertCircle,
   Bitcoin,
   Activity,
+  Zap,
   DollarSign,
   ArrowUpRight,
   BarChart2,
   Coins,
+  Clock,
+  Globe,
+  Rocket,
 } from "lucide-react";
 
 const Home = () => {
@@ -259,14 +263,14 @@ const Home = () => {
             </div>
 
             <div className="p-4 flex items-center h-16">
-              {/* Price and change on the Left */}
+              {/* Price and change on the left */}
               <div className="flex-grow flex flex-col items-start">
                 <div className="font-medium text-lg">$1,780,000,000,000</div>
                 <div className="text-sm text-green-500 flex items-center">
                   <ArrowUpRight size={14} className="mr-1" /> +2.3% (24h)
                 </div>
               </div>
-              {/* Line chart on the Right */}
+              {/* Line chart on the right */}
               <div className="flex-none">
                 {generateLineChart(marketCapChartData, true)}
               </div>
@@ -310,6 +314,69 @@ const Home = () => {
               <div className="text-gray-500 text-xs font-medium">Coins</div>
               <div className="text-lg font-bold">1.2M</div>
               <div className="text-xs text-green-500">+5.7%</div>
+            </div>
+          </div>
+
+          {/* 24h Trading Volume */}
+          <div className="col-span-2 h-32 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+              <Activity size={18} className="mr-2" />
+              <span className="flex items-center w-full justify-between">
+                24h Trading Volume
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+            <div className="p-4 flex items-center h-16">
+              {/* Price and change on the left */}
+              <div className="flex-grow flex flex-col items-start">
+                <div className="font-medium text-lg">$78,400,000,000</div>
+                <div className="text-sm text-red-500 flex items-center">
+                  <TrendingDown size={14} className="mr-1" /> -4.7% (24h)
+                </div>
+              </div>
+
+              {/* Line chart on the right */}
+              <div className="flex-none">
+                {generateLineChart(volumeChartData, false)}
+              </div>
+            </div>
+          </div>
+
+          {/* ETH Gas */}
+          <div className="col-span-4/3 h-32 bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 rounded-xl shadow-md border border-cyan-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-cyan-500 text-white rounded-lg">
+                <Zap size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">ETH Gwei</div>
+              <div className="text-lg font-bold">24</div>
+              <div className="text-xs text-green-500">Low</div>
+            </div>
+          </div>
+
+          {/* Altcoin Season Index */}
+          <div className="col-span-4/3 h-32 bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-red-500 text-white rounded-lg">
+                <Rocket size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">
+                Altcoin Season Index
+              </div>
+              <div className="text-lg font-bold">68</div>
+              <div className="text-xs text-orange-500">Almost There!</div>
+            </div>
+          </div>
+
+          {/* New widget: Global Exchanges */}
+          <div className="col-span-4/3 h-32 bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-blue-500 text-white rounded-lg">
+                <Globe size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">Exchanges</div>
+              <div className="text-lg font-bold">312</div>
+              <div className="text-xs text-red-500">-2</div>
             </div>
           </div>
         </div>

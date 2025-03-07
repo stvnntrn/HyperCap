@@ -63,6 +63,25 @@ const Home = () => {
     },
   ];
 
+  // Trending coins for the widget
+  const trendingCoins = [
+    { name: "Solana", symbol: "SOL", change24h: 5.2, price: 107.32 },
+    { name: "Cardano", symbol: "ADA", change24h: 3.2, price: 0.48 },
+    { name: "Ethereum", symbol: "ETH", change24h: 1.7, price: 2976.45 },
+  ];
+
+  // Top sectors data
+  const topSectors = [
+    { name: "GameFi", change: 15.3, marketCap: "48.2B" },
+    { name: "Layer 2", change: 9.7, marketCap: "62.5B" },
+    { name: "DeFi", change: 7.2, marketCap: "91.3B" },
+  ];
+
+  // Sample chart data - would be replaced with real data
+  const marketCapChartData = [1.72, 1.73, 1.71, 1.75, 1.77, 1.76, 1.79, 1.78];
+
+  const volumeChartData = [71.2, 74.3, 72.1, 75.5, 83.1, 81.2, 77.5, 78.4];
+
   return (
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
       <h2 className="text-2xl font-bold mb-6">Cryptocurrency Market</h2>

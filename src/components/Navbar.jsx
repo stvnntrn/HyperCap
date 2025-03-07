@@ -5,14 +5,14 @@ const Navbar = () => {
   return (
     <nav className="bg-white text-gray-900 py-4 w-full border-b border-[#EFF2F5]">
       <div className="container mx-auto flex justify-between items-center px-6">
-        <div className="flex items-center space-x-8">
+        <div className="flex items-center space-x-7">
           <Link
             to="/"
             className="text-3xl font-bold hover:text-primary mb-1 font-nunito"
           >
             HyperCap
           </Link>
-          <ul className="flex space-x-8 font-semibold">
+          <ul className="flex space-x-7 font-semibold">
             <li>
               <Link to="/cryptocurrencies" className="hover:text-primary">
                 Cryptocurrencies
@@ -25,7 +25,7 @@ const Navbar = () => {
             </li>
             <li>
               <Link to="/roi-calculator" className="hover:text-primary">
-                ROI Calculator
+                Roi Calculator
               </Link>
             </li>
             <li>

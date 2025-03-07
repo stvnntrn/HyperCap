@@ -2,11 +2,13 @@ import { useState } from "react";
 import {
   TrendingUp,
   TrendingDown,
+  AlertCircle,
   Bitcoin,
   Activity,
   DollarSign,
   ArrowUpRight,
   BarChart2,
+  Coins,
 } from "lucide-react";
 
 const Home = () => {
@@ -282,6 +284,32 @@ const Home = () => {
               </div>
               <div className="text-lg font-bold">48.2%</div>
               <div className="text-xs text-red-500">-0.4%</div>
+            </div>
+          </div>
+
+          {/* Fear & Greed */}
+          <div className="col-span-1 h-32 bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-xl shadow-md border border-green-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-green-500 text-white rounded-lg">
+                <AlertCircle size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">
+                Fear & Greed
+              </div>
+              <div className="text-lg font-bold">72</div>
+              <div className="text-xs text-green-500">Greedy</div>
+            </div>
+          </div>
+
+          {/* Active Coins */}
+          <div className="col-span-1 h-32 bg-gradient-to-br from-purple-50 to-purple-100 p-3 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-purple-500 text-white rounded-lg">
+                <Coins size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">Coins</div>
+              <div className="text-lg font-bold">1.2M</div>
+              <div className="text-xs text-green-500">+5.7%</div>
             </div>
           </div>
         </div>

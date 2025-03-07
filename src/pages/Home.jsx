@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  ArrowUpRight,
+  BarChart2,
+} from "lucide-react";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("trending");
@@ -84,7 +90,117 @@ const Home = () => {
 
   return (
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
-      <h2 className="text-2xl font-bold mb-6">Cryptocurrency Market</h2>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-6 flex items-center">
+          Market Overview
+          <span className="bg-gradient-to-r from-teal-500 to-teal-700 text-white text-xs px-2 py-1 rounded-full ml-3">
+            LIVE
+          </span>
+        </h2>
+
+        <div className="grid grid-cols-9 gap-4">
+          {/* Trending coins card*/}
+          <div className="col-span-2 row-span-2 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+              <TrendingUp size={18} className="mr-2" />
+              <span className="flex items-center w-full justify-between">
+                Trending Coins
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+            <div className="p-4">
+              {trendingCoins.map((coin, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between ${
+                    index < trendingCoins.length - 1
+                      ? "border-b border-teal-100 pb-3 mb-3"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                      {coin.symbol.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-medium">{coin.name}</div>
+                      <div className="text-gray-500 text-xs">{coin.symbol}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">
+                      ${coin.price.toLocaleString()}
+                    </div>
+                    <div
+                      className={`text-xs flex items-center justify-end ${
+                        coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {coin.change24h >= 0 ? (
+                        <TrendingUp size={12} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={12} className="mr-1" />
+                      )}
+                      {coin.change24h >= 0 ? "+" : ""}
+                      {coin.change24h}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Sectors card */}
+          <div className="col-span-2 row-span-2 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+              <BarChart2 size={18} className="mr-2" />
+              <span className="flex items-center w-full justify-between">
+                Top Sectors
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+            <div className="p-4">
+              {topSectors.map((sector, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between ${
+                    index < topSectors.length - 1
+                      ? "border-b border-purple-100 pb-3 mb-3"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                      {sector.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-medium">{sector.name}</div>
+                      <div className="text-gray-500 text-xs">
+                        Market Cap: {sector.marketCap}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className={`text-sm flex items-center justify-end ${
+                        sector.change >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {sector.change >= 0 ? (
+                        <TrendingUp size={12} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={12} className="mr-1" />
+                      )}
+                      {sector.change >= 0 ? "+" : ""}
+                      {sector.change}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

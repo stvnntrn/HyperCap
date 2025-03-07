@@ -2,7 +2,9 @@ import { useState } from "react";
 import {
   TrendingUp,
   TrendingDown,
+  Bitcoin,
   Activity,
+  DollarSign,
   ArrowUpRight,
   BarChart2,
 } from "lucide-react";
@@ -87,6 +89,50 @@ const Home = () => {
   const marketCapChartData = [1.72, 1.73, 1.71, 1.75, 1.77, 1.76, 1.79, 1.78];
 
   const volumeChartData = [71.2, 74.3, 72.1, 75.5, 83.1, 81.2, 77.5, 78.4];
+
+  const generateLineChart = (data, isPositive) => {
+    const width = 80;
+    const height = 40;
+    const padding = 5;
+
+    const maxValue = Math.max(...data);
+    const minValue = Math.min(...data);
+
+    // Scale data points to fit in the given height
+    const scaledData = data.map((value) => {
+      const range = maxValue - minValue;
+      if (range === 0) return padding;
+      return (
+        height - padding - ((value - minValue) / range) * (height - padding * 2)
+      );
+    });
+
+    // Create the path string
+    const pathString = scaledData
+      .map((point, index) => {
+        const x = (index / (data.length - 1)) * width;
+        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
+      })
+      .join(" ");
+
+    return (
+      <svg width={width} height={height} className="ml-2">
+        <path
+          d={pathString}
+          stroke={isPositive ? "#10b981" : "#ef4444"}
+          strokeWidth="2"
+          fill="none"
+        />
+
+        <path
+          d={`${pathString} L ${width} ${height} L 0 ${height} Z`}
+          fill={
+            isPositive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)"
+          }
+        />
+      </svg>
+    );
+  };
 
   return (
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
@@ -197,6 +243,45 @@ const Home = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Total Market Cap card */}
+          <div className="col-span-2 h-32 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+              <DollarSign size={18} className="mr-2" />
+              <span className="flex items-center w-full justify-between">
+                Total Market Cap
+                <ArrowUpRight size={14} />
+              </span>
+            </div>
+
+            <div className="p-4 flex items-center h-16">
+              {/* Price and change on the Left */}
+              <div className="flex-grow flex flex-col items-start">
+                <div className="font-medium text-lg">$1,780,000,000,000</div>
+                <div className="text-sm text-green-500 flex items-center">
+                  <ArrowUpRight size={14} className="mr-1" /> +2.3% (24h)
+                </div>
+              </div>
+              {/* Line chart on the Right */}
+              <div className="flex-none">
+                {generateLineChart(marketCapChartData, true)}
+              </div>
+            </div>
+          </div>
+
+          {/* BTC Dominance */}
+          <div className="col-span-1 h-32 bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-xl shadow-md border border-yellow-100 hover:shadow-lg transition-all">
+            <div className="flex flex-col items-center text-center h-full justify-between py-1">
+              <div className="p-2 bg-yellow-500 text-white rounded-lg">
+                <Bitcoin size={16} />
+              </div>
+              <div className="text-gray-500 text-xs font-medium">
+                BTC Dominance
+              </div>
+              <div className="text-lg font-bold">48.2%</div>
+              <div className="text-xs text-red-500">-0.4%</div>
             </div>
           </div>
         </div>

@@ -10,9 +10,9 @@ import {
   ArrowUpRight,
   BarChart2,
   Coins,
-  Clock,
   Globe,
   Rocket,
+  Star,
 } from "lucide-react";
 
 const Home = () => {
@@ -138,6 +138,53 @@ const Home = () => {
         />
       </svg>
     );
+  };
+
+  // Filter data based on active tab
+  const getFilteredCoins = () => {
+    switch (activeTab) {
+      case "trending":
+        return [...coins].sort((a, b) => b.volume - a.volume);
+      case "gainers":
+        return [...coins].sort((a, b) => b.change24h - a.change24h);
+      case "losers":
+        return [...coins].sort((a, b) => a.change24h - b.change24h);
+      default:
+        return coins;
+    }
+  };
+
+  // Generate sparkline-like trend indicator
+  const getTrendIndicator = (value) => {
+    const points = [0, 20, 40, 60, 80, 100];
+    const height = 24;
+
+    // Generate points that trend up or down based on value
+    const trend =
+      value > 0 ? points.map((p) => height - p / 5) : points.map((p) => p / 5);
+
+    const pathData = points
+      .map((point, i) => `${i === 0 ? "M" : "L"} ${point} ${trend[i]}`)
+      .join(" ");
+
+    return (
+      <svg width="100" height={height} className="ml-2">
+        <path
+          d={pathData}
+          stroke={value > 0 ? "#10b981" : "#ef4444"}
+          fill="none"
+          strokeWidth="2"
+        />
+      </svg>
+    );
+  };
+
+  // Format large numbers with K, M, B suffixes
+  const formatNumber = (num) => {
+    if (num >= 1000000000) return (num / 1000000000).toFixed(2) + "B";
+    if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(2) + "K";
+    return num.toFixed(2);
   };
 
   return (
@@ -368,7 +415,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* New widget: Global Exchanges */}
+          {/* Global Exchanges */}
           <div className="col-span-1 h-32 bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all">
             <div className="flex flex-col items-center text-center h-full justify-between py-1">
               <div className="p-2 bg-blue-500 text-white rounded-lg">
@@ -379,45 +426,163 @@ const Home = () => {
               <div className="text-xs text-red-500">-2</div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Tabs with teal theme */}
-          <div className="flex mb-4 bg-gray-100 p-1 rounded-full w-fit">
-            {[
-              {
-                id: "trending",
-                label: "Trending",
-                icon: <Activity size={16} className="text-teal-600" />,
-              },
-              {
-                id: "gainers",
-                label: "Top Gainers",
-                icon: <TrendingUp size={16} className="text-green-600" />,
-              },
-              {
-                id: "losers",
-                label: "Top Losers",
-                icon: <TrendingDown size={16} className="text-red-600" />,
-              },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-200"
+      {/* Tabs */}
+      <div className="flex mb-4 bg-gray-100 p-1 rounded-full w-fit">
+        {[
+          {
+            id: "trending",
+            label: "Trending",
+            icon: <Activity size={16} className="text-teal-600" />,
+          },
+          {
+            id: "gainers",
+            label: "Top Gainers",
+            icon: <TrendingUp size={16} className="text-green-600" />,
+          },
+          {
+            id: "losers",
+            label: "Top Losers",
+            icon: <TrendingDown size={16} className="text-red-600" />,
+          },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
+              activeTab === tab.id
+                ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <span
+              className={`mr-2 ${activeTab === tab.id ? "text-white" : ""}`}
+            >
+              {tab.icon}
+            </span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Main coin table with teal theme */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+        <table className="min-w-full">
+          <thead className="bg-gradient-to-r from-gray-50 to-teal-50">
+            <tr>
+              <th className="p-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Coin
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                1h
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                24h
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                7d
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Volume 24h
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Market Cap
+              </th>
+              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Trend
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {getFilteredCoins().map((coin, index) => (
+              <tr
+                key={coin.id}
+                className={`hover:bg-teal-50 transition-colors cursor-pointer group ${
+                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
                 }`}
               >
-                <span
-                  className={`mr-2 ${activeTab === tab.id ? "text-white" : ""}`}
+                <td className="p-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                      {coin.symbol.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-medium">{coin.name}</div>
+                      <div className="text-gray-500 text-sm">{coin.symbol}</div>
+                    </div>
+                    <button className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-yellow-500">
+                      <Star size={16} />
+                    </button>
+                  </div>
+                </td>
+                <td className="p-4 text-right whitespace-nowrap font-medium">
+                  ${coin.price.toLocaleString()}
+                </td>
+                <td
+                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                    coin.change1h >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
                 >
-                  {tab.icon}
-                </span>
-                {tab.label}
-              </button>
+                  <span className="flex items-center justify-end">
+                    {coin.change1h >= 0 ? (
+                      <TrendingUp size={14} className="mr-1" />
+                    ) : (
+                      <TrendingDown size={14} className="mr-1" />
+                    )}
+                    {coin.change1h >= 0 ? "+" : ""}
+                    {coin.change1h}%
+                  </span>
+                </td>
+                <td
+                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                    coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  <span className="flex items-center justify-end">
+                    {coin.change24h >= 0 ? (
+                      <TrendingUp size={14} className="mr-1" />
+                    ) : (
+                      <TrendingDown size={14} className="mr-1" />
+                    )}
+                    {coin.change24h >= 0 ? "+" : ""}
+                    {coin.change24h}%
+                  </span>
+                </td>
+                <td
+                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                    coin.change7d >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  <span className="flex items-center justify-end">
+                    {coin.change7d >= 0 ? (
+                      <TrendingUp size={14} className="mr-1" />
+                    ) : (
+                      <TrendingDown size={14} className="mr-1" />
+                    )}
+                    {coin.change7d >= 0 ? "+" : ""}
+                    {coin.change7d}%
+                  </span>
+                </td>
+                <td className="p-4 text-right whitespace-nowrap">
+                  ${formatNumber(coin.volume)}
+                </td>
+                <td className="p-4 text-right whitespace-nowrap">
+                  ${formatNumber(coin.marketCap)}
+                </td>
+                <td className="p-4 text-right">
+                  <div className="bg-gray-100 rounded-md p-1">
+                    {getTrendIndicator(coin.change24h)}
+                  </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

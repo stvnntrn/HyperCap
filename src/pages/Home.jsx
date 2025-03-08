@@ -467,34 +467,37 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Main coin table with teal theme */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+      {/* Main coin list */}
+      <div className="overflow-hidden rounded-xl border border-gray-200">
         <table className="min-w-full">
-          <thead className="bg-gradient-to-r from-gray-50 to-teal-50">
+          <thead className="bg-gradient-to-r from-teal-600 to-teal-700">
             <tr>
-              <th className="p-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider">
+                #
+              </th>
+              <th className="p-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Coin
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Price
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 1h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 24h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 7d
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Volume 24h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Market Cap
               </th>
-              <th className="p-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Trend
+              <th className="p-4 pr-5 text-right text-xs font-medium text-white uppercase tracking-wider">
+                Last 7 Days
               </th>
             </tr>
           </thead>
@@ -502,10 +505,11 @@ const Home = () => {
             {getFilteredCoins().map((coin, index) => (
               <tr
                 key={coin.id}
-                className={`hover:bg-teal-50 transition-colors cursor-pointer group ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                }`}
+                className="hover:bg-teal-50 transition-colors cursor-pointer"
               >
+                <td className="p-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700">
+                  {index + 1}
+                </td>
                 <td className="p-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">

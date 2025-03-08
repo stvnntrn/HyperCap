@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { FaSearch, FaBriefcase, FaStar } from "react-icons/fa";
+import { Calculator, TrendingUp } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -23,15 +24,31 @@ const Navbar = () => {
                 Compare
               </Link>
             </li>
-            <li>
-              <Link to="/roi-calculator" className="hover:text-primary">
-                Roi Calculator
+            <li className="relative group">
+              <Link
+                to="/calculators"
+                className="flex items-center space-x-1 hover:text-primary focus:outline-none"
+              >
+                Calculators
               </Link>
-            </li>
-            <li>
-              <Link to="/staking-calculator" className="hover:text-primary">
-                Staking Calculator
-              </Link>
+              <ul className="absolute left-0 mt-2 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <li>
+                  <Link
+                    to="/calculators"
+                    className="flex items-center px-4 py-2 hover:bg-gray-100"
+                  >
+                    <Calculator className="w-4 h-4 mr-2" /> ROI Calculator
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/calculators"
+                    className="flex items-center px-4 py-2 hover:bg-gray-100"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" /> Staking Calculator
+                  </Link>
+                </li>
+              </ul>
             </li>
             <li>
               <Link to="/learn" className="hover:text-primary">

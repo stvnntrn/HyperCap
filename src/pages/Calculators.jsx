@@ -1,12 +1,12 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect } from "react";
 import {
   Calculator,
   TrendingUp,
   Coins,
-  DollarSign,
-  Percent,
-  ArrowDown,
   BarChart2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 const Calculators = () => {
@@ -18,6 +18,7 @@ const Calculators = () => {
   const [sellPrice, setSellPrice] = useState("");
   const [investmentFees, setInvestmentFees] = useState("");
   const [exitFees, setExitFees] = useState("");
+  const [calculationResult, setCalculationResult] = useState(null);
 
   const tokens = [
     { symbol: "BTC", name: "Bitcoin" },
@@ -47,6 +48,53 @@ const Calculators = () => {
       default:
         return "$";
     }
+  };
+
+  useEffect(() => {
+    calculateResults();
+  }, [amount, buyPrice, investmentFees, sellPrice, exitFees, currency, token]);
+
+  const calculateResults = () => {
+    const investmentAmount = parseFloat(amount) || 0;
+    const entryPrice = parseFloat(buyPrice) || 0;
+    const entryFee = parseFloat(investmentFees) || 0;
+    const exitPrice = parseFloat(sellPrice) || 0;
+    const exitFee = parseFloat(exitFees) || 0;
+
+    // Calculate total investment
+    const totalInvestment = investmentAmount + entryFee;
+    const tokensPurchased = entryPrice > 0 ? investmentAmount / entryPrice : 0;
+
+    // Calculate exit amount
+    const grossReturn = tokensPurchased * exitPrice;
+    const netReturn = grossReturn - exitFee;
+
+    // Calculate profit/loss (only if both prices are provided)
+    const hasBothPrices = Boolean(buyPrice && sellPrice);
+    const absoluteProfit = hasBothPrices ? netReturn - totalInvestment : 0;
+    const percentageReturn =
+      hasBothPrices && totalInvestment > 0
+        ? ((netReturn - totalInvestment) / totalInvestment) * 100
+        : 0;
+
+    // Calculate total fees
+    const totalFees = entryFee + exitFee;
+
+    setCalculationResult({
+      tokensPurchased,
+      totalInvestment,
+      grossReturn,
+      netReturn,
+      absoluteProfit,
+      percentageReturn,
+      totalFees,
+      isProfit: absoluteProfit >= 0,
+    });
+  };
+
+  // Format currency
+  const formatCurrency = (value) => {
+    return `${getCurrencySymbol(currency)}${parseFloat(value).toFixed(2)}`;
   };
 
   return (
@@ -253,14 +301,103 @@ const Calculators = () => {
               </div>
             </div>
 
-            {/* Results Panel for roi calculator */}
-            <div className="border-t border-gray-200">
-              <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 font-medium flex items-center">
-                <BarChart2 size={20} className="mr-2" />
-                <span>Investment Results</span>
+            {/* Investment results */}
+            {calculationResult && (
+              <div className="border-t border-gray-200 p-5">
+                <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                  <TrendingUp size={20} className="mr-2 text-teal-600" />
+                  Investment Results
+                </h3>
+
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                  {/* Profit/Loss */}
+                  <div
+                    className={`p-4 border-b ${
+                      !buyPrice || !sellPrice
+                        ? "bg-gray-50 border-gray-100"
+                        : calculationResult.isProfit
+                        ? "bg-green-50 border-green-100"
+                        : "bg-red-50 border-red-100"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium text-gray-700">
+                        Profit/Loss:
+                      </span>
+                      <div className="flex items-center">
+                        <span
+                          className={`text-2xl font-bold ${
+                            !buyPrice || !sellPrice
+                              ? "text-gray-600"
+                              : calculationResult.isProfit
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {!buyPrice || !sellPrice ? (
+                            <span className="text-gray-600">
+                              {formatCurrency(0)}{" "}
+                            </span>
+                          ) : calculationResult.isProfit ? (
+                            <ArrowUp size={24} className="inline mr-2" />
+                          ) : (
+                            <ArrowDown size={24} className="inline mr-2" />
+                          )}
+                          {!buyPrice || !sellPrice
+                            ? ""
+                            : formatCurrency(
+                                Math.abs(calculationResult.absoluteProfit)
+                              )}
+                        </span>
+                        <span
+                          className={`ml-2 px-2 py-1 rounded-md text-sm font-medium ${
+                            !buyPrice || !sellPrice
+                              ? "bg-gray-100 text-gray-800"
+                              : calculationResult.isProfit
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {!buyPrice || !sellPrice
+                            ? "0.00%"
+                            : `${Math.abs(
+                                calculationResult.percentageReturn
+                              ).toFixed(2)}%`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Investment */}
+                  <div className="p-4 border-t">
+                    <div className="text-sm text-gray-500 mb-1">
+                      TOTAL INVESTMENT
+                    </div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {formatCurrency(calculationResult.totalInvestment)}
+                    </div>
+                  </div>
+
+                  {/* Total Exit Amount */}
+                  <div className="p-4 border-t">
+                    <div className="text-sm text-gray-500 mb-1">
+                      TOTAL EXIT AMOUNT
+                    </div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {formatCurrency(calculationResult.netReturn)}
+                    </div>
+                  </div>
+
+                  {/* Total Fees */}
+                  <div className="p-4 border-t">
+                    <div className="text-sm text-gray-500 mb-1">TOTAL FEES</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {formatCurrency(calculationResult.totalFees)}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="p-5 bg-gray-50"></div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
@@ -270,7 +407,7 @@ const Calculators = () => {
             </div>
             <div className="p-5"></div>
 
-            {/* Results Panel for staking calculator */}
+            {/* Investments results for staking calculator */}
             <div className="border-t border-gray-200">
               <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 font-medium flex items-center">
                 <BarChart2 size={20} className="mr-2" />

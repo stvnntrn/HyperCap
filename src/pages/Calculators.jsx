@@ -16,8 +16,8 @@ const Calculators = () => {
   const [token, setToken] = useState("BTC");
   const [buyPrice, setBuyPrice] = useState("");
   const [sellPrice, setSellPrice] = useState("");
-  const [investmentFees, setInvestmentFees] = useState("1");
-  const [exitFees, setExitFees] = useState("1");
+  const [investmentFees, setInvestmentFees] = useState("");
+  const [exitFees, setExitFees] = useState("");
 
   const tokens = [
     { symbol: "BTC", name: "Bitcoin" },
@@ -28,6 +28,26 @@ const Calculators = () => {
   ];
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
+
+  // Get currency symbol
+  const getCurrencySymbol = (curr) => {
+    switch (curr) {
+      case "USD":
+        return "$";
+      case "EUR":
+        return "€";
+      case "GBP":
+        return "£";
+      case "JPY":
+        return "¥";
+      case "CAD":
+        return "C$";
+      case "AUD":
+        return "A$";
+      default:
+        return "$";
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 max-w-3xl mt-8">
@@ -133,32 +153,101 @@ const Calculators = () => {
                   Total Investment
                 </label>
                 <div className="relative rounded-lg shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    {currency === "USD" && (
-                      <span className="text-gray-400">$</span>
-                    )}
-                    {currency === "EUR" && (
-                      <span className="text-gray-400">€</span>
-                    )}
-                    {currency === "GBP" && (
-                      <span className="text-gray-400">£</span>
-                    )}
-                    {currency === "JPY" && (
-                      <span className="text-gray-400">¥</span>
-                    )}
-                    {currency === "CAD" && (
-                      <span className="text-gray-400">C$</span>
-                    )}
-                    {currency === "AUD" && (
-                      <span className="text-gray-400">A$</span>
-                    )}
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                      {getCurrencySymbol(currency)}
+                    </span>
                   </div>
                   <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Buy Price */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Entry Price ({currency})
+                </label>
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                      {getCurrencySymbol(currency)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(e.target.value)}
+                    placeholder="0.00"
+                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Entry Fee */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Entry Fee ({currency})
+                </label>
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                      {getCurrencySymbol(currency)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={investmentFees}
+                    onChange={(e) => setInvestmentFees(e.target.value)}
+                    placeholder="0.00"
+                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Sell Price */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sell Price ({currency})
+                </label>
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                      {getCurrencySymbol(currency)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(e.target.value)}
+                    placeholder="0.00"
+                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Exit Fee */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Exit Fee ({currency})
+                </label>
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                      {getCurrencySymbol(currency)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={exitFees}
+                    onChange={(e) => setExitFees(e.target.value)}
+                    placeholder="0.00"
+                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>

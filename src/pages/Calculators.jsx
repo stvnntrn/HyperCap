@@ -20,12 +20,73 @@ const Calculators = () => {
   const [exitFees, setExitFees] = useState("");
   const [calculationResult, setCalculationResult] = useState(null);
 
+  // Staking calculator states
+  const [stakingAmount, setStakingAmount] = useState("");
+  const [isTokenAmount, setIsTokenAmount] = useState(false);
+  const [stakingRate, setStakingRate] = useState("");
+  const [isAPR, setIsAPR] = useState(true);
+  const [stakingDuration, setStakingDuration] = useState("");
+  const [durationUnit, setDurationUnit] = useState("days");
+  const [compoundingFrequency, setCompoundingFrequency] = useState("daily");
+  const [useCurrentPrice, setUseCurrentPrice] = useState(true);
+  const [customTokenPrice, setCustomTokenPrice] = useState("");
+
   const tokens = [
-    { symbol: "BTC", name: "Bitcoin" },
-    { symbol: "ETH", name: "Ethereum" },
-    { symbol: "SOL", name: "Solana" },
-    { symbol: "ADA", name: "Cardano" },
-    { symbol: "XRP", name: "Ripple" },
+    {
+      id: 1,
+      name: "Bitcoin",
+      symbol: "BTC",
+      price: 48243.21,
+      change1h: 0.5,
+      change24h: -2.1,
+      change7d: 3.8,
+      volume: 28432156789,
+      marketCap: 893421567890,
+    },
+    {
+      id: 2,
+      name: "Ethereum",
+      symbol: "ETH",
+      price: 2976.45,
+      change1h: -0.2,
+      change24h: 1.7,
+      change7d: -1.3,
+      volume: 15678923456,
+      marketCap: 352678945123,
+    },
+    {
+      id: 3,
+      name: "Solana",
+      symbol: "SOL",
+      price: 107.32,
+      change1h: 1.5,
+      change24h: 5.2,
+      change7d: 12.4,
+      volume: 5678234567,
+      marketCap: 42678234567,
+    },
+    {
+      id: 4,
+      name: "Ripple",
+      symbol: "XRP",
+      price: 0.54,
+      change1h: 0.1,
+      change24h: -0.8,
+      change7d: -2.5,
+      volume: 2345678912,
+      marketCap: 27456789123,
+    },
+    {
+      id: 5,
+      name: "Cardano",
+      symbol: "ADA",
+      price: 0.48,
+      change1h: -0.4,
+      change24h: 3.2,
+      change7d: 8.9,
+      volume: 1987654321,
+      marketCap: 16789123456,
+    },
   ];
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
@@ -437,13 +498,190 @@ const Calculators = () => {
               <BarChart2 size={20} className="mr-2" />
               <span>Staking Calculator</span>
             </div>
-            <div className="p-5"></div>
+            <div className="p-5">
+              <div className="grid grid-cols-4 gap-4">
+                {/* Token Selection */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
+                    Token
+                  </label>
+                  <select
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  >
+                    {tokens.map((t) => (
+                      <option key={t.symbol} value={t.symbol}>
+                        {t.name} ({t.symbol})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Initial Investment Amount */}
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700 pl-1">
+                      Initial Investment
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">{currency}</span>
+                      <div
+                        className="relative w-8 h-4 rounded-full bg-gray-200 cursor-pointer"
+                        onClick={() => setIsTokenAmount(!isTokenAmount)}
+                      >
+                        <div
+                          className={`absolute top-0.5 h-3 w-3 rounded-full bg-teal-600 transform transition-transform ease-in-out duration-300 ${
+                            isTokenAmount ? "translate-x-4" : "translate-x-0.5"
+                          }`}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600">{token}</span>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                      <span
+                        className={`bg-gray-200 text-gray-600 h-full flex items-center rounded-l-lg border-r border-gray-300 ${
+                          isTokenAmount ? "px-2 py-2" : "px-3 py-2"
+                        }`}
+                      >
+                        {isTokenAmount ? token : getCurrencySymbol(currency)}
+                      </span>
+                    </div>
+                    <input
+                      type="number"
+                      value={stakingAmount}
+                      onChange={(e) => setStakingAmount(e.target.value)}
+                      placeholder="0.00"
+                      className={`block w-full ${
+                        isTokenAmount ? "pl-14" : "pl-11"
+                      } pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                    />
+                  </div>
+                </div>
+
+                {/* Staking Rate */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
+                    Staking Rate
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={stakingRate}
+                      onChange={(e) => setStakingRate(e.target.value)}
+                      placeholder="0.00"
+                      className="block w-full pl-3 pr-18 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                    <select
+                      value={isAPR ? "APR" : "APY"}
+                      onChange={(e) => setIsAPR(e.target.value === "APR")}
+                      className="absolute inset-y-0 right-0 w-16 rounded-r-lg border-l border-gray-300 bg-gray-200 text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-center"
+                    >
+                      <option value="APR">APR</option>
+                      <option value="APY">APY</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Staking Duration */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
+                    Staking Duration
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={stakingDuration}
+                      onChange={(e) => setStakingDuration(e.target.value)}
+                      placeholder="0"
+                      className="block w-full pr-22 pl-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                    <select
+                      value={durationUnit}
+                      onChange={(e) => setDurationUnit(e.target.value)}
+                      className="absolute inset-y-0 right-0 w-20 rounded-r-lg border-l border-gray-300 bg-gray-200 text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-center"
+                    >
+                      <option value="days">Days</option>
+                      <option value="months">Months</option>
+                      <option value="years">Years</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Compounding Frequency */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
+                    Compounding Frequency
+                  </label>
+                  <select
+                    value={compoundingFrequency}
+                    onChange={(e) => setCompoundingFrequency(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+
+                {/* Token Price */}
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700 pl-1">
+                      Select {token} Price
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="relative w-8 h-4 rounded-full bg-gray-200 cursor-pointer"
+                        onClick={() => setUseCurrentPrice(!useCurrentPrice)}
+                      >
+                        <div
+                          className={`absolute top-0.5 h-3 w-3 rounded-full transform transition-transform ease-in-out duration-300 ${
+                            useCurrentPrice
+                              ? "translate-x-4 bg-teal-600"
+                              : "translate-x-0.5 bg-gray-400"
+                          }`}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        Current price
+                      </span>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                      <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
+                        {getCurrencySymbol(currency)}
+                      </span>
+                    </div>
+                    <input
+                      type="number"
+                      value={
+                        useCurrentPrice
+                          ? tokens.find((t) => t.symbol === token).price
+                          : customTokenPrice
+                      }
+                      onChange={(e) => setCustomTokenPrice(e.target.value)}
+                      disabled={useCurrentPrice}
+                      placeholder="0.00"
+                      className={`block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
+                        useCurrentPrice ? "bg-gray-100" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Investments results for staking calculator */}
+          {/* Investment results card will be implemented later */}
           <div className="col-span-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
-              <BarChart2 size={20} className="mr-2" />
+              <TrendingUp size={20} className="mr-2" />
               <span>Investment Results</span>
             </div>
             <div className="p-5 bg-gray-50"></div>

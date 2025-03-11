@@ -93,12 +93,40 @@ const Calculators = () => {
   };
 
   // Format currency
-  const formatCurrency = (value) => {
-    return `${getCurrencySymbol(currency)}${parseFloat(value).toFixed(2)}`;
+  const formatCurrency = (value, currency) => {
+    const numValue = parseFloat(value);
+
+    if (numValue >= 1000000000) {
+      // For billions
+      const valueInB = numValue / 1000000000;
+      if (valueInB % 1 === 0) {
+        return `${getCurrencySymbol(currency)}${valueInB.toFixed(0)}B`;
+      } else {
+        return `${getCurrencySymbol(currency)}${valueInB.toFixed(1)}B`;
+      }
+    } else if (numValue >= 1000000) {
+      // For millions
+      const valueInM = numValue / 1000000;
+      if (valueInM % 1 === 0) {
+        return `${getCurrencySymbol(currency)}${valueInM.toFixed(0)}M`;
+      } else {
+        return `${getCurrencySymbol(currency)}${valueInM.toFixed(1)}M`;
+      }
+    } else if (numValue >= 10000) {
+      // For thousands
+      const valueInK = numValue / 1000;
+      if (valueInK % 1 === 0) {
+        return `${getCurrencySymbol(currency)}${valueInK.toFixed(0)}K`;
+      } else {
+        return `${getCurrencySymbol(currency)}${valueInK.toFixed(1)}K`;
+      }
+    } else {
+      return `${getCurrencySymbol(currency)}${numValue.toFixed(2)}`;
+    }
   };
 
   return (
-    <div className="container mx-auto px-4 max-w-3xl mt-8">
+    <div className="container mx-auto px-4 mt-8">
       <div className="flex flex-col items-center p-6 text-center">
         <div className="bg-teal-100 p-3 rounded-xl mb-4">
           <Calculator size={40} className="text-teal-600" />
@@ -149,11 +177,11 @@ const Calculators = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        {/* Calculator panel roi calculator */}
-        {activeCalculator === "roi" ? (
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 font-medium flex items-center">
+      {/* Calculator panel roi calculator */}
+      {activeCalculator === "roi" ? (
+        <div className="grid grid-cols-3 gap-4 max-w-5xl mx-auto">
+          <div className="col-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden ">
+            <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
               <BarChart2 size={20} className="mr-2" />
               <span>ROI Calculator</span>
             </div>
@@ -300,15 +328,17 @@ const Calculators = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Investment results */}
-            {calculationResult && (
-              <div className="border-t border-gray-200 p-5">
-                <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                  <TrendingUp size={20} className="mr-2 text-teal-600" />
-                  Investment Results
-                </h3>
+          {/* Investment results */}
+          {calculationResult && (
+            <div className="col-span-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+              <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
+                <TrendingUp size={20} className="mr-2" />
+                <span>Investment Results</span>
+              </div>
 
+              <div className="p-5">
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                   {/* Profit/Loss */}
                   <div
@@ -320,7 +350,7 @@ const Calculators = () => {
                         : "bg-red-50 border-red-100"
                     }`}
                   >
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
                       <span className="text-lg font-medium text-gray-700">
                         Profit/Loss:
                       </span>
@@ -397,27 +427,29 @@ const Calculators = () => {
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 font-medium flex items-center">
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-4 max-w-5xl mx-auto">
+          <div className="col-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
               <BarChart2 size={20} className="mr-2" />
               <span>Staking Calculator</span>
             </div>
             <div className="p-5"></div>
-
-            {/* Investments results for staking calculator */}
-            <div className="border-t border-gray-200">
-              <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 font-medium flex items-center">
-                <BarChart2 size={20} className="mr-2" />
-                <span>Investment Results</span>
-              </div>
-              <div className="p-5 bg-gray-50"></div>
-            </div>
           </div>
-        )}
-      </div>
+
+          {/* Investments results for staking calculator */}
+          <div className="col-span-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
+              <BarChart2 size={20} className="mr-2" />
+              <span>Investment Results</span>
+            </div>
+            <div className="p-5 bg-gray-50"></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

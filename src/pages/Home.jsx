@@ -145,7 +145,7 @@ const Home = () => {
                   key={index}
                   className={`flex items-center justify-between ${
                     index < trendingCoins.length - 1
-                      ? "border-b border-teal-100 pb-3 mb-3"
+                      ? "border-b border-teal-100 pb-4 mb-4"
                       : ""
                   }`}
                 >
@@ -196,7 +196,7 @@ const Home = () => {
                   key={index}
                   className={`flex items-center justify-between ${
                     index < topSectors.length - 1
-                      ? "border-b border-purple-100 pb-3 mb-3"
+                      ? "border-b border-purple-100 pb-4 mb-4"
                       : ""
                   }`}
                 >
@@ -241,7 +241,7 @@ const Home = () => {
               </span>
             </div>
 
-            <div className="p-4 flex items-center h-16">
+            <div className="p-4 pt-7 flex items-center h-16">
               {/* Price and change on the left */}
               <div className="flex-grow flex flex-col items-start">
                 <div className="font-medium text-lg">$1,780,000,000,000</div>
@@ -305,7 +305,7 @@ const Home = () => {
                 <ArrowUpRight size={14} />
               </span>
             </div>
-            <div className="p-4 flex items-center h-16">
+            <div className="p-4 pt-7 flex items-center h-16">
               {/* Price and change on the left */}
               <div className="flex-grow flex flex-col items-start">
                 <div className="font-medium text-lg">$78,400,000,000</div>

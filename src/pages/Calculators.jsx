@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
+import { coins } from "../data/coins";
 import {
   Calculator,
   TrendingUp,
@@ -30,64 +31,6 @@ const Calculators = () => {
   const [compoundingFrequency, setCompoundingFrequency] = useState("daily");
   const [useCurrentPrice, setUseCurrentPrice] = useState(true);
   const [customTokenPrice, setCustomTokenPrice] = useState("");
-
-  const tokens = [
-    {
-      id: 1,
-      name: "Bitcoin",
-      symbol: "BTC",
-      price: 48243.21,
-      change1h: 0.5,
-      change24h: -2.1,
-      change7d: 3.8,
-      volume: 28432156789,
-      marketCap: 893421567890,
-    },
-    {
-      id: 2,
-      name: "Ethereum",
-      symbol: "ETH",
-      price: 2976.45,
-      change1h: -0.2,
-      change24h: 1.7,
-      change7d: -1.3,
-      volume: 15678923456,
-      marketCap: 352678945123,
-    },
-    {
-      id: 3,
-      name: "Solana",
-      symbol: "SOL",
-      price: 107.32,
-      change1h: 1.5,
-      change24h: 5.2,
-      change7d: 12.4,
-      volume: 5678234567,
-      marketCap: 42678234567,
-    },
-    {
-      id: 4,
-      name: "Ripple",
-      symbol: "XRP",
-      price: 0.54,
-      change1h: 0.1,
-      change24h: -0.8,
-      change7d: -2.5,
-      volume: 2345678912,
-      marketCap: 27456789123,
-    },
-    {
-      id: 5,
-      name: "Cardano",
-      symbol: "ADA",
-      price: 0.48,
-      change1h: -0.4,
-      change24h: 3.2,
-      change7d: 8.9,
-      volume: 1987654321,
-      marketCap: 16789123456,
-    },
-  ];
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
 
@@ -258,7 +201,7 @@ const Calculators = () => {
                   onChange={(e) => setToken(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
-                  {tokens.map((t) => (
+                  {coins.map((t) => (
                     <option key={t.symbol} value={t.symbol}>
                       {t.name} ({t.symbol})
                     </option>
@@ -508,7 +451,7 @@ const Calculators = () => {
                       onChange={(e) => setToken(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     >
-                      {tokens.map((t) => (
+                      {coins.map((t) => (
                         <option key={t.symbol} value={t.symbol}>
                           {t.name} ({t.symbol})
                         </option>
@@ -680,7 +623,7 @@ const Calculators = () => {
                         type="number"
                         value={
                           useCurrentPrice
-                            ? tokens.find((t) => t.symbol === token).price
+                            ? coins.find((t) => t.symbol === token).price
                             : customTokenPrice
                         }
                         onChange={(e) => setCustomTokenPrice(e.target.value)}

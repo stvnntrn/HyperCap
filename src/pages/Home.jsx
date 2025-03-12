@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { coins, trendingCoins } from "../data/coins";
+import { topSectors } from "../data/sectors";
 import {
   TrendingUp,
   TrendingDown,
@@ -13,83 +15,11 @@ import {
   Globe,
   Rocket,
   Star,
+  ChartNoAxesColumnIncreasing,
 } from "lucide-react";
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState("trending");
-
-  // Sample data - would be replaced with real API data
-  const coins = [
-    {
-      id: 1,
-      name: "Bitcoin",
-      symbol: "BTC",
-      price: 48243.21,
-      change1h: 0.5,
-      change24h: -2.1,
-      change7d: 3.8,
-      volume: 28432156789,
-      marketCap: 893421567890,
-    },
-    {
-      id: 2,
-      name: "Ethereum",
-      symbol: "ETH",
-      price: 2976.45,
-      change1h: -0.2,
-      change24h: 1.7,
-      change7d: -1.3,
-      volume: 15678923456,
-      marketCap: 352678945123,
-    },
-    {
-      id: 3,
-      name: "Solana",
-      symbol: "SOL",
-      price: 107.32,
-      change1h: 1.5,
-      change24h: 5.2,
-      change7d: 12.4,
-      volume: 5678234567,
-      marketCap: 42678234567,
-    },
-    {
-      id: 4,
-      name: "Ripple",
-      symbol: "XRP",
-      price: 0.54,
-      change1h: 0.1,
-      change24h: -0.8,
-      change7d: -2.5,
-      volume: 2345678912,
-      marketCap: 27456789123,
-    },
-    {
-      id: 5,
-      name: "Cardano",
-      symbol: "ADA",
-      price: 0.48,
-      change1h: -0.4,
-      change24h: 3.2,
-      change7d: 8.9,
-      volume: 1987654321,
-      marketCap: 16789123456,
-    },
-  ];
-
-  // Trending coins for the widget
-  const trendingCoins = [
-    { name: "Solana", symbol: "SOL", change24h: 5.2, price: 107.32 },
-    { name: "Cardano", symbol: "ADA", change24h: 3.2, price: 0.48 },
-    { name: "Ethereum", symbol: "ETH", change24h: 1.7, price: 2976.45 },
-  ];
-
-  // Top sectors data
-  const topSectors = [
-    { name: "GameFi", change: 15.3, marketCap: "48.2B" },
-    { name: "Layer 2", change: 9.7, marketCap: "62.5B" },
-    { name: "DeFi", change: 7.2, marketCap: "91.3B" },
-  ];
+  const [activeTab, setActiveTab] = useState("top");
 
   // Sample chart data - would be replaced with real data
   const marketCapChartData = [1.72, 1.73, 1.71, 1.75, 1.77, 1.76, 1.79, 1.78];
@@ -143,6 +73,8 @@ const Home = () => {
   // Filter data based on active tab
   const getFilteredCoins = () => {
     switch (activeTab) {
+      case "top":
+        return [...coins].sort((a, b) => b.marketCap - a.marketCap);
       case "trending":
         return [...coins].sort((a, b) => b.volume - a.volume);
       case "gainers":
@@ -430,35 +362,42 @@ const Home = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex mb-4 bg-gray-100 p-1 rounded-full w-fit">
+      <div className="flex mb-4 p-1 rounded-full w-fit">
         {[
+          {
+            id: "top",
+            label: "Top",
+            icon: <ChartNoAxesColumnIncreasing size={16} />,
+          },
           {
             id: "trending",
             label: "Trending",
-            icon: <Activity size={16} className="text-teal-600" />,
+            icon: <Activity size={16} />,
           },
           {
             id: "gainers",
             label: "Top Gainers",
-            icon: <TrendingUp size={16} className="text-green-600" />,
+            icon: <TrendingUp size={16} />,
           },
           {
             id: "losers",
             label: "Top Losers",
-            icon: <TrendingDown size={16} className="text-red-600" />,
+            icon: <TrendingDown size={16} />,
           },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
+            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all cursor-pointer font-semibold ${
               activeTab === tab.id
-                ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-200"
+                ? "bg-teal-100 text-teal-700"
+                : "text-gray-500 hover:bg-gray-200"
             }`}
           >
             <span
-              className={`mr-2 ${activeTab === tab.id ? "text-white" : ""}`}
+              className={`mr-2 ${
+                activeTab === tab.id ? "text-teal-700" : "text-gray-500"
+              }`}
             >
               {tab.icon}
             </span>

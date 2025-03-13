@@ -88,35 +88,51 @@ const Home = () => {
 
   // Generate sparkline-like trend indicator
   const getTrendIndicator = (value) => {
-    const points = [0, 20, 40, 60, 80, 100];
-    const height = 24;
+    const width = 160;
+    const height = 70;
+    const padding = 5;
 
-    // Generate points that trend up or down based on value
-    const trend =
-      value > 0 ? points.map((p) => height - p / 5) : points.map((p) => p / 5);
+    // Generate random data points for a more dynamic look
+    const data = Array.from({ length: 16 }, () => {
+      const base = value > 0 ? 20 : 60;
+      return base + (Math.random() * 20 - 10);
+    });
 
-    const pathData = points
-      .map((point, i) => `${i === 0 ? "M" : "L"} ${point} ${trend[i]}`)
+    const maxValue = Math.max(...data);
+    const minValue = Math.min(...data);
+
+    // Scale data points to fit
+    const scaledData = data.map((value) => {
+      const range = maxValue - minValue;
+      if (range === 0) return padding;
+      return (
+        height - padding - ((value - minValue) / range) * (height - padding * 2)
+      );
+    });
+
+    // Create the path string
+    const pathString = scaledData
+      .map((point, index) => {
+        const x = (index / (data.length - 1)) * width;
+        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
+      })
       .join(" ");
 
     return (
-      <svg width="100" height={height} className="ml-2">
+      <svg width={width} height={height} className="ml-2">
         <path
-          d={pathData}
+          d={pathString}
           stroke={value > 0 ? "#10b981" : "#ef4444"}
-          fill="none"
           strokeWidth="2"
+          fill="none"
         />
       </svg>
     );
   };
 
-  // Format large numbers with K, M, B suffixes
+  // Format large numbers with commas
   const formatNumber = (num) => {
-    if (num >= 1000000000) return (num / 1000000000).toFixed(2) + "B";
-    if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(2) + "K";
-    return num.toFixed(2);
+    return num.toLocaleString();
   };
 
   return (
@@ -153,9 +169,11 @@ const Home = () => {
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
                       {coin.symbol.charAt(0)}
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <div className="font-medium">{coin.name}</div>
-                      <div className="text-gray-500 text-xs">{coin.symbol}</div>
+                      <div className="text-gray-500 text-sm">
+                        ({coin.symbol})
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -361,6 +379,11 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Main heading */}
+      <h2 className="text-2xl font-bold mb-4">
+        Cryptocurrency Prices by Market Cap
+      </h2>
+
       {/* Tabs */}
       <div className="flex mb-4 p-1 rounded-full w-fit">
         {[
@@ -407,35 +430,36 @@ const Home = () => {
       </div>
 
       {/* Main coin list */}
-      <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="overflow-hidden rounded-xl">
         <table className="min-w-full">
           <thead className="bg-gradient-to-r from-teal-600 to-teal-700">
             <tr>
-              <th className="p-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider"></th>
+              <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                 #
               </th>
-              <th className="p-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Coin
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Price
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 1h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 24h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 7d
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Volume 24h
               </th>
-              <th className="p-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Market Cap
               </th>
-              <th className="p-4 pr-5 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="py-4 pr-5 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Last 7 Days
               </th>
             </tr>
@@ -446,28 +470,31 @@ const Home = () => {
                 key={coin.id}
                 className="hover:bg-teal-50 transition-colors cursor-pointer"
               >
-                <td className="p-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700">
+                <td className="pl-3 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
+                  <Star
+                    size={16}
+                    className="text-gray-400 hover:text-yellow-500"
+                  />
+                </td>
+                <td className="py-4 whitespace-nowrap text-sm font-medium text-gray-700">
                   {index + 1}
                 </td>
-                <td className="p-4 whitespace-nowrap">
+                <td className="py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
                       {coin.symbol.charAt(0)}
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <div className="font-medium">{coin.name}</div>
                       <div className="text-gray-500 text-sm">{coin.symbol}</div>
                     </div>
-                    <button className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-yellow-500">
-                      <Star size={16} />
-                    </button>
                   </div>
                 </td>
-                <td className="p-4 text-right whitespace-nowrap font-medium">
+                <td className="py-4 text-right whitespace-nowrap font-medium w-0">
                   ${coin.price.toLocaleString()}
                 </td>
                 <td
-                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
                     coin.change1h >= 0 ? "text-green-500" : "text-red-500"
                   }`}
                 >
@@ -482,7 +509,7 @@ const Home = () => {
                   </span>
                 </td>
                 <td
-                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
                     coin.change24h >= 0 ? "text-green-500" : "text-red-500"
                   }`}
                 >
@@ -497,7 +524,7 @@ const Home = () => {
                   </span>
                 </td>
                 <td
-                  className={`p-4 text-right whitespace-nowrap font-medium ${
+                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
                     coin.change7d >= 0 ? "text-green-500" : "text-red-500"
                   }`}
                 >
@@ -511,15 +538,15 @@ const Home = () => {
                     {coin.change7d}%
                   </span>
                 </td>
-                <td className="p-4 text-right whitespace-nowrap">
+                <td className="py-4 pl-5 text-right whitespace-nowrap w-0">
                   ${formatNumber(coin.volume)}
                 </td>
-                <td className="p-4 text-right whitespace-nowrap">
+                <td className="py-4 pl-4 text-right whitespace-nowrap w-0">
                   ${formatNumber(coin.marketCap)}
                 </td>
-                <td className="p-4 text-right">
-                  <div className="bg-gray-100 rounded-md p-1">
-                    {getTrendIndicator(coin.change24h)}
+                <td className="pr-4 pl-4 text-right w-0">
+                  <div className="rounded-md p-1 flex justify-end">
+                    {getTrendIndicator(coin.change7d)}
                   </div>
                 </td>
               </tr>

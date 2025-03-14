@@ -18,6 +18,18 @@ import {
   ChartNoAxesColumnIncreasing,
   ArrowUp,
   ArrowDown,
+  Brain,
+  Gamepad2,
+  Wallet,
+  Building2,
+  Blocks,
+  Gem,
+  Link2,
+  Leaf,
+  ShieldCheck,
+  Smartphone,
+  Boxes,
+  Warehouse,
 } from "lucide-react";
 
 const Home = () => {
@@ -442,7 +454,7 @@ const Home = () => {
       </h2>
 
       {/* Tabs */}
-      <div className="flex mb-4 p-1 rounded-full w-fit">
+      <div className="flex mb-2 p-1 rounded-full w-fit bg-gray-100/80 backdrop-blur-sm relative">
         {[
           {
             id: "top",
@@ -471,19 +483,99 @@ const Home = () => {
               setActiveTab(tab.id);
               setSortConfig({});
             }}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all cursor-pointer font-semibold ${
+            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all duration-300 ease-in-out cursor-pointer font-semibold ${
               activeTab === tab.id
-                ? "bg-teal-100 text-teal-700"
-                : "text-gray-500 hover:bg-gray-200"
+                ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white"
+                : "text-gray-500 hover:bg-white/50"
             }`}
           >
             <span
-              className={`mr-2 ${
-                activeTab === tab.id ? "text-teal-700" : "text-gray-500"
+              className={`mr-2 transition-colors duration-300 ${
+                activeTab === tab.id ? "text-white" : "text-gray-500"
               }`}
             >
               {tab.icon}
             </span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex flex-wrap gap-1 mb-2 p-1 ml-1 w-fit">
+        {[
+          {
+            id: "defi",
+            label: "DeFi",
+            icon: <Wallet size={14} />,
+          },
+          {
+            id: "layer1",
+            label: "Layer 1",
+            icon: <Blocks size={14} />,
+          },
+          {
+            id: "layer2",
+            label: "Layer 2",
+            icon: <Boxes size={14} />,
+          },
+          {
+            id: "ai",
+            label: "AI",
+            icon: <Brain size={14} />,
+          },
+          {
+            id: "gaming",
+            label: "Gaming",
+            icon: <Gamepad2 size={14} />,
+          },
+          {
+            id: "infrastructure",
+            label: "Infrastructure",
+            icon: <Link2 size={14} />,
+          },
+          {
+            id: "meme",
+            label: "Meme",
+            icon: <Rocket size={14} />,
+          },
+          {
+            id: "privacy",
+            label: "Privacy",
+            icon: <ShieldCheck size={14} />,
+          },
+          {
+            id: "rwa",
+            label: "RWA",
+            icon: <Building2 size={14} />,
+          },
+          {
+            id: "storage",
+            label: "Storage",
+            icon: <Warehouse size={14} />,
+          },
+          {
+            id: "mobile",
+            label: "Mobile",
+            icon: <Smartphone size={14} />,
+          },
+          {
+            id: "sustainability",
+            label: "Green",
+            icon: <Leaf size={14} />,
+          },
+          {
+            id: "nft",
+            label: "NFT",
+            icon: <Gem size={14} />,
+          },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {}}
+            className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium text-gray-500 hover:text-gray-700`}
+          >
+            <span className="mr-1.5 text-gray-500">{tab.icon}</span>
             {tab.label}
           </button>
         ))}

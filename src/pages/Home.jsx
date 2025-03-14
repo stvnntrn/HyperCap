@@ -51,6 +51,12 @@ const Home = () => {
   // Get sorted data
   const getSortedCoins = () => {
     const filteredCoins = getFilteredCoins();
+
+    // No column header sorting is active, return the filtered coins
+    if (!sortConfig.key) {
+      return filteredCoins;
+    }
+
     const marketCapRanking = getMarketCapRanking();
 
     return [...filteredCoins].sort((a, b) => {
@@ -461,7 +467,10 @@ const Home = () => {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setSortConfig({});
+            }}
             className={`flex items-center px-4 py-2 rounded-full text-sm transition-all cursor-pointer font-semibold ${
               activeTab === tab.id
                 ? "bg-teal-100 text-teal-700"

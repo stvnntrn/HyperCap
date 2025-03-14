@@ -16,10 +16,61 @@ import {
   Rocket,
   Star,
   ChartNoAxesColumnIncreasing,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("top");
+  const [sortConfig, setSortConfig] = useState({
+    key: "marketCap",
+    direction: "desc",
+  });
+
+  // Get market cap ranking map
+  const getMarketCapRanking = () => {
+    const sortedByMarketCap = [...coins].sort(
+      (a, b) => b.marketCap - a.marketCap
+    );
+    return new Map(
+      sortedByMarketCap.map((coin, index) => [coin.id, index + 1])
+    );
+  };
+
+  // Handle sorting
+  const handleSort = (key) => {
+    setSortConfig((prevConfig) => ({
+      key,
+      direction:
+        prevConfig.key === key && prevConfig.direction === "desc"
+          ? "asc"
+          : "desc",
+    }));
+  };
+
+  // Get sorted data
+  const getSortedCoins = () => {
+    const filteredCoins = getFilteredCoins();
+    const marketCapRanking = getMarketCapRanking();
+
+    return [...filteredCoins].sort((a, b) => {
+      if (sortConfig.key === "#") {
+        const aRank = marketCapRanking.get(a.id);
+        const bRank = marketCapRanking.get(b.id);
+        return sortConfig.direction === "desc" ? aRank - bRank : bRank - aRank;
+      }
+
+      let aValue =
+        sortConfig.key === "coin" ? a.name.toLowerCase() : a[sortConfig.key];
+      let bValue =
+        sortConfig.key === "coin" ? b.name.toLowerCase() : b[sortConfig.key];
+
+      if (sortConfig.direction === "asc") {
+        return aValue > bValue ? 1 : -1;
+      }
+      return aValue < bValue ? 1 : -1;
+    });
+  };
 
   // Sample chart data - would be replaced with real data
   const marketCapChartData = [1.72, 1.73, 1.71, 1.75, 1.77, 1.76, 1.79, 1.78];
@@ -435,29 +486,122 @@ const Home = () => {
           <thead className="bg-gradient-to-r from-teal-600 to-teal-700">
             <tr>
               <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider"></th>
-              <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                #
+              <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <div className="flex items-center gap-1">
+                  <span className="text-white">#</span>
+                </div>
               </th>
-              <th className="py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Coin
+              <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <div className="flex items-center gap-1">
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("coin")}
+                  >
+                    Coin
+                  </span>
+                  {sortConfig.key === "coin" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                Price
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "price" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("price")}
+                  >
+                    Price
+                  </span>
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                1h
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "change1h" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("change1h")}
+                  >
+                    1h
+                  </span>
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                24h
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "change24h" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("change24h")}
+                  >
+                    24h
+                  </span>
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                7d
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "change7d" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("change7d")}
+                  >
+                    7d
+                  </span>
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                Volume 24h
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "volume" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("volume")}
+                  >
+                    Volume 24h
+                  </span>
+                </div>
               </th>
               <th className="py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                Market Cap
+                <div className="flex items-center justify-end gap-1">
+                  {sortConfig.key === "marketCap" &&
+                    (sortConfig.direction === "desc" ? (
+                      <ArrowDown size={14} />
+                    ) : (
+                      <ArrowUp size={14} />
+                    ))}
+                  <span
+                    className="cursor-pointer hover:text-teal-200 transition-colors"
+                    onClick={() => handleSort("marketCap")}
+                  >
+                    Market Cap
+                  </span>
+                </div>
               </th>
               <th className="py-4 pr-5 text-right text-xs font-medium text-white uppercase tracking-wider">
                 Last 7 Days
@@ -465,92 +609,97 @@ const Home = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {getFilteredCoins().map((coin, index) => (
-              <tr
-                key={coin.id}
-                className="hover:bg-teal-50 transition-colors cursor-pointer"
-              >
-                <td className="pl-3 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                  <Star
-                    size={16}
-                    className="text-gray-400 hover:text-yellow-500"
-                  />
-                </td>
-                <td className="py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                  {index + 1}
-                </td>
-                <td className="py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
-                      {coin.symbol.charAt(0)}
+            {getSortedCoins().map((coin) => {
+              const marketCapRanking = getMarketCapRanking();
+              return (
+                <tr
+                  key={coin.id}
+                  className="hover:bg-teal-50 transition-colors cursor-pointer"
+                >
+                  <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
+                    <Star
+                      size={16}
+                      className="text-gray-400 hover:text-yellow-500"
+                    />
+                  </td>
+                  <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
+                    {marketCapRanking.get(coin.id)}
+                  </td>
+                  <td className="py-4 pl-7 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        {coin.symbol.charAt(0)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{coin.name}</div>
+                        <div className="text-gray-500 text-sm">
+                          {coin.symbol}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="font-medium">{coin.name}</div>
-                      <div className="text-gray-500 text-sm">{coin.symbol}</div>
+                  </td>
+                  <td className="py-4 text-right whitespace-nowrap font-medium w-0">
+                    ${coin.price.toLocaleString()}
+                  </td>
+                  <td
+                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                      coin.change1h >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    <span className="flex items-center justify-end">
+                      {coin.change1h >= 0 ? (
+                        <TrendingUp size={14} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={14} className="mr-1" />
+                      )}
+                      {coin.change1h >= 0 ? "+" : ""}
+                      {coin.change1h}%
+                    </span>
+                  </td>
+                  <td
+                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                      coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    <span className="flex items-center justify-end">
+                      {coin.change24h >= 0 ? (
+                        <TrendingUp size={14} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={14} className="mr-1" />
+                      )}
+                      {coin.change24h >= 0 ? "+" : ""}
+                      {coin.change24h}%
+                    </span>
+                  </td>
+                  <td
+                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                      coin.change7d >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    <span className="flex items-center justify-end">
+                      {coin.change7d >= 0 ? (
+                        <TrendingUp size={14} className="mr-1" />
+                      ) : (
+                        <TrendingDown size={14} className="mr-1" />
+                      )}
+                      {coin.change7d >= 0 ? "+" : ""}
+                      {coin.change7d}%
+                    </span>
+                  </td>
+                  <td className="py-4 pl-5 text-right whitespace-nowrap w-0">
+                    ${formatNumber(coin.volume)}
+                  </td>
+                  <td className="py-4 pl-4 text-right whitespace-nowrap w-0">
+                    ${formatNumber(coin.marketCap)}
+                  </td>
+                  <td className="pr-4 pl-4 text-right w-0">
+                    <div className="rounded-md p-1 flex justify-end">
+                      {getTrendIndicator(coin.change7d)}
                     </div>
-                  </div>
-                </td>
-                <td className="py-4 text-right whitespace-nowrap font-medium w-0">
-                  ${coin.price.toLocaleString()}
-                </td>
-                <td
-                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
-                    coin.change1h >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  <span className="flex items-center justify-end">
-                    {coin.change1h >= 0 ? (
-                      <TrendingUp size={14} className="mr-1" />
-                    ) : (
-                      <TrendingDown size={14} className="mr-1" />
-                    )}
-                    {coin.change1h >= 0 ? "+" : ""}
-                    {coin.change1h}%
-                  </span>
-                </td>
-                <td
-                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
-                    coin.change24h >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  <span className="flex items-center justify-end">
-                    {coin.change24h >= 0 ? (
-                      <TrendingUp size={14} className="mr-1" />
-                    ) : (
-                      <TrendingDown size={14} className="mr-1" />
-                    )}
-                    {coin.change24h >= 0 ? "+" : ""}
-                    {coin.change24h}%
-                  </span>
-                </td>
-                <td
-                  className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
-                    coin.change7d >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  <span className="flex items-center justify-end">
-                    {coin.change7d >= 0 ? (
-                      <TrendingUp size={14} className="mr-1" />
-                    ) : (
-                      <TrendingDown size={14} className="mr-1" />
-                    )}
-                    {coin.change7d >= 0 ? "+" : ""}
-                    {coin.change7d}%
-                  </span>
-                </td>
-                <td className="py-4 pl-5 text-right whitespace-nowrap w-0">
-                  ${formatNumber(coin.volume)}
-                </td>
-                <td className="py-4 pl-4 text-right whitespace-nowrap w-0">
-                  ${formatNumber(coin.marketCap)}
-                </td>
-                <td className="pr-4 pl-4 text-right w-0">
-                  <div className="rounded-md p-1 flex justify-end">
-                    {getTrendIndicator(coin.change7d)}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

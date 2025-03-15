@@ -35,6 +35,27 @@ const Home = () => {
     direction: "desc",
   });
 
+  // Get active tab position and width
+  const getTabStyle = () => {
+    const tabsContainer = document.querySelector("[data-tabs-container]");
+    if (!tabsContainer) return { width: "16.7%", transform: "translateX(0)" };
+
+    const activeTabElement = tabsContainer.querySelector(
+      `[data-tab-id="${activeTab}"]`
+    );
+    if (!activeTabElement)
+      return { width: "16.7%", transform: "translateX(0)" };
+
+    const containerLeft = tabsContainer.getBoundingClientRect().left;
+    const tabLeft = activeTabElement.getBoundingClientRect().left;
+    const tabWidth = activeTabElement.getBoundingClientRect().width;
+
+    return {
+      width: `${tabWidth}px`,
+      transform: `translateX(${tabLeft - containerLeft}px)`,
+    };
+  };
+
   // Get market cap ranking map
   const getMarketCapRanking = () => {
     const sortedByMarketCap = [...coins].sort(
@@ -450,7 +471,14 @@ const Home = () => {
       </h2>
 
       {/* Tabs */}
-      <div className="flex mb-2 p-1 rounded-full w-fit bg-gray-100/80 backdrop-blur-sm relative">
+      <div
+        className="flex mb-2 rounded-full w-fit bg-gray-100/80 backdrop-blur-sm relative"
+        data-tabs-container
+      >
+        <div
+          className="absolute h-full w-full rounded-full bg-gradient-to-r from-teal-600 to-teal-700 transition-all duration-300 ease-in-out"
+          style={getTabStyle()}
+        />
         {[
           {
             id: "top",
@@ -475,18 +503,21 @@ const Home = () => {
         ].map((tab) => (
           <button
             key={tab.id}
+            data-tab-id={tab.id}
             onClick={() => {
               setActiveTab(tab.id);
               setSortConfig({});
             }}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all duration-300 ease-in-out cursor-pointer font-semibold ${
+            className={`relative z-10 flex items-center px-4 py-2 rounded-full text-sm transition-all duration-300 ease-in-out cursor-pointer font-semibold ${
               activeTab === tab.id
-                ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white"
-                : "text-gray-500 hover:bg-white/50"
+                ? "text-white"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             <span
-              className={`mr-2 transition-colors duration-300 ${
+              className={`${
+                tab.id === "top" ? "mr-1" : "mr-2"
+              } transition-colors duration-300 ${
                 activeTab === tab.id ? "text-white" : "text-gray-500"
               }`}
             >

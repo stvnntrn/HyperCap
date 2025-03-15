@@ -25,11 +25,7 @@ import {
   Blocks,
   Gem,
   Link2,
-  Leaf,
-  ShieldCheck,
-  Smartphone,
   Boxes,
-  Warehouse,
 } from "lucide-react";
 
 const Home = () => {
@@ -505,9 +501,24 @@ const Home = () => {
       <div className="flex flex-wrap gap-1 mb-2 p-1 ml-1 w-fit">
         {[
           {
-            id: "defi",
-            label: "DeFi",
-            icon: <Wallet size={14} />,
+            id: "bnb",
+            label: "BNB",
+            icon: <Coins size={14} />,
+          },
+          {
+            id: "sol",
+            label: "SOL",
+            icon: <Zap size={14} />,
+          },
+          {
+            id: "dot",
+            label: "DOT",
+            icon: <Globe size={14} />,
+          },
+          {
+            id: "smart-contract",
+            label: "Smart Contract",
+            icon: <Blocks size={14} />,
           },
           {
             id: "layer1",
@@ -518,6 +529,11 @@ const Home = () => {
             id: "layer2",
             label: "Layer 2",
             icon: <Boxes size={14} />,
+          },
+          {
+            id: "defi",
+            label: "DeFi",
+            icon: <Wallet size={14} />,
           },
           {
             id: "ai",
@@ -535,34 +551,14 @@ const Home = () => {
             icon: <Link2 size={14} />,
           },
           {
-            id: "meme",
-            label: "Meme",
-            icon: <Rocket size={14} />,
-          },
-          {
-            id: "privacy",
-            label: "Privacy",
-            icon: <ShieldCheck size={14} />,
-          },
-          {
             id: "rwa",
             label: "RWA",
             icon: <Building2 size={14} />,
           },
           {
-            id: "storage",
-            label: "Storage",
-            icon: <Warehouse size={14} />,
-          },
-          {
-            id: "mobile",
-            label: "Mobile",
-            icon: <Smartphone size={14} />,
-          },
-          {
-            id: "sustainability",
-            label: "Green",
-            icon: <Leaf size={14} />,
+            id: "meme",
+            label: "Meme",
+            icon: <Rocket size={14} />,
           },
           {
             id: "nft",

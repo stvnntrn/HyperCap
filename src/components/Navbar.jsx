@@ -1,6 +1,22 @@
 import { Link } from "react-router-dom";
 import { FaSearch, FaBriefcase, FaStar } from "react-icons/fa";
-import { Calculator, TrendingUp } from "lucide-react";
+import {
+  Calculator,
+  TrendingUp,
+  Blocks,
+  Brain,
+  Wallet,
+  Gamepad2,
+  Building2,
+  Rocket,
+  Gem,
+  Globe,
+  Zap,
+  Link2,
+  Boxes,
+  Coins,
+  ChevronRight,
+} from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -14,10 +30,129 @@ const Navbar = () => {
             HyperCap
           </Link>
           <ul className="flex space-x-7 font-semibold">
-            <li>
-              <Link to="/cryptocurrencies" className="hover:text-primary">
-                Cryptocurrencies
+            <li className="relative group">
+              <Link
+                to="/"
+                className="hover:text-primary flex items-center space-x-1"
+              >
+                <span>Cryptocurrencies</span>
               </Link>
+              <ul className="absolute left-0 mt-2 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <li className="relative group/inner">
+                  <div className="flex items-center justify-between px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                    <span className="flex items-center">
+                      <Blocks className="w-4 h-4 mr-2" /> Categories
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <ul className="absolute left-full top-0 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover/inner:opacity-100 group-hover/inner:visible transition-all duration-200">
+                    <li>
+                      <Link
+                        to="/category/bnb"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Coins className="w-4 h-4 mr-2" /> BNB
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/sol"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Zap className="w-4 h-4 mr-2" /> SOL
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/dot"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Globe className="w-4 h-4 mr-2" /> DOT
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/smart-contract"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Blocks className="w-4 h-4 mr-2" /> Smart Contract
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/layer-1"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Blocks className="w-4 h-4 mr-2" /> Layer 1
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/layer-2"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Boxes className="w-4 h-4 mr-2" /> Layer 2
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/defi"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Wallet className="w-4 h-4 mr-2" /> DeFi
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/ai"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Brain className="w-4 h-4 mr-2" /> AI
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/gaming"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Gamepad2 className="w-4 h-4 mr-2" /> Gaming
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/infrastructure"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Link2 className="w-4 h-4 mr-2" /> Infrastructure
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/rwa"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Building2 className="w-4 h-4 mr-2" /> RWA
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/meme"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Rocket className="w-4 h-4 mr-2" /> Meme
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/category/nft"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Gem className="w-4 h-4 mr-2" /> NFT
+                      </Link>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
             </li>
             <li>
               <Link to="/compare" className="hover:text-primary">
@@ -31,7 +166,7 @@ const Navbar = () => {
               >
                 Calculators
               </Link>
-              <ul className="absolute left-0 mt-2 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <ul className="absolute left-0 mt-2 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <li>
                   <Link
                     to="/calculators"

@@ -27,6 +27,7 @@ import {
   Link2,
   Boxes,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("top");
@@ -535,76 +536,89 @@ const Home = () => {
             id: "bnb",
             label: "BNB",
             icon: <Coins size={14} />,
+            path: "/category/bnb",
           },
           {
             id: "sol",
             label: "SOL",
             icon: <Zap size={14} />,
+            path: "/category/sol",
           },
           {
             id: "dot",
             label: "DOT",
             icon: <Globe size={14} />,
+            path: "/category/dot",
           },
           {
             id: "smart-contract",
             label: "Smart Contract",
             icon: <Blocks size={14} />,
+            path: "/category/smart-contract",
           },
           {
             id: "layer1",
             label: "Layer 1",
             icon: <Blocks size={14} />,
+            path: "/category/layer-1",
           },
           {
             id: "layer2",
             label: "Layer 2",
             icon: <Boxes size={14} />,
+            path: "/category/layer-2",
           },
           {
             id: "defi",
             label: "DeFi",
             icon: <Wallet size={14} />,
+            path: "/category/defi",
           },
           {
             id: "ai",
             label: "AI",
             icon: <Brain size={14} />,
+            path: "/category/ai",
           },
           {
             id: "gaming",
             label: "Gaming",
             icon: <Gamepad2 size={14} />,
+            path: "/category/gaming",
           },
           {
             id: "infrastructure",
             label: "Infrastructure",
             icon: <Link2 size={14} />,
+            path: "/category/infrastructure",
           },
           {
             id: "rwa",
             label: "RWA",
             icon: <Building2 size={14} />,
+            path: "/category/rwa",
           },
           {
             id: "meme",
             label: "Meme",
             icon: <Rocket size={14} />,
+            path: "/category/meme",
           },
           {
             id: "nft",
             label: "NFT",
             icon: <Gem size={14} />,
+            path: "/category/nft",
           },
         ].map((tab) => (
-          <button
+          <Link
             key={tab.id}
-            onClick={() => {}}
+            to={tab.path}
             className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium text-gray-500 hover:text-gray-700`}
           >
             <span className="mr-1.5 text-gray-500">{tab.icon}</span>
             {tab.label}
-          </button>
+          </Link>
         ))}
       </div>
 

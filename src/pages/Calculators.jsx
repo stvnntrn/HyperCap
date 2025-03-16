@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { coins } from "../data/coins";
+import { useLocation } from "react-router-dom";
 import {
   Calculator,
   TrendingUp,
@@ -11,7 +12,14 @@ import {
 } from "lucide-react";
 
 const Calculators = () => {
-  const [activeCalculator, setActiveCalculator] = useState("roi");
+  const location = useLocation();
+  const [activeCalculator, setActiveCalculator] = useState(() => {
+    const path = location.pathname;
+    if (path.endsWith("/staking")) return "staking";
+    if (path.endsWith("/roi")) return "roi";
+    return "roi";
+  });
+
   const [currency, setCurrency] = useState("USD");
   const [amount, setAmount] = useState("");
   const [token, setToken] = useState("BTC");
@@ -57,6 +65,16 @@ const Calculators = () => {
   useEffect(() => {
     calculateResults();
   }, [amount, buyPrice, investmentFees, sellPrice, exitFees, currency, token]);
+
+  // Update active calculator when path changes
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.endsWith("/staking")) {
+      setActiveCalculator("staking");
+    } else if (path.endsWith("/roi")) {
+      setActiveCalculator("roi");
+    }
+  }, [location]);
 
   const calculateResults = () => {
     const investmentAmount = parseFloat(amount) || 0;

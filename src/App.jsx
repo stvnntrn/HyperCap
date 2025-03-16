@@ -32,6 +32,8 @@ const App = () => {
         <Route path="/cryptocurrencies" element={<Cryptocurrencies />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/calculators" element={<Calculators />} />
+        <Route path="/calculators/roi" element={<Calculators />} />
+        <Route path="/calculators/staking" element={<Calculators />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/watchlist" element={<Watchlist />} />

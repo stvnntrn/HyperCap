@@ -29,7 +29,6 @@ const Calculators = () => {
   const [exitFees, setExitFees] = useState("");
   const [calculationResult, setCalculationResult] = useState(null);
 
-  // Staking calculator states
   const [stakingAmount, setStakingAmount] = useState("");
   const [isTokenAmount, setIsTokenAmount] = useState(false);
   const [stakingRate, setStakingRate] = useState("");
@@ -39,6 +38,13 @@ const Calculators = () => {
   const [compoundingFrequency, setCompoundingFrequency] = useState("daily");
   const [useCurrentPrice, setUseCurrentPrice] = useState(true);
   const [customTokenPrice, setCustomTokenPrice] = useState("");
+
+  const [stakingResults, setStakingResults] = useState({
+    daily: { fiat: 0, tokens: 0 },
+    monthly: { fiat: 0, tokens: 0 },
+    yearly: { fiat: 0, tokens: 0 },
+    total: { fiat: 0, tokens: 0 },
+  });
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
 
@@ -76,6 +82,21 @@ const Calculators = () => {
     }
   }, [location]);
 
+  useEffect(() => {
+    calculateStakingReturns();
+  }, [
+    stakingAmount,
+    stakingRate,
+    isAPR,
+    compoundingFrequency,
+    durationUnit,
+    stakingDuration,
+    token,
+    useCurrentPrice,
+    customTokenPrice,
+    isTokenAmount,
+  ]);
+
   const calculateResults = () => {
     const investmentAmount = parseFloat(amount) || 0;
     const entryPrice = parseFloat(buyPrice) || 0;
@@ -111,6 +132,108 @@ const Calculators = () => {
       percentageReturn,
       totalFees,
       isProfit: absoluteProfit >= 0,
+    });
+  };
+
+  const calculateStakingReturns = () => {
+    // Return early if required fields are empty
+    if (!stakingAmount || !stakingRate || !stakingDuration) {
+      setStakingResults({
+        daily: { fiat: 0, tokens: 0 },
+        monthly: { fiat: 0, tokens: 0 },
+        yearly: { fiat: 0, tokens: 0 },
+        total: { fiat: 0, tokens: 0 },
+      });
+      return;
+    }
+
+    // Get current market price for token conversion
+    const currentMarketPrice = coins.find((t) => t.symbol === token).price;
+
+    // Get display price
+    const displayPrice = useCurrentPrice
+      ? currentMarketPrice
+      : parseFloat(customTokenPrice) || 0;
+
+    // Convert input to numbers
+    const inputAmount = parseFloat(stakingAmount);
+
+    // Use current market price to calculate token amount (if input is in fiat)
+    const principal = isTokenAmount
+      ? inputAmount
+      : inputAmount / currentMarketPrice;
+    const rate = parseFloat(stakingRate) / 100;
+
+    // Convert duration to days
+    let durationInDays = parseFloat(stakingDuration);
+    if (durationUnit === "months") {
+      durationInDays *= 30.44;
+    } else if (durationUnit === "years") {
+      durationInDays *= 365.25;
+    }
+
+    // Calculate compounding periods per year
+    let periodsPerYear;
+    switch (compoundingFrequency) {
+      case "daily":
+        periodsPerYear = 365.25;
+        break;
+      case "weekly":
+        periodsPerYear = 52;
+        break;
+      case "monthly":
+        periodsPerYear = 12;
+        break;
+      case "quarterly":
+        periodsPerYear = 4;
+        break;
+      case "yearly":
+        periodsPerYear = 1;
+        break;
+      default:
+        periodsPerYear = 365.25;
+    }
+
+    // Calculate APY if APR is given
+    let effectiveRate = rate;
+    if (isAPR) {
+      effectiveRate = Math.pow(1 + rate / periodsPerYear, periodsPerYear) - 1;
+    }
+
+    // Calculate daily, monthly, and yearly returns in tokens
+    const dailyRate = Math.pow(1 + effectiveRate, 1 / 365.25) - 1;
+    const monthlyRate = Math.pow(1 + effectiveRate, 30.44 / 365.25) - 1;
+    const yearlyRate = effectiveRate;
+
+    // Calculate token returns
+    const dailyTokens = principal * dailyRate;
+    const monthlyTokens = principal * monthlyRate;
+    const yearlyTokens = principal * yearlyRate;
+
+    // Calculate total returns after the staking period
+    const periodsElapsed = durationInDays / (365.25 / periodsPerYear);
+    const totalTokens =
+      principal * Math.pow(1 + rate / periodsPerYear, periodsElapsed);
+    const totalTokenReturn = totalTokens - principal;
+
+    // Set results with fiat values calculated using display price
+    setStakingResults({
+      daily: {
+        tokens: dailyTokens,
+        fiat: dailyTokens * displayPrice,
+      },
+      monthly: {
+        tokens: monthlyTokens,
+        fiat: monthlyTokens * displayPrice,
+      },
+      yearly: {
+        tokens: yearlyTokens,
+        fiat: yearlyTokens * displayPrice,
+      },
+      total: {
+        tokens: totalTokenReturn,
+        fiat: totalTokenReturn * displayPrice,
+      },
     });
   };
 
@@ -690,9 +813,11 @@ const Calculators = () => {
                     Daily Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(0)}
+                    {formatCurrency(stakingResults.daily.fiat, currency)}
                   </div>
-                  <div className="text-base text-gray-500">0.00 {token}</div>
+                  <div className="text-base text-gray-500">
+                    {stakingResults.daily.tokens.toFixed(8)} {token}
+                  </div>
                 </div>
 
                 {/* Monthly Staking Returns */}
@@ -701,9 +826,11 @@ const Calculators = () => {
                     Monthly Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(0)}
+                    {formatCurrency(stakingResults.monthly.fiat, currency)}
                   </div>
-                  <div className="text-base text-gray-500">0.00 {token}</div>
+                  <div className="text-base text-gray-500">
+                    {stakingResults.monthly.tokens.toFixed(8)} {token}
+                  </div>
                 </div>
 
                 {/* Yearly Staking Returns */}
@@ -712,9 +839,11 @@ const Calculators = () => {
                     Yearly Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(0)}
+                    {formatCurrency(stakingResults.yearly.fiat, currency)}
                   </div>
-                  <div className="text-base text-gray-500">0.00 {token}</div>
+                  <div className="text-base text-gray-500">
+                    {stakingResults.yearly.tokens.toFixed(8)} {token}
+                  </div>
                 </div>
               </div>
             </div>

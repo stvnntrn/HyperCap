@@ -10,6 +10,28 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+// ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Calculators = () => {
   const location = useLocation();
@@ -213,7 +235,7 @@ const Calculators = () => {
     // Calculate total returns after the staking period
     const periodsElapsed = durationInDays / (365.25 / periodsPerYear);
     const totalTokens =
-      principal * Math.pow(1 + rate / periodsPerYear, periodsElapsed);
+      principal * Math.pow(1 + effectiveRate / periodsPerYear, periodsElapsed);
     const totalTokenReturn = totalTokens - principal;
 
     // Set results with fiat values calculated using display price
@@ -268,6 +290,107 @@ const Calculators = () => {
     } else {
       return `${getCurrencySymbol(currency)}${numValue.toFixed(2)}`;
     }
+  };
+
+  const generateChartData = () => {
+    if (!stakingAmount || !stakingRate || !stakingDuration) {
+      return {
+        labels: [],
+        datasets: [],
+      };
+    }
+
+    // Get current market price for token conversion
+    const currentMarketPrice = coins.find((t) => t.symbol === token).price;
+    const displayPrice = useCurrentPrice
+      ? currentMarketPrice
+      : parseFloat(customTokenPrice) || 0;
+
+    // Convert input to numbers
+    const inputAmount = parseFloat(stakingAmount);
+    const principal = isTokenAmount
+      ? inputAmount
+      : inputAmount / currentMarketPrice;
+    const rate = parseFloat(stakingRate) / 100;
+
+    // Convert duration to days
+    let durationInDays = parseFloat(stakingDuration);
+    if (durationUnit === "months") {
+      durationInDays *= 30.44;
+    } else if (durationUnit === "years") {
+      durationInDays *= 365.25;
+    }
+
+    // Calculate compounding periods per year
+    let periodsPerYear;
+    switch (compoundingFrequency) {
+      case "daily":
+        periodsPerYear = 365.25;
+        break;
+      case "weekly":
+        periodsPerYear = 52;
+        break;
+      case "monthly":
+        periodsPerYear = 12;
+        break;
+      case "quarterly":
+        periodsPerYear = 4;
+        break;
+      case "yearly":
+        periodsPerYear = 1;
+        break;
+      default:
+        periodsPerYear = 365.25;
+    }
+
+    // Calculate APY if APR is given
+    let effectiveRate = rate;
+    if (isAPR) {
+      effectiveRate = Math.pow(1 + rate / periodsPerYear, periodsPerYear) - 1;
+    }
+
+    // Generate data points for the chart
+    const dataPoints = [];
+    const labels = [];
+    const step = durationInDays / 50; // Generate 50 data points
+
+    for (let i = 0; i <= durationInDays; i += step) {
+      const periodsElapsed = i / (365.25 / periodsPerYear);
+      const balance =
+        principal *
+        Math.pow(1 + effectiveRate / periodsPerYear, periodsElapsed);
+      const rewards = balance - principal;
+
+      dataPoints.push({
+        balance: balance * displayPrice,
+        rewards: rewards * displayPrice,
+      });
+
+      // Format label based on duration unit
+      let label;
+      if (durationUnit === "days") {
+        label = `${Math.round(i)} days`;
+      } else if (durationUnit === "months") {
+        label = `${Math.round(i / 30.44)} months`;
+      } else {
+        label = `${Math.round(i / 365.25)} years`;
+      }
+      labels.push(label);
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Total Balance Growth",
+          data: dataPoints.map((point) => point.balance),
+          borderColor: "rgb(20, 184, 166)",
+          backgroundColor: "rgba(20, 184, 166, 0.1)",
+          fill: true,
+          tension: 0.4,
+        },
+      ],
+    };
   };
 
   return (
@@ -571,9 +694,9 @@ const Calculators = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-3 grid-rows-3 gap-4 mx-auto">
+        <div className="grid grid-cols-3 gap-4 mx-auto">
           {/* Staking Calculator */}
-          <div className="col-span-3 row-span-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="col-span-3 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
               <BarChart2 size={20} className="mr-2" />
               <span>Staking Calculator</span>
@@ -788,19 +911,93 @@ const Calculators = () => {
           </div>
 
           {/* Investment Chart */}
-          <div className="col-span-2 row-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="col-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
               <BarChart2 size={20} className="mr-2" />
               <span>Investment Growth</span>
             </div>
-            <div className="p-5 h-full">
-              {/* Chart */}
-              <div className="bg-gray-50 rounded-lg h-full flex items-center justify-center"></div>
+            <div className="p-5">
+              {/* Total Rewards Summary */}
+              <div className="mb-6 text-center">
+                <div className="text-lg text-gray-500 mb-4">
+                  Total Rewards in {stakingDuration || "0"} {durationUnit}
+                </div>
+                <div className="text-3xl font-bold text-teal-600 mb-1">
+                  {formatCurrency(stakingResults.total.fiat)}
+                </div>
+                <div className="text-lg text-gray-500">
+                  {stakingResults.total.tokens.toFixed(8)} {token}
+                </div>
+              </div>
+
+              <div className="h-[300px]">
+                <Line
+                  data={generateChartData()}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        mode: "index",
+                        intersect: false,
+                        callbacks: {
+                          label: function (context) {
+                            return `${formatCurrency(context.parsed.y)}`;
+                          },
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        grid: {
+                          display: false,
+                        },
+                        title: {
+                          display: true,
+                          text: "Time",
+                          font: {
+                            size: 14,
+                            weight: "bold",
+                          },
+                          padding: {
+                            top: 10,
+                          },
+                        },
+                      },
+                      y: {
+                        beginAtZero: false,
+                        grid: {
+                          display: false,
+                        },
+                        title: {
+                          display: true,
+                          text: "Value (USD)",
+                          font: {
+                            size: 14,
+                            weight: "bold",
+                          },
+                          padding: {
+                            bottom: 10,
+                          },
+                        },
+                        ticks: {
+                          callback: function (value) {
+                            return formatCurrency(value);
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
             </div>
           </div>
 
           {/* Staking Returns */}
-          <div className="col-span-1 row-span-2 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="col-span-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
               <TrendingUp size={20} className="mr-2" />
               <span>Staking Returns</span>

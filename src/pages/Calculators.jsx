@@ -70,6 +70,18 @@ const Calculators = () => {
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
 
+  const clearStakingInputs = () => {
+    setStakingAmount("");
+    setIsTokenAmount(false);
+    setStakingRate("");
+    setIsAPR(true);
+    setStakingDuration("");
+    setDurationUnit("days");
+    setCompoundingFrequency("daily");
+    setUseCurrentPrice(true);
+    setCustomTokenPrice("");
+  };
+
   // Get currency symbol
   const getCurrencySymbol = (curr) => {
     switch (curr) {
@@ -157,30 +169,19 @@ const Calculators = () => {
     });
   };
 
-  const calculateStakingReturns = () => {
-    // Return early if required fields are empty
+  const calculateStakingParameters = () => {
     if (!stakingAmount || !stakingRate || !stakingDuration) {
-      setStakingResults({
-        daily: { fiat: 0, tokens: 0 },
-        monthly: { fiat: 0, tokens: 0 },
-        yearly: { fiat: 0, tokens: 0 },
-        total: { fiat: 0, tokens: 0 },
-      });
-      return;
+      return null;
     }
 
     // Get current market price for token conversion
     const currentMarketPrice = coins.find((t) => t.symbol === token).price;
-
-    // Get display price
     const displayPrice = useCurrentPrice
       ? currentMarketPrice
       : parseFloat(customTokenPrice) || 0;
 
     // Convert input to numbers
     const inputAmount = parseFloat(stakingAmount);
-
-    // Use current market price to calculate token amount (if input is in fiat)
     const principal = isTokenAmount
       ? inputAmount
       : inputAmount / currentMarketPrice;
@@ -189,9 +190,9 @@ const Calculators = () => {
     // Convert duration to days
     let durationInDays = parseFloat(stakingDuration);
     if (durationUnit === "months") {
-      durationInDays *= 30.44;
+      durationInDays *= 365 / 12;
     } else if (durationUnit === "years") {
-      durationInDays *= 365.25;
+      durationInDays *= 365;
     }
 
     // Calculate compounding periods per year
@@ -222,21 +223,50 @@ const Calculators = () => {
       effectiveRate = Math.pow(1 + rate / periodsPerYear, periodsPerYear) - 1;
     }
 
-    // Calculate daily, monthly, and yearly returns in tokens
-    const dailyRate = Math.pow(1 + effectiveRate, 1 / 365.25) - 1;
-    const monthlyRate = Math.pow(1 + effectiveRate, 30.44 / 365.25) - 1;
-    const yearlyRate = effectiveRate;
+    return {
+      principal,
+      effectiveRate,
+      periodsPerYear,
+      durationInDays,
+      displayPrice,
+      currentMarketPrice,
+    };
+  };
 
-    // Calculate token returns
-    const dailyTokens = principal * dailyRate;
-    const monthlyTokens = principal * monthlyRate;
-    const yearlyTokens = principal * yearlyRate;
+  const calculateStakingReturns = () => {
+    const params = calculateStakingParameters();
+    if (!params) {
+      setStakingResults({
+        daily: { fiat: 0, tokens: 0 },
+        monthly: { fiat: 0, tokens: 0 },
+        yearly: { fiat: 0, tokens: 0 },
+        total: { fiat: 0, tokens: 0 },
+      });
+      return;
+    }
+
+    const {
+      principal,
+      effectiveRate,
+      periodsPerYear,
+      durationInDays,
+      displayPrice,
+    } = params;
 
     // Calculate total returns after the staking period
     const periodsElapsed = durationInDays / (365.25 / periodsPerYear);
     const totalTokens =
       principal * Math.pow(1 + effectiveRate / periodsPerYear, periodsElapsed);
     const totalTokenReturn = totalTokens - principal;
+
+    // Calculate daily returns (average per day over the duration)
+    const dailyTokens = totalTokenReturn / durationInDays;
+
+    // Calculate monthly returns (average per month over the duration)
+    const monthlyTokens = totalTokenReturn / (durationInDays / 30.44);
+
+    // Calculate yearly returns (average per year over the duration)
+    const yearlyTokens = totalTokenReturn / (durationInDays / 365.25);
 
     // Set results with fiat values calculated using display price
     setStakingResults({
@@ -257,6 +287,85 @@ const Calculators = () => {
         fiat: totalTokenReturn * displayPrice,
       },
     });
+  };
+
+  const generateChartData = () => {
+    const params = calculateStakingParameters();
+    if (!params) {
+      return {
+        labels: [],
+        datasets: [],
+      };
+    }
+
+    const {
+      principal,
+      effectiveRate,
+      periodsPerYear,
+      durationInDays,
+      displayPrice,
+    } = params;
+
+    // Generate data points
+    const dataPoints = [];
+    const labels = [];
+
+    // Set fixed number of data points to 20
+    const numDataPoints = 20;
+
+    // Calculate step size to ensure we cover the full duration
+    const step = durationInDays / (numDataPoints - 1);
+
+    // Generate data points
+    for (let i = 0; i < numDataPoints; i++) {
+      const currentDay = i * step;
+      const periodsElapsed = currentDay / (365.25 / periodsPerYear);
+      const balance =
+        principal *
+        Math.pow(1 + effectiveRate / periodsPerYear, periodsElapsed);
+      const rewards = balance - principal;
+
+      dataPoints.push({
+        balance: balance * displayPrice,
+        rewards: rewards * displayPrice,
+      });
+
+      // Format label based on duration unit
+      let label;
+      if (durationUnit === "days") {
+        label = `${Math.round(currentDay)} days`;
+      } else if (durationUnit === "months") {
+        label = `${Math.round(currentDay / 30.44)} months`;
+      } else {
+        label = `${Math.round(currentDay / 365.25)} years`;
+      }
+      labels.push(label);
+    }
+
+    // Remove duplicate labels by keeping only unique values
+    const uniqueLabels = labels.filter(
+      (label, index, self) => self.indexOf(label) === index
+    );
+    const uniqueDataPoints = uniqueLabels.map((label) => {
+      const originalIndex = labels.indexOf(label);
+      return dataPoints[originalIndex];
+    });
+
+    return {
+      labels: uniqueLabels,
+      datasets: [
+        {
+          label: "Total Balance Growth",
+          data: uniqueDataPoints.map((point) => point.balance),
+          borderColor: "rgb(20, 184, 166)",
+          backgroundColor: "rgba(20, 184, 166, 0.1)",
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
   };
 
   // Format currency
@@ -292,109 +401,8 @@ const Calculators = () => {
     }
   };
 
-  const generateChartData = () => {
-    if (!stakingAmount || !stakingRate || !stakingDuration) {
-      return {
-        labels: [],
-        datasets: [],
-      };
-    }
-
-    // Get current market price for token conversion
-    const currentMarketPrice = coins.find((t) => t.symbol === token).price;
-    const displayPrice = useCurrentPrice
-      ? currentMarketPrice
-      : parseFloat(customTokenPrice) || 0;
-
-    // Convert input to numbers
-    const inputAmount = parseFloat(stakingAmount);
-    const principal = isTokenAmount
-      ? inputAmount
-      : inputAmount / currentMarketPrice;
-    const rate = parseFloat(stakingRate) / 100;
-
-    // Convert duration to days
-    let durationInDays = parseFloat(stakingDuration);
-    if (durationUnit === "months") {
-      durationInDays *= 30.44;
-    } else if (durationUnit === "years") {
-      durationInDays *= 365.25;
-    }
-
-    // Calculate compounding periods per year
-    let periodsPerYear;
-    switch (compoundingFrequency) {
-      case "daily":
-        periodsPerYear = 365.25;
-        break;
-      case "weekly":
-        periodsPerYear = 52;
-        break;
-      case "monthly":
-        periodsPerYear = 12;
-        break;
-      case "quarterly":
-        periodsPerYear = 4;
-        break;
-      case "yearly":
-        periodsPerYear = 1;
-        break;
-      default:
-        periodsPerYear = 365.25;
-    }
-
-    // Calculate APY if APR is given
-    let effectiveRate = rate;
-    if (isAPR) {
-      effectiveRate = Math.pow(1 + rate / periodsPerYear, periodsPerYear) - 1;
-    }
-
-    // Generate data points for the chart
-    const dataPoints = [];
-    const labels = [];
-    const step = durationInDays / 50; // Generate 50 data points
-
-    for (let i = 0; i <= durationInDays; i += step) {
-      const periodsElapsed = i / (365.25 / periodsPerYear);
-      const balance =
-        principal *
-        Math.pow(1 + effectiveRate / periodsPerYear, periodsElapsed);
-      const rewards = balance - principal;
-
-      dataPoints.push({
-        balance: balance * displayPrice,
-        rewards: rewards * displayPrice,
-      });
-
-      // Format label based on duration unit
-      let label;
-      if (durationUnit === "days") {
-        label = `${Math.round(i)} days`;
-      } else if (durationUnit === "months") {
-        label = `${Math.round(i / 30.44)} months`;
-      } else {
-        label = `${Math.round(i / 365.25)} years`;
-      }
-      labels.push(label);
-    }
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: "Total Balance Growth",
-          data: dataPoints.map((point) => point.balance),
-          borderColor: "rgb(20, 184, 166)",
-          backgroundColor: "rgba(20, 184, 166, 0.1)",
-          fill: true,
-          tension: 0.4,
-        },
-      ],
-    };
-  };
-
   return (
-    <div className="container mx-auto px-4 mt-8">
+    <div className="container mx-auto px-4 mt-8 mb-16">
       <div className="flex flex-col items-center p-6 text-center">
         <div className="bg-teal-100 p-3 rounded-xl mb-4">
           <Calculator size={40} className="text-teal-600" />
@@ -697,9 +705,17 @@ const Calculators = () => {
         <div className="grid grid-cols-3 gap-4 mx-auto">
           {/* Staking Calculator */}
           <div className="col-span-3 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="bg-teal-700 text-white p-4 font-medium flex items-center">
-              <BarChart2 size={20} className="mr-2" />
-              <span>Staking Calculator</span>
+            <div className="bg-teal-700 text-white p-4 font-medium flex items-center justify-between">
+              <div className="flex items-center">
+                <BarChart2 size={20} className="mr-2" />
+                <span>Staking Calculator</span>
+              </div>
+              <button
+                onClick={clearStakingInputs}
+                className="px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                Clear All
+              </button>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-3 gap-4">
@@ -916,17 +932,20 @@ const Calculators = () => {
               <BarChart2 size={20} className="mr-2" />
               <span>Investment Growth</span>
             </div>
-            <div className="p-5">
+            <div className="px-3 pt-4">
               {/* Total Rewards Summary */}
-              <div className="mb-6 text-center">
-                <div className="text-lg text-gray-500 mb-4">
+              <div className="mb-3 text-center">
+                <div className="text-lg text-gray-500 mb-1">
                   Total Rewards in {stakingDuration || "0"} {durationUnit}
                 </div>
-                <div className="text-3xl font-bold text-teal-600 mb-1">
+                <div className="text-3xl font-bold text-green-600 mb-1">
                   {formatCurrency(stakingResults.total.fiat)}
                 </div>
-                <div className="text-lg text-gray-500">
-                  {stakingResults.total.tokens.toFixed(8)} {token}
+                <div className="text-base text-gray-500">
+                  {stakingResults.total.tokens === 0
+                    ? "0"
+                    : stakingResults.total.tokens.toFixed(8)}{" "}
+                  {token}
                 </div>
               </div>
 
@@ -942,6 +961,7 @@ const Calculators = () => {
                       },
                       tooltip: {
                         mode: "index",
+                        displayColors: false,
                         intersect: false,
                         callbacks: {
                           label: function (context) {
@@ -963,7 +983,7 @@ const Calculators = () => {
                             weight: "bold",
                           },
                           padding: {
-                            top: 10,
+                            top: 5,
                           },
                         },
                       },
@@ -974,14 +994,27 @@ const Calculators = () => {
                         },
                         title: {
                           display: true,
-                          text: "Value (USD)",
+                          text: "Total Value (USD)",
                           font: {
                             size: 14,
                             weight: "bold",
                           },
                           padding: {
-                            bottom: 10,
+                            bottom: 5,
                           },
+                        },
+                        min: function () {
+                          const currentMarketPrice = coins.find(
+                            (t) => t.symbol === token
+                          ).price;
+                          const displayPrice = useCurrentPrice
+                            ? currentMarketPrice
+                            : parseFloat(customTokenPrice) || 0;
+                          const inputAmount = parseFloat(stakingAmount);
+                          const principal = isTokenAmount
+                            ? inputAmount
+                            : inputAmount / currentMarketPrice;
+                          return principal * displayPrice;
                         },
                         ticks: {
                           callback: function (value) {
@@ -1013,7 +1046,10 @@ const Calculators = () => {
                     {formatCurrency(stakingResults.daily.fiat, currency)}
                   </div>
                   <div className="text-base text-gray-500">
-                    {stakingResults.daily.tokens.toFixed(8)} {token}
+                    {stakingResults.daily.tokens === 0
+                      ? "0"
+                      : stakingResults.daily.tokens.toFixed(8)}{" "}
+                    {token}
                   </div>
                 </div>
 
@@ -1026,7 +1062,10 @@ const Calculators = () => {
                     {formatCurrency(stakingResults.monthly.fiat, currency)}
                   </div>
                   <div className="text-base text-gray-500">
-                    {stakingResults.monthly.tokens.toFixed(8)} {token}
+                    {stakingResults.monthly.tokens === 0
+                      ? "0"
+                      : stakingResults.monthly.tokens.toFixed(8)}{" "}
+                    {token}
                   </div>
                 </div>
 
@@ -1039,7 +1078,10 @@ const Calculators = () => {
                     {formatCurrency(stakingResults.yearly.fiat, currency)}
                   </div>
                   <div className="text-base text-gray-500">
-                    {stakingResults.yearly.tokens.toFixed(8)} {token}
+                    {stakingResults.yearly.tokens === 0
+                      ? "0"
+                      : stakingResults.yearly.tokens.toFixed(8)}{" "}
+                    {token}
                   </div>
                 </div>
               </div>

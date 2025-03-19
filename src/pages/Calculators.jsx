@@ -42,7 +42,8 @@ const Calculators = () => {
     return "roi";
   });
 
-  const [currency, setCurrency] = useState("USD");
+  const [roiCurrency, setRoiCurrency] = useState("USD");
+  const [stakingCurrency, setStakingCurrency] = useState("USD");
   const [amount, setAmount] = useState("");
   const [token, setToken] = useState("BTC");
   const [buyPrice, setBuyPrice] = useState("");
@@ -69,6 +70,36 @@ const Calculators = () => {
   });
 
   const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
+
+  // Add this function to measure text width
+  const getTextWidth = (text) => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    context.font = "16px Inter, system-ui, sans-serif"; // Match your app's font
+    const metrics = context.measureText(text);
+    return metrics.width;
+  };
+
+  const getTokenPadding = (symbol, isToken = false) => {
+    const symbolText = isToken ? symbol : getCurrencySymbol(symbol);
+    const textWidth = getTextWidth(symbolText);
+
+    if (isToken) {
+      // For tokens
+      const grayBoxPadding = 14; // 7px on each side
+      const spacingAfterBox = 10;
+      return `${Math.max(40, textWidth + grayBoxPadding + spacingAfterBox)}px`;
+    } else {
+      // For currencies
+      const grayBoxPadding = 16; // 8px on each side
+      const spacingAfterBox = 16;
+      const extraPadding = symbolText.length > 1 ? 2 : 0; // Reduced extra padding for multi-character currencies
+      return `${Math.max(
+        36,
+        textWidth + grayBoxPadding + spacingAfterBox + extraPadding
+      )}px`;
+    }
+  };
 
   const clearStakingInputs = () => {
     setStakingAmount("");
@@ -112,7 +143,15 @@ const Calculators = () => {
 
   useEffect(() => {
     calculateResults();
-  }, [amount, buyPrice, investmentFees, sellPrice, exitFees, currency, token]);
+  }, [
+    amount,
+    buyPrice,
+    investmentFees,
+    sellPrice,
+    exitFees,
+    roiCurrency,
+    token,
+  ]);
 
   // Update active calculator when path changes
   useEffect(() => {
@@ -532,9 +571,9 @@ const Calculators = () => {
                   Currency
                 </label>
                 <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  value={roiCurrency}
+                  onChange={(e) => setRoiCurrency(e.target.value)}
+                  className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
                 >
                   {currencies.map((curr) => (
                     <option key={curr} value={curr}>
@@ -552,7 +591,7 @@ const Calculators = () => {
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                      {getCurrencySymbol(currency)}
+                      {getCurrencySymbol(roiCurrency)}
                     </span>
                   </div>
                   <input
@@ -560,7 +599,10 @@ const Calculators = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pr-3 py-2 rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                    style={{
+                      paddingLeft: getTokenPadding(roiCurrency),
+                    }}
                   />
                 </div>
               </div>
@@ -568,12 +610,12 @@ const Calculators = () => {
               {/* Buy Price */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Entry Price ({currency})
+                  Entry Price ({roiCurrency})
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                      {getCurrencySymbol(currency)}
+                      {getCurrencySymbol(roiCurrency)}
                     </span>
                   </div>
                   <input
@@ -581,7 +623,10 @@ const Calculators = () => {
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pr-3 py-2 rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                    style={{
+                      paddingLeft: getTokenPadding(roiCurrency),
+                    }}
                   />
                 </div>
               </div>
@@ -589,12 +634,12 @@ const Calculators = () => {
               {/* Entry Fee */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Entry Fee ({currency})
+                  Entry Fee ({roiCurrency})
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                      {getCurrencySymbol(currency)}
+                      {getCurrencySymbol(roiCurrency)}
                     </span>
                   </div>
                   <input
@@ -602,7 +647,10 @@ const Calculators = () => {
                     value={investmentFees}
                     onChange={(e) => setInvestmentFees(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pr-3 py-2 rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                    style={{
+                      paddingLeft: getTokenPadding(roiCurrency),
+                    }}
                   />
                 </div>
               </div>
@@ -610,12 +658,12 @@ const Calculators = () => {
               {/* Sell Price */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sell Price ({currency})
+                  Sell Price ({roiCurrency})
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                      {getCurrencySymbol(currency)}
+                      {getCurrencySymbol(roiCurrency)}
                     </span>
                   </div>
                   <input
@@ -623,7 +671,10 @@ const Calculators = () => {
                     value={sellPrice}
                     onChange={(e) => setSellPrice(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pr-3 py-2 rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                    style={{
+                      paddingLeft: getTokenPadding(roiCurrency),
+                    }}
                   />
                 </div>
               </div>
@@ -631,12 +682,12 @@ const Calculators = () => {
               {/* Exit Fee */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Exit Fee ({currency})
+                  Exit Fee ({roiCurrency})
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                      {getCurrencySymbol(currency)}
+                      {getCurrencySymbol(roiCurrency)}
                     </span>
                   </div>
                   <input
@@ -644,7 +695,10 @@ const Calculators = () => {
                     value={exitFees}
                     onChange={(e) => setExitFees(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pr-3 py-2 rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                    style={{
+                      paddingLeft: getTokenPadding(roiCurrency),
+                    }}
                   />
                 </div>
               </div>
@@ -677,19 +731,21 @@ const Calculators = () => {
                         }`}
                       >
                         {!buyPrice || !sellPrice ? (
-                          formatCurrency(0)
+                          formatCurrency(0, roiCurrency)
                         ) : calculationResult.isProfit ? (
                           <>
                             <ArrowUp size={26} className="inline mr-2" />
                             {formatCurrency(
-                              Math.abs(calculationResult.absoluteProfit)
+                              Math.abs(calculationResult.absoluteProfit),
+                              roiCurrency
                             )}
                           </>
                         ) : (
                           <>
                             <ArrowDown size={26} className="inline mr-2" />
                             {formatCurrency(
-                              Math.abs(calculationResult.absoluteProfit)
+                              Math.abs(calculationResult.absoluteProfit),
+                              roiCurrency
                             )}
                           </>
                         )}
@@ -718,7 +774,10 @@ const Calculators = () => {
                       Total Investment
                     </div>
                     <div className="text-xl font-bold text-gray-600">
-                      {formatCurrency(calculationResult.totalInvestment)}
+                      {formatCurrency(
+                        calculationResult.totalInvestment,
+                        roiCurrency
+                      )}
                     </div>
                   </div>
 
@@ -728,7 +787,7 @@ const Calculators = () => {
                       Total Exit Amount
                     </div>
                     <div className="text-xl font-bold text-gray-600">
-                      {formatCurrency(calculationResult.netReturn)}
+                      {formatCurrency(calculationResult.netReturn, roiCurrency)}
                     </div>
                   </div>
 
@@ -738,7 +797,7 @@ const Calculators = () => {
                       Total Fees
                     </div>
                     <div className="text-xl font-bold text-gray-600">
-                      {formatCurrency(calculationResult.totalFees)}
+                      {formatCurrency(calculationResult.totalFees, roiCurrency)}
                     </div>
                   </div>
                 </div>
@@ -763,9 +822,9 @@ const Calculators = () => {
               </button>
             </div>
             <div className="p-5">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-9 gap-4">
                 {/* Token Selection */}
-                <div className="col-span-1">
+                <div className="col-span-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Token
                   </label>
@@ -783,7 +842,7 @@ const Calculators = () => {
                 </div>
 
                 {/* Staking Rate */}
-                <div className="col-span-1">
+                <div className="col-span-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Staking Rate
                   </label>
@@ -799,7 +858,6 @@ const Calculators = () => {
                           (!isNaN(value) && !isNaN(parseFloat(value)))
                         ) {
                           setStakingRate(value);
-                          // Set cursor position after the numbers but before %
                           requestAnimationFrame(() => {
                             e.target.setSelectionRange(
                               value.length,
@@ -836,7 +894,7 @@ const Calculators = () => {
                 </div>
 
                 {/* Compounding Frequency */}
-                <div className="col-span-1">
+                <div className="col-span-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Compounding Frequency
                   </label>
@@ -853,14 +911,34 @@ const Calculators = () => {
                   </select>
                 </div>
 
-                {/* Initial Investment */}
+                {/* Currency Selection */}
                 <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
+                    Currency
+                  </label>
+                  <select
+                    value={stakingCurrency}
+                    onChange={(e) => setStakingCurrency(e.target.value)}
+                    className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
+                  >
+                    {currencies.map((curr) => (
+                      <option key={curr} value={curr}>
+                        {curr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Initial Investment */}
+                <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-gray-700 pl-1">
                       Initial Investment
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">{currency}</span>
+                      <span className="text-sm text-gray-600">
+                        {stakingCurrency}
+                      </span>
                       <div
                         className="relative w-8 h-4 rounded-full bg-gray-200 cursor-pointer"
                         onClick={() => setIsTokenAmount(!isTokenAmount)}
@@ -881,7 +959,9 @@ const Calculators = () => {
                           isTokenAmount ? "px-2 py-2" : "px-3 py-2"
                         }`}
                       >
-                        {isTokenAmount ? token : getCurrencySymbol(currency)}
+                        {isTokenAmount
+                          ? token
+                          : getCurrencySymbol(stakingCurrency)}
                       </span>
                     </div>
                     <input
@@ -889,15 +969,18 @@ const Calculators = () => {
                       value={stakingAmount}
                       onChange={(e) => setStakingAmount(e.target.value)}
                       placeholder="0.00"
-                      className={`block w-full ${
-                        isTokenAmount ? "pl-14" : "pl-11"
-                      } pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      className={`block w-full pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      style={{
+                        paddingLeft: isTokenAmount
+                          ? getTokenPadding(token, true)
+                          : getTokenPadding(stakingCurrency),
+                      }}
                     />
                   </div>
                 </div>
 
                 {/* Staking Duration */}
-                <div className="col-span-1">
+                <div className="col-span-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Staking Duration
                   </label>
@@ -922,7 +1005,7 @@ const Calculators = () => {
                 </div>
 
                 {/* Token Price */}
-                <div className="col-span-1">
+                <div className="col-span-3">
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-gray-700 pl-1">
                       Select {token} Price
@@ -948,7 +1031,7 @@ const Calculators = () => {
                   <div className="relative shadow-sm">
                     <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                       <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
-                        {getCurrencySymbol(currency)}
+                        {getCurrencySymbol(stakingCurrency)}
                       </span>
                     </div>
                     <input
@@ -961,9 +1044,12 @@ const Calculators = () => {
                       onChange={(e) => setCustomTokenPrice(e.target.value)}
                       disabled={useCurrentPrice}
                       placeholder="0.00"
-                      className={`block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
+                      className={`block w-full pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                         useCurrentPrice ? "bg-gray-100" : ""
                       }`}
+                      style={{
+                        paddingLeft: getTokenPadding(stakingCurrency),
+                      }}
                     />
                   </div>
                 </div>
@@ -990,7 +1076,7 @@ const Calculators = () => {
                       : "text-green-600"
                   }`}
                 >
-                  {formatCurrency(stakingResults.total.fiat)}
+                  {formatCurrency(stakingResults.total.fiat, stakingCurrency)}
                 </div>
                 <div className="text-base text-gray-500">
                   {stakingResults.total.tokens === 0
@@ -1006,21 +1092,6 @@ const Calculators = () => {
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                      tooltip: {
-                        mode: "index",
-                        displayColors: false,
-                        intersect: false,
-                        callbacks: {
-                          label: function (context) {
-                            return `${formatCurrency(context.parsed.y)}`;
-                          },
-                        },
-                      },
-                    },
                     scales: {
                       x: {
                         grid: {
@@ -1045,7 +1116,7 @@ const Calculators = () => {
                         },
                         title: {
                           display: true,
-                          text: "Total Value (USD)",
+                          text: `Total Value (${stakingCurrency})`,
                           font: {
                             size: 14,
                             weight: "bold",
@@ -1069,7 +1140,25 @@ const Calculators = () => {
                         },
                         ticks: {
                           callback: function (value) {
-                            return formatCurrency(value);
+                            return formatCurrency(value, stakingCurrency);
+                          },
+                        },
+                      },
+                    },
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        mode: "index",
+                        displayColors: false,
+                        intersect: false,
+                        callbacks: {
+                          label: function (context) {
+                            return `${formatCurrency(
+                              context.parsed.y,
+                              stakingCurrency
+                            )}`;
                           },
                         },
                       },
@@ -1094,7 +1183,7 @@ const Calculators = () => {
                     Daily Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(stakingResults.daily.fiat, currency)}
+                    {formatCurrency(stakingResults.daily.fiat, stakingCurrency)}
                   </div>
                   <div className="text-base text-gray-500">
                     {stakingResults.daily.tokens === 0
@@ -1110,7 +1199,10 @@ const Calculators = () => {
                     Monthly Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(stakingResults.monthly.fiat, currency)}
+                    {formatCurrency(
+                      stakingResults.monthly.fiat,
+                      stakingCurrency
+                    )}
                   </div>
                   <div className="text-base text-gray-500">
                     {stakingResults.monthly.tokens === 0
@@ -1126,7 +1218,10 @@ const Calculators = () => {
                     Yearly Staking Returns
                   </div>
                   <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {formatCurrency(stakingResults.yearly.fiat, currency)}
+                    {formatCurrency(
+                      stakingResults.yearly.fiat,
+                      stakingCurrency
+                    )}
                   </div>
                   <div className="text-base text-gray-500">
                     {stakingResults.yearly.tokens === 0

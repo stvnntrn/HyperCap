@@ -516,7 +516,7 @@ const Calculators = () => {
                 <select
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
-                  className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
                 >
                   {coins.map((t) => (
                     <option key={t.symbol} value={t.symbol}>
@@ -560,7 +560,7 @@ const Calculators = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -581,7 +581,7 @@ const Calculators = () => {
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -602,7 +602,7 @@ const Calculators = () => {
                     value={investmentFees}
                     onChange={(e) => setInvestmentFees(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -623,7 +623,7 @@ const Calculators = () => {
                     value={sellPrice}
                     onChange={(e) => setSellPrice(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -644,7 +644,7 @@ const Calculators = () => {
                     value={exitFees}
                     onChange={(e) => setExitFees(e.target.value)}
                     placeholder="0.00"
-                    className="block w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="block w-full pl-11 pr-3 py-[0.4375rem] rounded-lg outline outline-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -772,7 +772,7 @@ const Calculators = () => {
                   <select
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
-                    className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
                   >
                     {coins.map((t) => (
                       <option key={t.symbol} value={t.symbol}>
@@ -787,7 +787,7 @@ const Calculators = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Staking Rate
                   </label>
-                  <div className="relative">
+                  <div className="relative shadow-sm">
                     <input
                       type="text"
                       inputMode="decimal"
@@ -843,7 +843,7 @@ const Calculators = () => {
                   <select
                     value={compoundingFrequency}
                     onChange={(e) => setCompoundingFrequency(e.target.value)}
-                    className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full rounded-lg border-r-8 border-transparent outline outline-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -874,7 +874,7 @@ const Calculators = () => {
                       <span className="text-sm text-gray-600">{token}</span>
                     </div>
                   </div>
-                  <div className="relative">
+                  <div className="relative shadow-sm">
                     <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                       <span
                         className={`bg-gray-200 text-gray-600 h-full flex items-center rounded-l-lg border-r border-gray-300 ${
@@ -901,7 +901,7 @@ const Calculators = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">
                     Staking Duration
                   </label>
-                  <div className="relative">
+                  <div className="relative shadow-sm">
                     <input
                       type="number"
                       value={stakingDuration}
@@ -945,7 +945,7 @@ const Calculators = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="relative">
+                  <div className="relative shadow-sm">
                     <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                       <span className="bg-gray-200 text-gray-600 px-3 py-2 h-full flex items-center rounded-l-lg border-r border-gray-300">
                         {getCurrencySymbol(currency)}

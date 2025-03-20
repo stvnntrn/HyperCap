@@ -530,7 +530,7 @@ const Home = () => {
       </div>
 
       {/* Category tabs */}
-      <div className="flex flex-wrap gap-1 mb-2 p-1 ml-1 w-fit">
+      <div className="flex flex-wrap gap-1 mb-2 p-1 w-fit">
         {[
           {
             id: "bnb",
@@ -784,7 +784,7 @@ const Home = () => {
                     ${coin.price.toLocaleString()}
                   </td>
                   <td
-                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                    className={`py-4 pl-6 text-right whitespace-nowrap w-0 font-medium ${
                       coin.change1h >= 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
@@ -799,7 +799,7 @@ const Home = () => {
                     </span>
                   </td>
                   <td
-                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                    className={`py-4 pl-6 text-right whitespace-nowrap w-0 font-medium ${
                       coin.change24h >= 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
@@ -814,7 +814,7 @@ const Home = () => {
                     </span>
                   </td>
                   <td
-                    className={`py-4 pl-5 text-right whitespace-nowrap w-0 font-medium ${
+                    className={`py-4 pl-6 text-right whitespace-nowrap w-0 font-medium ${
                       coin.change7d >= 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
@@ -828,10 +828,10 @@ const Home = () => {
                       {coin.change7d}%
                     </span>
                   </td>
-                  <td className="py-4 pl-5 text-right whitespace-nowrap w-0">
+                  <td className="py-4 pl-9 text-right whitespace-nowrap w-0">
                     ${formatNumber(coin.volume)}
                   </td>
-                  <td className="py-4 pl-4 text-right whitespace-nowrap w-0">
+                  <td className="py-4 pl-9 text-right whitespace-nowrap w-0">
                     ${formatNumber(coin.marketCap)}
                   </td>
                   <td className="pr-4 pl-4 text-right w-0">

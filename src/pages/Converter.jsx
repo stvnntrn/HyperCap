@@ -117,12 +117,12 @@ const Converter = () => {
     const textWidth = getTextWidth(symbolText);
 
     if (isToken) {
-      const grayBoxPadding = 16;
-      const spacingAfterBox = 12;
+      const grayBoxPadding = 18;
+      const spacingAfterBox = 14;
       return `${Math.max(40, textWidth + grayBoxPadding + spacingAfterBox)}px`;
     } else {
-      const grayBoxPadding = 16;
-      const spacingAfterBox = 12;
+      const grayBoxPadding = 18;
+      const spacingAfterBox = 14;
       const extraPadding = symbolText.length > 1 ? 4 : 0;
       return `${Math.max(
         36,
@@ -137,9 +137,7 @@ const Converter = () => {
         <div className="bg-teal-100 p-3 rounded-xl mb-4">
           <ArrowUpDown size={40} className="text-teal-600" />
         </div>
-        <h1 className="text-4xl font-bold mb-2 text-gray-900">
-          Currency Converter
-        </h1>
+        <h1 className="text-4xl font-bold mb-2 text-gray-900">Converter</h1>
         <p className="text-gray-600 font-bold text-base mx-auto max-w-sm">
           Convert between cryptocurrencies and fiat currencies instantly
         </p>
@@ -257,7 +255,7 @@ const Converter = () => {
               </div>
 
               {/* Exchange Rate Display */}
-              <div className="mt-2">
+              <div className="mt-4">
                 <p className="text-sm text-gray-600 text-center">
                   1 {fromType} = {convert(1, fromType, toType).toFixed(8)}{" "}
                   {toType}

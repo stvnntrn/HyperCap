@@ -7,6 +7,7 @@ import Learn from "./pages/Learn";
 import Portfolio from "./pages/Portfolio";
 import Watchlist from "./pages/Watchlist";
 import Navbar from "./components/Navbar";
+import Converter from "./pages/Converter";
 
 import BnbCoins from "./pages/categories/BnbCoins";
 import SolCoins from "./pages/categories/SolCoins";
@@ -31,6 +32,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/cryptocurrencies" element={<Cryptocurrencies />} />
         <Route path="/compare" element={<Compare />} />
+        <Route path="/converter" element={<Converter />} />
         <Route path="/calculators" element={<Calculators />} />
         <Route path="/calculators/roi" element={<Calculators />} />
         <Route path="/calculators/staking" element={<Calculators />} />

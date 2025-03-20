@@ -186,6 +186,11 @@ const Navbar = () => {
               </ul>
             </li>
             <li>
+              <Link to="/converter" className="hover:text-primary">
+                Converter
+              </Link>
+            </li>
+            <li>
               <Link to="/learn" className="hover:text-primary">
                 Learn
               </Link>

@@ -22,6 +22,7 @@ import {
   Building2,
   Rocket,
   Gem,
+  ArrowUpRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -71,10 +72,254 @@ const AiCoins = () => {
   const totalMarketCap = aiCoins.reduce((sum, coin) => sum + coin.marketCap, 0);
   const totalVolume = aiCoins.reduce((sum, coin) => sum + coin.volume, 0);
 
-  // Get trending AI coins
+  // Get trending AI coins by volume
   const trendingAiCoins = [...aiCoins]
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 3);
+
+  // Get top gainers
+  const topGainers = [...aiCoins]
     .sort((a, b) => b.change24h - a.change24h)
     .slice(0, 3);
+
+  // Generate sample market cap chart data - now with hourly points
+  const marketCapChartData = Array.from({ length: 19 }, (_, i) => {
+    const date = new Date();
+    date.setHours(date.getHours() + i); // Points every hour
+    return {
+      value: totalMarketCap * (0.95 + Math.random() * 0.1),
+      date: date,
+    };
+  });
+
+  // Generate line chart
+  const generateLineChart = (data, isPositive = true) => {
+    const width = 580;
+    const height = 160;
+    const padding = { top: 20, right: 30, bottom: 35, left: 80 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+
+    const values = data.map((d) => d.value);
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
+
+    // Format large numbers for y-axis
+    const formatYAxisValue = (value) => {
+      if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+      if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+      if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+      return `$${value.toFixed(0)}`;
+    };
+
+    // Format time for x-axis
+    const formatTime = (date) => {
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        hour12: true,
+      });
+    };
+
+    // Scale data points
+    const scaledData = values.map((value) => {
+      const range = maxValue - minValue;
+      if (range === 0) return padding.top;
+      return (
+        height - padding.bottom - ((value - minValue) / range) * chartHeight
+      );
+    });
+
+    // Generate path
+    const pathString = scaledData
+      .map((point, index) => {
+        const x = padding.left + (index / (data.length - 1)) * chartWidth;
+        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
+      })
+      .join(" ");
+
+    // Calculate y-axis values (3 points)
+    const yAxisValues = [
+      maxValue,
+      minValue + (maxValue - minValue) / 2,
+      minValue,
+    ];
+
+    return (
+      <svg width={width} height={height} className="w-full">
+        {/* Y-axis */}
+        <line
+          x1={padding.left}
+          y1={padding.top}
+          x2={padding.left}
+          y2={height - padding.bottom}
+          stroke="#e5e7eb"
+          strokeWidth="1"
+        />
+        {/* X-axis */}
+        <line
+          x1={padding.left}
+          y1={height - padding.bottom}
+          x2={width - padding.right}
+          y2={height - padding.bottom}
+          stroke="#e5e7eb"
+          strokeWidth="1"
+        />
+
+        {/* Y-axis labels */}
+        {yAxisValues.map((value, i) => {
+          const y = padding.top + (i * chartHeight) / 2;
+          return (
+            <g key={i}>
+              <line
+                x1={padding.left - 5}
+                y1={y}
+                x2={padding.left}
+                y2={y}
+                stroke="#e5e7eb"
+                strokeWidth="1"
+              />
+              <text
+                x={padding.left - 10}
+                y={y}
+                textAnchor="end"
+                alignmentBaseline="middle"
+                className="text-xs text-gray-500"
+              >
+                {formatYAxisValue(value)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Hover points */}
+        {data.map((point, i) => {
+          const x = padding.left + (i / (data.length - 1)) * chartWidth;
+          const y = scaledData[i];
+          return (
+            <g key={`point-${i}`}>
+              <circle
+                cx={x}
+                cy={y}
+                r="4"
+                className="opacity-0 hover:opacity-100 fill-purple-500 transition-opacity duration-200"
+              />
+              <g className="opacity-0 hover:opacity-100 transition-opacity duration-200">
+                <rect
+                  x={x - 50}
+                  y={y - 30}
+                  width="100"
+                  height="20"
+                  rx="4"
+                  className="fill-gray-800"
+                />
+                <text
+                  x={x}
+                  y={y - 16}
+                  textAnchor="middle"
+                  className="text-xs fill-white"
+                >
+                  {formatNumber(point.value)}
+                </text>
+              </g>
+            </g>
+          );
+        })}
+
+        {/* X-axis labels - show only every 6 hours */}
+        {data
+          .filter((_, i) => i % 6 === 0)
+          .map((point, i) => {
+            const x = padding.left + ((i * 6) / (data.length - 1)) * chartWidth;
+            return (
+              <text
+                key={i}
+                x={x + 15}
+                y={height - 8}
+                textAnchor="middle"
+                className="text-xs text-gray-500 font-medium"
+              >
+                {formatTime(point.date)}
+              </text>
+            );
+          })}
+
+        {/* Main chart line */}
+        <path
+          d={pathString}
+          stroke={isPositive ? "#10b981" : "#ef4444"}
+          strokeWidth="2"
+          fill="none"
+        />
+        <path
+          d={`${pathString} L ${width - padding.right} ${
+            height - padding.bottom
+          } L ${padding.left} ${height - padding.bottom} Z`}
+          fill={
+            isPositive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)"
+          }
+        />
+      </svg>
+    );
+  };
+
+  // Format large numbers
+  const formatNumber = (num, fullNumber = false) => {
+    if (fullNumber) {
+      return num.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    } else {
+      return (
+        "$" +
+        num.toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })
+      );
+    }
+  };
+
+  // Generate trend indicator
+  const getTrendIndicator = (value) => {
+    const width = 160;
+    const height = 70;
+    const padding = 5;
+
+    const data = Array.from({ length: 16 }, () => {
+      const base = value > 0 ? 20 : 60;
+      return base + (Math.random() * 20 - 10);
+    });
+
+    const maxValue = Math.max(...data);
+    const minValue = Math.min(...data);
+
+    const scaledData = data.map((value) => {
+      const range = maxValue - minValue;
+      if (range === 0) return padding;
+      return (
+        height - padding - ((value - minValue) / range) * (height - padding * 2)
+      );
+    });
+
+    const pathString = scaledData
+      .map((point, index) => {
+        const x = (index / (data.length - 1)) * width;
+        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
+      })
+      .join(" ");
+
+    return (
+      <svg width={width} height={height} className="ml-2">
+        <path
+          d={pathString}
+          stroke={value > 0 ? "#10b981" : "#ef4444"}
+          strokeWidth="2"
+          fill="none"
+        />
+      </svg>
+    );
+  };
 
   // Handle sorting
   const handleSort = (key) => {
@@ -145,127 +390,128 @@ const AiCoins = () => {
     return filteredCoins;
   };
 
-  // Generate trend indicator
-  const getTrendIndicator = (value) => {
-    const width = 160;
-    const height = 70;
-    const padding = 5;
-
-    const data = Array.from({ length: 16 }, () => {
-      const base = value > 0 ? 20 : 60;
-      return base + (Math.random() * 20 - 10);
-    });
-
-    const maxValue = Math.max(...data);
-    const minValue = Math.min(...data);
-
-    const scaledData = data.map((value) => {
-      const range = maxValue - minValue;
-      if (range === 0) return padding;
-      return (
-        height - padding - ((value - minValue) / range) * (height - padding * 2)
-      );
-    });
-
-    const pathString = scaledData
-      .map((point, index) => {
-        const x = (index / (data.length - 1)) * width;
-        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
-      })
-      .join(" ");
-
-    return (
-      <svg width={width} height={height} className="ml-2">
-        <path
-          d={pathString}
-          stroke={value > 0 ? "#10b981" : "#ef4444"}
-          strokeWidth="2"
-          fill="none"
-        />
-      </svg>
-    );
-  };
-
-  // Format large numbers
-  const formatNumber = (num, fullNumber = false) => {
-    if (fullNumber) {
-      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-      return num.toLocaleString();
-    } else {
-      return "$" + num.toLocaleString();
-    }
-  };
-
   return (
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
-          Market Overview
+          AI Crypto Market Overview
           <span className="bg-gradient-to-r from-purple-500 to-purple-700 text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {/* Total Market Cap card */}
-          <div className="rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 font-medium flex items-center">
-              <DollarSign size={18} className="mr-2" />
-              <span>Total AI Market Cap</span>
-            </div>
-            <div className="p-4">
-              <div className="text-2xl font-bold mb-2">
-                ${formatNumber(totalMarketCap, true)}
-              </div>
-              <div className="text-purple-600 text-sm">
-                {aiCoins.length} Active AI Coins
-              </div>
-            </div>
-          </div>
-
-          {/* 24h Volume card */}
-          <div className="rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 font-medium flex items-center">
-              <Activity size={18} className="mr-2" />
-              <span>24h Trading Volume</span>
-            </div>
-            <div className="p-4">
-              <div className="text-2xl font-bold mb-2">
-                ${formatNumber(totalVolume, true)}
-              </div>
-              <div className="text-purple-600 text-sm">
-                Across all AI tokens
-              </div>
-            </div>
-          </div>
-
-          {/* Trending AI coins card */}
-          <div className="rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 font-medium flex items-center">
-              <TrendingUp size={18} className="mr-2" />
-              <span>Top Trending AI Coins</span>
-            </div>
-            <div className="p-4">
-              {trendingAiCoins.map((coin, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between mb-2"
-                >
-                  <div className="flex items-center">
-                    <div className="font-medium">{coin.symbol}</div>
-                  </div>
-                  <div
-                    className={`${
-                      coin.change24h >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {coin.change24h >= 0 ? "+" : ""}
-                    {coin.change24h}%
-                  </div>
+        <div className="grid grid-cols-12 gap-6">
+          {/* Market Stats Section */}
+          <div className="col-span-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl px-6 py-4">
+            <div className="flex items-center gap-12">
+              {/* Market Cap */}
+              <div>
+                <div className="text-sm text-purple-600 font-medium flex items-center gap-2">
+                  <DollarSign size={16} />
+                  Total AI Market Cap
                 </div>
-              ))}
+                <div className="text-2xl font-bold text-gray-900 mt-1">
+                  ${formatNumber(totalMarketCap, true)}
+                </div>
+                <div className="text-green-500 text-sm flex items-center mt-1">
+                  <ArrowUpRight size={14} className="mr-1" />
+                  +5.2% (24h)
+                </div>
+              </div>
+              {/* Volume */}
+              <div>
+                <div className="text-sm text-purple-600 font-medium flex items-center gap-2">
+                  <Activity size={16} />
+                  24h Volume
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">
+                  ${formatNumber(totalVolume, true)}
+                </div>
+                <div className="text-red-500 text-sm flex items-center mt-1">
+                  <ArrowUpRight size={14} className="mr-1" />
+                  -3.8% (24h)
+                </div>
+              </div>
+            </div>
+            <div>{generateLineChart(marketCapChartData)}</div>
+          </div>
+
+          {/* Right Section */}
+          <div className="col-span-6 grid grid-cols-2 gap-4">
+            {/* Trending */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+              <div className="text-sm text-purple-600 font-medium flex items-center gap-2 mb-3">
+                <TrendingUp size={16} />
+                Trending 24h
+              </div>
+              <div className="space-y-3">
+                {trendingAiCoins.map((coin, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-white/50 p-2 rounded-lg hover:bg-white/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
+                        {coin.symbol.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{coin.name}</div>
+                        <div className="text-gray-500 text-xs">
+                          ${formatNumber(coin.volume, true)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium text-sm">
+                        ${coin.price.toLocaleString()}
+                      </div>
+                      <div
+                        className={`text-xs ${
+                          coin.change24h >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {coin.change24h >= 0 ? "+" : ""}
+                        {coin.change24h}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Gainers */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+              <div className="text-sm text-purple-600 font-medium flex items-center gap-2 mb-3">
+                <TrendingUp size={16} />
+                Top Gainers
+              </div>
+              <div className="space-y-3">
+                {topGainers.map((coin, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-white/50 p-2 rounded-lg hover:bg-white/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
+                        {coin.symbol.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{coin.name}</div>
+                        <div className="text-gray-500 text-xs">
+                          ${coin.price.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-500 text-sm font-medium">
+                        +{coin.change24h}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

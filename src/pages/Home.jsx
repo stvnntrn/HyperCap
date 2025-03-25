@@ -234,21 +234,20 @@ const Home = () => {
 
         <div className="grid grid-cols-9 gap-4">
           {/* Trending coins card*/}
-          <div className="col-span-2 row-span-2 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+          <div className="col-span-2 row-span-2 rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center">
               <TrendingUp size={18} className="mr-2" />
               <span className="flex items-center w-full justify-between">
                 Trending Coins
-                <ArrowUpRight size={14} />
               </span>
             </div>
-            <div className="p-4">
+            <div>
               {trendingCoins.map((coin, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between ${
+                  className={`flex items-center justify-between p-4 hover:bg-teal-50 transition-colors cursor-pointer ${
                     index < trendingCoins.length - 1
-                      ? "border-b border-teal-100 pb-4 mb-4"
+                      ? "border-b border-gray-200"
                       : ""
                   }`}
                 >
@@ -287,21 +286,20 @@ const Home = () => {
           </div>
 
           {/* Top Sectors card */}
-          <div className="col-span-2 row-span-2 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+          <div className="col-span-2 row-span-2 rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center">
               <BarChart2 size={18} className="mr-2" />
               <span className="flex items-center w-full justify-between">
                 Top Sectors
-                <ArrowUpRight size={14} />
               </span>
             </div>
-            <div className="p-4">
+            <div>
               {topSectors.map((sector, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between ${
+                  className={`flex items-center justify-between p-4 hover:bg-teal-50 transition-colors cursor-pointer ${
                     index < topSectors.length - 1
-                      ? "border-b border-purple-100 pb-4 mb-4"
+                      ? "border-b border-gray-200"
                       : ""
                   }`}
                 >
@@ -337,12 +335,11 @@ const Home = () => {
           </div>
 
           {/* Total Market Cap card */}
-          <div className="col-span-2 h-32 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+          <div className="col-span-2 h-32 rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center">
               <DollarSign size={18} className="mr-2" />
               <span className="flex items-center w-full justify-between">
                 Total Market Cap
-                <ArrowUpRight size={14} />
               </span>
             </div>
 
@@ -402,12 +399,11 @@ const Home = () => {
           </div>
 
           {/* 24h Trading Volume */}
-          <div className="col-span-2 h-32 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-all overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center cursor-pointer hover:from-teal-700 hover:to-teal-800 transition-all">
+          <div className="col-span-2 h-32 rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 font-medium flex items-center">
               <Activity size={18} className="mr-2" />
               <span className="flex items-center w-full justify-between">
                 24h Trading Volume
-                <ArrowUpRight size={14} />
               </span>
             </div>
             <div className="p-4 pt-7 flex items-center h-16">

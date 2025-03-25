@@ -419,7 +419,7 @@ const AiCoins = () => {
         <div className="grid grid-cols-12 gap-4">
           {/* Market Cap Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="px-3 pt-3 pb-2 font-medium flex items-center justify-between">
+            <div className="p-3 font-medium flex items-center justify-between">
               <div className="flex items-center text-teal-600">
                 <DollarSign size={18} className="mr-2" />
                 <span>Market Cap</span>
@@ -441,7 +441,7 @@ const AiCoins = () => {
 
           {/* Volume Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="px-3 pt-3 pb-2 font-medium flex items-center justify-between">
+            <div className="p-3 font-medium flex items-center justify-between">
               <div className="flex items-center text-teal-600">
                 <Activity size={18} className="mr-2" />
                 <span>24h Volume</span>

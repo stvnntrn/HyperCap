@@ -23,6 +23,7 @@ import {
   Rocket,
   Gem,
   ArrowUpRight,
+  PlusCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -75,12 +76,17 @@ const AiCoins = () => {
   // Get trending AI coins by volume
   const trendingAiCoins = [...aiCoins]
     .sort((a, b) => b.volume - a.volume)
-    .slice(0, 3);
+    .slice(0, 5);
 
   // Get top gainers
   const topGainers = [...aiCoins]
     .sort((a, b) => b.change24h - a.change24h)
-    .slice(0, 3);
+    .slice(0, 5);
+
+  // Get newly listed coins (using market cap as a proxy for listing time)
+  const newlyListed = [...aiCoins]
+    .sort((a, b) => b.marketCap - a.marketCap)
+    .slice(0, 5);
 
   // Generate sample market cap chart data - now with hourly points
   const marketCapChartData = Array.from({ length: 19 }, (_, i) => {
@@ -92,11 +98,21 @@ const AiCoins = () => {
     };
   });
 
+  // Generate sample volume chart data - now with hourly points
+  const volumeChartData = Array.from({ length: 19 }, (_, i) => {
+    const date = new Date();
+    date.setHours(date.getHours() + i); // Points every hour
+    return {
+      value: totalVolume * (0.95 + Math.random() * 0.1),
+      date: date,
+    };
+  });
+
   // Generate line chart
   const generateLineChart = (data, isPositive = true) => {
-    const width = 580;
-    const height = 160;
-    const padding = { top: 20, right: 30, bottom: 35, left: 80 };
+    const width = 1000;
+    const height = 120;
+    const padding = { top: 20, right: 20, bottom: 30, left: 60 };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
 
@@ -395,129 +411,177 @@ const AiCoins = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           AI Crypto Market Overview
-          <span className="bg-gradient-to-r from-purple-500 to-purple-700 text-white text-xs px-2 py-1 rounded-full ml-3">
+          <span className="bg-gradient-to-r from-teal-500 to-teal-700 text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* Market Stats Section */}
-          <div className="col-span-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl px-6 py-4">
-            <div className="flex items-center gap-12">
-              {/* Market Cap */}
-              <div>
-                <div className="text-sm text-purple-600 font-medium flex items-center gap-2">
-                  <DollarSign size={16} />
-                  Total AI Market Cap
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">
-                  ${formatNumber(totalMarketCap, true)}
-                </div>
-                <div className="text-green-500 text-sm flex items-center mt-1">
-                  <ArrowUpRight size={14} className="mr-1" />
-                  +5.2% (24h)
-                </div>
+        <div className="grid grid-cols-12 gap-4">
+          {/* Market Cap Chart */}
+          <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
+            <div className="px-3 pt-3 pb-2 font-medium flex items-center justify-between">
+              <div className="flex items-center text-teal-600">
+                <DollarSign size={18} className="mr-2" />
+                <span>Market Cap</span>
               </div>
-              {/* Volume */}
-              <div>
-                <div className="text-sm text-purple-600 font-medium flex items-center gap-2">
-                  <Activity size={16} />
-                  24h Volume
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">
-                  ${formatNumber(totalVolume, true)}
-                </div>
-                <div className="text-red-500 text-sm flex items-center mt-1">
-                  <ArrowUpRight size={14} className="mr-1" />
-                  -3.8% (24h)
-                </div>
+              <div className="text-green-500 text-sm flex items-center">
+                <ArrowUpRight size={14} className="mr-1" />
+                +5.2% (24h)
               </div>
             </div>
-            <div>{generateLineChart(marketCapChartData)}</div>
+            <div className="px-4 pb-4">
+              <div className="text-2xl font-bold text-gray-800">
+                ${(totalMarketCap / 1e9).toFixed(2)}B
+              </div>
+              <div className="h-[120px]">
+                {generateLineChart(marketCapChartData)}
+              </div>
+            </div>
           </div>
 
-          {/* Right Section */}
-          <div className="col-span-6 grid grid-cols-2 gap-4">
-            {/* Trending */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-              <div className="text-sm text-purple-600 font-medium flex items-center gap-2 mb-3">
-                <TrendingUp size={16} />
-                Trending 24h
+          {/* Volume Chart */}
+          <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
+            <div className="px-3 pt-3 pb-2 font-medium flex items-center justify-between">
+              <div className="flex items-center text-teal-600">
+                <Activity size={18} className="mr-2" />
+                <span>24h Volume</span>
               </div>
-              <div className="space-y-3">
-                {trendingAiCoins.map((coin, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-white/50 p-2 rounded-lg hover:bg-white/80 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
-                        {coin.symbol.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{coin.name}</div>
-                        <div className="text-gray-500 text-xs">
-                          ${formatNumber(coin.volume, true)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium text-sm">
-                        ${coin.price.toLocaleString()}
-                      </div>
-                      <div
-                        className={`text-xs ${
-                          coin.change24h >= 0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {coin.change24h >= 0 ? "+" : ""}
-                        {coin.change24h}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-red-500 text-sm flex items-center">
+                <TrendingDown size={14} className="mr-1" />
+                -3.8% (24h)
               </div>
             </div>
-
-            {/* Top Gainers */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-              <div className="text-sm text-purple-600 font-medium flex items-center gap-2 mb-3">
-                <TrendingUp size={16} />
-                Top Gainers
+            <div className="px-4 pb-4">
+              <div className="text-2xl font-bold text-gray-800">
+                ${(totalVolume / 1e9).toFixed(2)}B
               </div>
-              <div className="space-y-3">
-                {topGainers.map((coin, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-white/50 p-2 rounded-lg hover:bg-white/80 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
-                        {coin.symbol.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{coin.name}</div>
-                        <div className="text-gray-500 text-xs">
-                          ${coin.price.toLocaleString()}
-                        </div>
-                      </div>
+              <div className="h-[120px]">
+                {generateLineChart(volumeChartData)}
+              </div>
+            </div>
+          </div>
+
+          {/* Trending Coins */}
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+              <TrendingUp size={16} />
+              Trending
+            </div>
+            <div className="space-y-1">
+              {trendingAiCoins.map((coin, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                      {coin.symbol.charAt(0)}
                     </div>
-                    <div className="text-right">
-                      <div className="text-green-500 text-sm font-medium">
-                        +{coin.change24h}%
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {coin.name}
                       </div>
+                      <div className="text-gray-500 text-xs">{coin.symbol}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-medium text-sm">
+                      ${coin.price.toLocaleString()}
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {coin.change24h >= 0 ? "+" : ""}
+                      {coin.change24h}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Gainers */}
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+              <Rocket size={16} />
+              Top Gainers
+            </div>
+            <div className="space-y-1">
+              {topGainers.map((coin, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                      {coin.symbol.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {coin.name}
+                      </div>
+                      <div className="text-gray-500 text-xs">{coin.symbol}</div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-medium text-sm">
+                      ${coin.price.toLocaleString()}
+                    </div>
+                    <div className="text-green-500 text-xs">
+                      +{coin.change24h}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Newly Listed */}
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+              <PlusCircle size={16} />
+              Newly Listed
+            </div>
+            <div className="space-y-1">
+              {newlyListed.map((coin, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                      {coin.symbol.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {coin.name}
+                      </div>
+                      <div className="text-gray-500 text-xs">{coin.symbol}</div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-medium text-sm">
+                      ${coin.price.toLocaleString()}
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {coin.change24h >= 0 ? "+" : ""}
+                      {coin.change24h}%
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Main heading */}
-        <h2 className="text-2xl font-bold mb-4">
+        <h2 className="text-2xl font-bold mb-4 mt-8">
           AI Cryptocurrency Prices by Market Cap
         </h2>
 
@@ -527,7 +591,7 @@ const AiCoins = () => {
           data-tabs-container
         >
           <div
-            className="absolute h-full w-full rounded-full bg-gradient-to-r from-purple-600 to-purple-700 transition-all duration-300 ease-in-out"
+            className="absolute h-full w-full rounded-full bg-gradient-to-r from-teal-600 to-teal-700 transition-all duration-300 ease-in-out"
             style={getTabStyle()}
           />
           {[
@@ -669,13 +733,13 @@ const AiCoins = () => {
                 className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium
                   ${
                     category.id === "ai"
-                      ? "bg-purple-100 text-purple-700"
+                      ? "bg-teal-100 text-teal-700"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
               >
                 <span
                   className={`mr-1.5 ${
-                    category.id === "ai" ? "text-purple-600" : "text-gray-500"
+                    category.id === "ai" ? "text-teal-600" : "text-gray-500"
                   }`}
                 >
                   {category.icon}
@@ -692,7 +756,7 @@ const AiCoins = () => {
               placeholder="Search AI coins..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
             />
             <Search
               size={16}
@@ -704,7 +768,7 @@ const AiCoins = () => {
         {/* Main coin list */}
         <div className="overflow-hidden rounded-xl">
           <table className="min-w-full table-fixed">
-            <thead className="bg-gradient-to-r from-purple-600 to-purple-700">
+            <thead className="bg-gradient-to-r from-teal-600 to-teal-700">
               <tr>
                 <th className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-white w-0"></th>
                 <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider w-0">
@@ -715,7 +779,7 @@ const AiCoins = () => {
                 <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("coin")}
                     >
                       Coin
@@ -737,7 +801,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("price")}
                     >
                       Price
@@ -753,7 +817,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("change1h")}
                     >
                       1h
@@ -769,7 +833,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("change24h")}
                     >
                       24h
@@ -785,7 +849,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("change7d")}
                     >
                       7d
@@ -801,7 +865,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("volume")}
                     >
                       Volume 24h
@@ -817,7 +881,7 @@ const AiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-teal-200 transition-colors"
                       onClick={() => handleSort("marketCap")}
                     >
                       Market Cap
@@ -835,7 +899,7 @@ const AiCoins = () => {
                 return (
                   <tr
                     key={coin.id}
-                    className="hover:bg-purple-50 transition-colors cursor-pointer"
+                    className="hover:bg-teal-50 transition-colors cursor-pointer"
                   >
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
@@ -848,7 +912,7 @@ const AiCoins = () => {
                     </td>
                     <td className="py-4 pl-7 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}
                         </div>
                         <div className="flex items-center gap-2">

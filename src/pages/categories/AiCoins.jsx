@@ -76,17 +76,17 @@ const AiCoins = () => {
   // Get trending AI coins by volume
   const trendingAiCoins = [...aiCoins]
     .sort((a, b) => b.volume - a.volume)
-    .slice(0, 5);
+    .slice(0, 3);
 
   // Get top gainers
   const topGainers = [...aiCoins]
     .sort((a, b) => b.change24h - a.change24h)
-    .slice(0, 5);
+    .slice(0, 3);
 
   // Get newly listed coins (using market cap as a proxy for listing time)
   const newlyListed = [...aiCoins]
     .sort((a, b) => b.marketCap - a.marketCap)
-    .slice(0, 5);
+    .slice(0, 3);
 
   // Generate sample market cap chart data - now with hourly points
   const marketCapChartData = Array.from({ length: 19 }, (_, i) => {
@@ -462,16 +462,16 @@ const AiCoins = () => {
           </div>
 
           {/* Trending Coins */}
-          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
-            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <TrendingUp size={16} />
               Trending
             </div>
-            <div className="space-y-1">
+            <div className="">
               {trendingAiCoins.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                  className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
@@ -503,16 +503,16 @@ const AiCoins = () => {
           </div>
 
           {/* Top Gainers */}
-          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
-            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <Rocket size={16} />
               Top Gainers
             </div>
-            <div className="space-y-1">
+            <div className="">
               {topGainers.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                  className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
@@ -539,16 +539,16 @@ const AiCoins = () => {
           </div>
 
           {/* Newly Listed */}
-          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white p-4">
-            <div className="text-base text-teal-600 font-medium flex items-center gap-2 mb-3">
+          <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
+            <div className="text-base text-teal-600 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <PlusCircle size={16} />
               Newly Listed
             </div>
-            <div className="space-y-1">
+            <div className="">
               {newlyListed.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-1 hover:bg-white/50 rounded-lg transition-colors group"
+                  className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">

@@ -112,7 +112,7 @@ const AiCoins = () => {
   const generateLineChart = (data, isPositive = true) => {
     const width = 1000;
     const height = 120;
-    const padding = { top: 20, right: 20, bottom: 30, left: 60 };
+    const padding = { top: 20, right: 20, bottom: 30, left: 80 };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
 
@@ -421,7 +421,7 @@ const AiCoins = () => {
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
               <div className="flex items-center text-teal-600">
-                <DollarSign size={18} className="mr-2" />
+                <DollarSign size={18} className="mr-1" />
                 <span>Market Cap</span>
               </div>
               <div className="text-green-500 text-sm flex items-center">
@@ -429,8 +429,8 @@ const AiCoins = () => {
                 +5.2% (24h)
               </div>
             </div>
-            <div className="px-4 pb-4">
-              <div className="text-2xl font-bold text-gray-800">
+            <div className="pb-4 pr-4">
+              <div className="text-2xl font-bold text-gray-800 pl-4">
                 ${(totalMarketCap / 1e9).toFixed(2)}B
               </div>
               <div className="h-[120px]">
@@ -451,8 +451,8 @@ const AiCoins = () => {
                 -3.8% (24h)
               </div>
             </div>
-            <div className="px-4 pb-4">
-              <div className="text-2xl font-bold text-gray-800">
+            <div className="pb-4 pr-4">
+              <div className="text-2xl font-bold text-gray-800 pl-4">
                 ${(totalVolume / 1e9).toFixed(2)}B
               </div>
               <div className="h-[120px]">

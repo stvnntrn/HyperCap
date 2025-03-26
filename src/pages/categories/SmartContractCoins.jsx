@@ -56,7 +56,7 @@ const SmartContractCoins = () => {
     };
   };
 
-  // Filter Smart Contract coins
+  // Filter smart contract coins
   const smartContractCoins = coins.filter((coin) =>
     coin.categories.includes("smart-contracts")
   );
@@ -81,7 +81,7 @@ const SmartContractCoins = () => {
     0
   );
 
-  // Get trending Smart Contract coins by volume
+  // Get trending smart contract coins by volume
   const trendingSmartContractCoins = [...smartContractCoins]
     .sort((a, b) => b.volume - a.volume)
     .slice(0, 3);
@@ -225,7 +225,7 @@ const SmartContractCoins = () => {
                 cx={x}
                 cy={y}
                 r="4"
-                className="opacity-0 hover:opacity-100 fill-indigo-500 transition-opacity duration-200"
+                className="opacity-0 hover:opacity-100 fill-blue-500 transition-opacity duration-200"
               />
               <g className="opacity-0 hover:opacity-100 transition-opacity duration-200">
                 <rect
@@ -419,7 +419,7 @@ const SmartContractCoins = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           Smart Contract Crypto Market Overview
-          <span className="bg-gradient-to-r from-indigo-500 to-indigo-700 text-white text-xs px-2 py-1 rounded-full ml-3">
+          <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
@@ -482,7 +482,7 @@ const SmartContractCoins = () => {
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -523,7 +523,7 @@ const SmartContractCoins = () => {
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -559,7 +559,7 @@ const SmartContractCoins = () => {
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -599,7 +599,7 @@ const SmartContractCoins = () => {
           data-tabs-container
         >
           <div
-            className="absolute h-full w-full rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 transition-all duration-300 ease-in-out"
+            className="absolute h-full w-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-in-out"
             style={getTabStyle()}
           />
           {[
@@ -741,14 +741,14 @@ const SmartContractCoins = () => {
                 className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium
                   ${
                     category.id === "smart-contract"
-                      ? "bg-indigo-100 text-indigo-700"
+                      ? "bg-indigo-50 text-indigo-700"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
               >
                 <span
                   className={`mr-1.5 ${
                     category.id === "smart-contract"
-                      ? "text-indigo-600"
+                      ? "text-indigo-500"
                       : "text-gray-500"
                   }`}
                 >
@@ -763,7 +763,7 @@ const SmartContractCoins = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search Smart Contract coins..."
+              placeholder="Search smart contract coins..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
@@ -778,7 +778,7 @@ const SmartContractCoins = () => {
         {/* Main coin list */}
         <div className="overflow-hidden rounded-xl">
           <table className="min-w-full table-fixed">
-            <thead className="bg-gradient-to-r from-indigo-600 to-indigo-700">
+            <thead className="bg-gradient-to-r from-indigo-500 to-purple-500">
               <tr>
                 <th className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-white w-0"></th>
                 <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider w-0">
@@ -786,7 +786,7 @@ const SmartContractCoins = () => {
                     <span className="text-white">#</span>
                   </div>
                 </th>
-                <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th className="py-4 pl-8.5 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
                       className="cursor-pointer hover:text-indigo-200 transition-colors"
@@ -909,20 +909,20 @@ const SmartContractCoins = () => {
                 return (
                   <tr
                     key={coin.id}
-                    className="hover:bg-indigo-50 transition-colors cursor-pointer"
+                    className="hover:bg-indigo-50/50 transition-colors cursor-pointer"
                   >
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
                         size={16}
-                        className="text-gray-400 hover:text-yellow-500"
+                        className="text-gray-400 hover:text-indigo-500"
                       />
                     </td>
                     <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       {marketCapRanking.get(coin.id)}
                     </td>
-                    <td className="py-4 pl-7 whitespace-nowrap">
+                    <td className="py-4 pl-8.5 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}
                         </div>
                         <div className="flex items-center gap-2">

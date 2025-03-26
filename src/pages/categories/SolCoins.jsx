@@ -419,8 +419,8 @@ const SolCoins = () => {
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
-          SOL Crypto Market Overview
-          <span className="bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 text-white text-xs px-2 py-1 rounded-full ml-3">
+          Solana Crypto Market Overview
+          <span className="bg-gradient-to-r from-[#7B4FFF] to-[#00D9B4] text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
@@ -429,7 +429,7 @@ const SolCoins = () => {
           {/* Market Cap Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-purple-500">
+              <div className="flex items-center text-[#7B4FFF]">
                 <DollarSign size={18} className="mr-1" />
                 <span>Market Cap</span>
               </div>
@@ -451,7 +451,7 @@ const SolCoins = () => {
           {/* Volume Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-purple-500">
+              <div className="flex items-center text-[#7B4FFF]">
                 <Activity size={18} className="mr-2" />
                 <span>24h Volume</span>
               </div>
@@ -472,7 +472,7 @@ const SolCoins = () => {
 
           {/* Trending Coins */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-purple-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#7B4FFF] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <TrendingUp size={16} />
               Trending
             </div>
@@ -513,7 +513,7 @@ const SolCoins = () => {
 
           {/* Top Gainers */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-purple-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#7B4FFF] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <Rocket size={16} />
               Top Gainers
             </div>
@@ -549,7 +549,7 @@ const SolCoins = () => {
 
           {/* Newly Listed */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-purple-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#7B4FFF] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <PlusCircle size={16} />
               Newly Listed
             </div>
@@ -600,7 +600,7 @@ const SolCoins = () => {
           data-tabs-container
         >
           <div
-            className="absolute h-full w-full rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 transition-all duration-300 ease-in-out"
+            className="absolute h-full w-full rounded-full bg-gradient-to-r from-[#7B4FFF] to-[#00D9B4] transition-all duration-300 ease-in-out"
             style={getTabStyle()}
           />
           {[
@@ -742,13 +742,13 @@ const SolCoins = () => {
                 className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium
                   ${
                     category.id === "sol"
-                      ? "bg-purple-50 text-purple-600"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-[#7B4FFF]/10 text-[#7B4FFF]"
+                      : "text-gray-400 hover:text-gray-600"
                   }`}
               >
                 <span
                   className={`mr-1.5 ${
-                    category.id === "sol" ? "text-purple-500" : "text-gray-500"
+                    category.id === "sol" ? "text-[#7B4FFF]" : "text-gray-400"
                   }`}
                 >
                   {category.icon}
@@ -762,10 +762,10 @@ const SolCoins = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search SOL coins..."
+              placeholder="Search Solana coins..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm"
+              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#7B4FFF] focus:border-transparent text-sm"
             />
             <Search
               size={16}
@@ -777,7 +777,7 @@ const SolCoins = () => {
         {/* Main coin list */}
         <div className="overflow-hidden rounded-xl">
           <table className="min-w-full table-fixed">
-            <thead className="bg-gradient-to-r from-purple-500 via-blue-500 to-green-500">
+            <thead className="bg-gradient-to-r from-[#7B4FFF] to-[#00D9B4]">
               <tr>
                 <th className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-white w-0"></th>
                 <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider w-0">
@@ -788,7 +788,7 @@ const SolCoins = () => {
                 <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("coin")}
                     >
                       Coin
@@ -810,7 +810,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("price")}
                     >
                       Price
@@ -826,7 +826,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("change1h")}
                     >
                       1h
@@ -842,7 +842,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("change24h")}
                     >
                       24h
@@ -858,7 +858,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("change7d")}
                     >
                       7d
@@ -874,7 +874,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("volume")}
                     >
                       Volume 24h
@@ -890,7 +890,7 @@ const SolCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-purple-200 transition-colors"
+                      className="cursor-pointer hover:text-[#7B4FFF] transition-colors"
                       onClick={() => handleSort("marketCap")}
                     >
                       Market Cap
@@ -908,12 +908,12 @@ const SolCoins = () => {
                 return (
                   <tr
                     key={coin.id}
-                    className="hover:bg-purple-50/50 transition-colors cursor-pointer"
+                    className="hover:bg-[#7B4FFF]/10 transition-colors cursor-pointer"
                   >
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
                         size={16}
-                        className="text-gray-400 hover:text-purple-500"
+                        className="text-gray-400 hover:text-[#7B4FFF]"
                       />
                     </td>
                     <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 max-w-[28px]">
@@ -921,7 +921,7 @@ const SolCoins = () => {
                     </td>
                     <td className="py-4 pl-7 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#7B4FFF] to-[#00D9B4] flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}
                         </div>
                         <div className="flex items-center gap-2">

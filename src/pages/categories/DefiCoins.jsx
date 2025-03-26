@@ -420,7 +420,7 @@ const DefiCoins = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           DeFi Crypto Market Overview
-          <span className="bg-gradient-to-r from-teal-400 to-teal-500 text-white text-xs px-2 py-1 rounded-full ml-3">
+          <span className="bg-gradient-to-r from-[#00B4DB] to-[#00F260] text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
@@ -429,7 +429,7 @@ const DefiCoins = () => {
           {/* Market Cap Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-teal-500">
+              <div className="flex items-center text-[#00B4DB]">
                 <DollarSign size={18} className="mr-1" />
                 <span>Market Cap</span>
               </div>
@@ -451,7 +451,7 @@ const DefiCoins = () => {
           {/* Volume Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-teal-500">
+              <div className="flex items-center text-[#00B4DB]">
                 <Activity size={18} className="mr-2" />
                 <span>24h Volume</span>
               </div>
@@ -472,7 +472,7 @@ const DefiCoins = () => {
 
           {/* Trending Coins */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-teal-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#00B4DB] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <TrendingUp size={16} />
               Trending
             </div>
@@ -480,10 +480,10 @@ const DefiCoins = () => {
               {trendingDefiCoins.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between hover:bg-teal-50/30 transition-colors group px-4 py-3 cursor-pointer"
+                  className="flex items-center justify-between hover:bg-[#00B4DB]/10 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-300 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#00B4DB] to-[#00F260] flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -513,7 +513,7 @@ const DefiCoins = () => {
 
           {/* Top Gainers */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-teal-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#00B4DB] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <Rocket size={16} />
               Top Gainers
             </div>
@@ -521,10 +521,10 @@ const DefiCoins = () => {
               {topGainers.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between hover:bg-teal-50/30 transition-colors group px-4 py-3 cursor-pointer"
+                  className="flex items-center justify-between hover:bg-[#00B4DB]/10 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-300 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#00B4DB] to-[#00F260] flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -549,7 +549,7 @@ const DefiCoins = () => {
 
           {/* Newly Listed */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-teal-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-[#00B4DB] font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <PlusCircle size={16} />
               Newly Listed
             </div>
@@ -557,10 +557,10 @@ const DefiCoins = () => {
               {newlyListed.map((coin, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between hover:bg-teal-50/30 transition-colors group px-4 py-3 cursor-pointer"
+                  className="flex items-center justify-between hover:bg-[#00B4DB]/10 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-300 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#00B4DB] to-[#00F260] flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -600,7 +600,7 @@ const DefiCoins = () => {
           data-tabs-container
         >
           <div
-            className="absolute h-full w-full rounded-full bg-gradient-to-r from-teal-400 to-teal-500 transition-all duration-300 ease-in-out"
+            className="absolute h-full w-full rounded-full bg-gradient-to-r from-[#00B4DB] to-[#00F260] transition-all duration-300 ease-in-out"
             style={getTabStyle()}
           />
           {[
@@ -742,13 +742,13 @@ const DefiCoins = () => {
                 className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium
                   ${
                     category.id === "defi"
-                      ? "bg-teal-50 text-teal-500"
+                      ? "bg-[#00B4DB]/10 text-[#00B4DB]"
                       : "text-gray-400 hover:text-gray-600"
                   }`}
               >
                 <span
                   className={`mr-1.5 ${
-                    category.id === "defi" ? "text-teal-500" : "text-gray-400"
+                    category.id === "defi" ? "text-[#00B4DB]" : "text-gray-400"
                   }`}
                 >
                   {category.icon}
@@ -765,7 +765,7 @@ const DefiCoins = () => {
               placeholder="Search DeFi coins..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent text-sm"
+              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00B4DB] focus:border-transparent text-sm"
             />
             <Search
               size={16}
@@ -777,7 +777,7 @@ const DefiCoins = () => {
         {/* Main coin list */}
         <div className="overflow-hidden rounded-xl">
           <table className="min-w-full table-fixed">
-            <thead className="bg-gradient-to-r from-teal-400 to-teal-500">
+            <thead className="bg-gradient-to-r from-[#00B4DB] to-[#00F260]">
               <tr>
                 <th className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-white w-0"></th>
                 <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider w-0">
@@ -788,7 +788,7 @@ const DefiCoins = () => {
                 <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("coin")}
                     >
                       Coin
@@ -810,7 +810,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("price")}
                     >
                       Price
@@ -826,7 +826,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("change1h")}
                     >
                       1h
@@ -842,7 +842,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("change24h")}
                     >
                       24h
@@ -858,7 +858,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("change7d")}
                     >
                       7d
@@ -874,7 +874,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("volume")}
                     >
                       Volume 24h
@@ -890,7 +890,7 @@ const DefiCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-teal-200 transition-colors"
+                      className="cursor-pointer hover:text-[#00B4DB] transition-colors"
                       onClick={() => handleSort("marketCap")}
                     >
                       Market Cap
@@ -908,12 +908,12 @@ const DefiCoins = () => {
                 return (
                   <tr
                     key={coin.id}
-                    className="hover:bg-teal-50/30 transition-colors cursor-pointer"
+                    className="hover:bg-[#00B4DB]/10 transition-colors cursor-pointer"
                   >
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
                         size={16}
-                        className="text-gray-400 hover:text-teal-500"
+                        className="text-gray-400 hover:text-[#00B4DB]"
                       />
                     </td>
                     <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 max-w-[28px]">
@@ -921,7 +921,7 @@ const DefiCoins = () => {
                     </td>
                     <td className="py-4 pl-7 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-300 to-teal-400 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#00B4DB] to-[#00F260] flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}
                         </div>
                         <div className="flex items-center gap-2">

@@ -291,13 +291,19 @@ const LayerOneCoins = () => {
         maximumFractionDigits: 0,
       });
     } else {
-      return (
-        "$" +
-        num.toLocaleString("en-US", {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })
-      );
+      // Handle very small numbers (less than 0.0001)
+      if (num < 0.0001) {
+        return `$${num.toFixed(8)}`;
+      }
+      // Handle small numbers (less than 0.01)
+      if (num < 0.01) {
+        return `$${num.toFixed(6)}`;
+      }
+      // Handle regular numbers
+      return `$${num.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
     }
   };
 

@@ -649,6 +649,12 @@ const AiCoins = () => {
           <div className="flex flex-wrap gap-1 p-1 w-fit">
             {[
               {
+                id: "eth",
+                label: "ETH",
+                icon: <Zap size={14} />,
+                path: "/category/eth",
+              },
+              {
                 id: "bnb",
                 label: "BNB",
                 icon: <Coins size={14} />,
@@ -657,14 +663,8 @@ const AiCoins = () => {
               {
                 id: "sol",
                 label: "SOL",
-                icon: <Zap size={14} />,
-                path: "/category/sol",
-              },
-              {
-                id: "dot",
-                label: "DOT",
                 icon: <Globe size={14} />,
-                path: "/category/dot",
+                path: "/category/sol",
               },
               {
                 id: "smart-contract",
@@ -675,13 +675,13 @@ const AiCoins = () => {
               {
                 id: "layer1",
                 label: "Layer 1",
-                icon: <Blocks size={14} />,
+                icon: <Boxes size={14} />,
                 path: "/category/layer-1",
               },
               {
                 id: "layer2",
                 label: "Layer 2",
-                icon: <Boxes size={14} />,
+                icon: <Link2 size={14} />,
                 path: "/category/layer-2",
               },
               {
@@ -705,25 +705,25 @@ const AiCoins = () => {
               {
                 id: "infrastructure",
                 label: "Infrastructure",
-                icon: <Link2 size={14} />,
+                icon: <Building2 size={14} />,
                 path: "/category/infrastructure",
               },
               {
                 id: "rwa",
                 label: "RWA",
-                icon: <Building2 size={14} />,
+                icon: <Rocket size={14} />,
                 path: "/category/rwa",
               },
               {
                 id: "meme",
                 label: "Meme",
-                icon: <Rocket size={14} />,
+                icon: <Gem size={14} />,
                 path: "/category/meme",
               },
               {
                 id: "nft",
                 label: "NFT",
-                icon: <Gem size={14} />,
+                icon: <Activity size={14} />,
                 path: "/category/nft",
               },
             ].map((category) => (

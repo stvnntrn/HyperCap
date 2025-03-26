@@ -11,7 +11,7 @@ import Converter from "./pages/Converter";
 
 import BnbCoins from "./pages/categories/BnbCoins";
 import SolCoins from "./pages/categories/SolCoins";
-import DotCoins from "./pages/categories/DotCoins";
+import EthCoins from "./pages/categories/EthCoins";
 import SmartContractCoins from "./pages/categories/SmartContractCoins";
 import LayerOneCoins from "./pages/categories/LayerOneCoins";
 import LayerTwoCoins from "./pages/categories/LayerTwoCoins";
@@ -43,7 +43,7 @@ const App = () => {
         {/* Category Routes */}
         <Route path="/category/bnb" element={<BnbCoins />} />
         <Route path="/category/sol" element={<SolCoins />} />
-        <Route path="/category/dot" element={<DotCoins />} />
+        <Route path="/category/eth" element={<EthCoins />} />
         <Route
           path="/category/smart-contract"
           element={<SmartContractCoins />}

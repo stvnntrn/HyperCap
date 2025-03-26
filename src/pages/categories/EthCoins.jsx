@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const BnbCoins = () => {
+const EthCoins = () => {
   const [activeTab, setActiveTab] = useState("top");
   const [sortConfig, setSortConfig] = useState({
     key: "marketCap",
@@ -56,12 +56,12 @@ const BnbCoins = () => {
     };
   };
 
-  // Filter BNB coins
-  const bnbCoins = coins.filter((coin) => coin.categories.includes("bnb"));
+  // Filter ETH coins
+  const ethCoins = coins.filter((coin) => coin.categories.includes("eth"));
 
   // Get market cap ranking map
   const getMarketCapRanking = () => {
-    const sortedByMarketCap = [...bnbCoins].sort(
+    const sortedByMarketCap = [...ethCoins].sort(
       (a, b) => b.marketCap - a.marketCap
     );
     return new Map(
@@ -70,24 +70,24 @@ const BnbCoins = () => {
   };
 
   // Calculate total market cap and volume
-  const totalMarketCap = bnbCoins.reduce(
+  const totalMarketCap = ethCoins.reduce(
     (sum, coin) => sum + coin.marketCap,
     0
   );
-  const totalVolume = bnbCoins.reduce((sum, coin) => sum + coin.volume, 0);
+  const totalVolume = ethCoins.reduce((sum, coin) => sum + coin.volume, 0);
 
-  // Get trending BNB coins by volume
-  const trendingBnbCoins = [...bnbCoins]
+  // Get trending ETH coins by volume
+  const trendingEthCoins = [...ethCoins]
     .sort((a, b) => b.volume - a.volume)
     .slice(0, 3);
 
   // Get top gainers
-  const topGainers = [...bnbCoins]
+  const topGainers = [...ethCoins]
     .sort((a, b) => b.change24h - a.change24h)
     .slice(0, 3);
 
   // Get newly listed coins (using market cap as a proxy for listing time)
-  const newlyListed = [...bnbCoins]
+  const newlyListed = [...ethCoins]
     .sort((a, b) => b.marketCap - a.marketCap)
     .slice(0, 3);
 
@@ -220,7 +220,7 @@ const BnbCoins = () => {
                 cx={x}
                 cy={y}
                 r="4"
-                className="opacity-0 hover:opacity-100 fill-purple-500 transition-opacity duration-200"
+                className="opacity-0 hover:opacity-100 fill-blue-500 transition-opacity duration-200"
               />
               <g className="opacity-0 hover:opacity-100 transition-opacity duration-200">
                 <rect
@@ -353,7 +353,7 @@ const BnbCoins = () => {
 
   // Get sorted and filtered coins
   const getSortedCoins = () => {
-    let filteredCoins = [...bnbCoins];
+    let filteredCoins = [...ethCoins];
 
     // Apply search filter
     if (searchQuery) {
@@ -413,8 +413,8 @@ const BnbCoins = () => {
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 flex items-center">
-          BNB Crypto Market Overview
-          <span className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs px-2 py-1 rounded-full ml-3">
+          ETH Crypto Market Overview
+          <span className="bg-gradient-to-r from-blue-400 to-blue-500 text-white text-xs px-2 py-1 rounded-full ml-3">
             LIVE
           </span>
         </h2>
@@ -423,7 +423,7 @@ const BnbCoins = () => {
           {/* Market Cap Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-yellow-500">
+              <div className="flex items-center text-blue-500">
                 <DollarSign size={18} className="mr-2" />
                 <span>Market Cap</span>
               </div>
@@ -445,7 +445,7 @@ const BnbCoins = () => {
           {/* Volume Chart */}
           <div className="col-span-6 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
             <div className="p-3 font-medium flex items-center justify-between">
-              <div className="flex items-center text-yellow-500">
+              <div className="flex items-center text-blue-500">
                 <Activity size={18} className="mr-2" />
                 <span>24h Volume</span>
               </div>
@@ -466,18 +466,18 @@ const BnbCoins = () => {
 
           {/* Trending Coins */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-yellow-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-blue-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <TrendingUp size={16} />
               Trending
             </div>
             <div className="">
-              {trendingBnbCoins.map((coin, index) => (
+              {trendingEthCoins.map((coin, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -507,7 +507,7 @@ const BnbCoins = () => {
 
           {/* Top Gainers */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-yellow-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-blue-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <Rocket size={16} />
               Top Gainers
             </div>
@@ -518,7 +518,7 @@ const BnbCoins = () => {
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -543,7 +543,7 @@ const BnbCoins = () => {
 
           {/* Newly Listed */}
           <div className="col-span-4 rounded-xl shadow-[0_4px_12px_-2px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(0,0,0,0.2)] transition-all overflow-hidden bg-white">
-            <div className="text-base text-yellow-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="text-base text-blue-500 font-medium flex items-center gap-2 px-4 pt-4 pb-2">
               <PlusCircle size={16} />
               Newly Listed
             </div>
@@ -554,7 +554,7 @@ const BnbCoins = () => {
                   className="flex items-center justify-between hover:bg-gray-50 transition-colors group px-4 py-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0">
                       {coin.symbol.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -585,7 +585,7 @@ const BnbCoins = () => {
 
         {/* Main heading */}
         <h2 className="text-2xl font-bold mb-4 mt-8">
-          BNB Cryptocurrency Prices by Market Cap
+          ETH Cryptocurrency Prices by Market Cap
         </h2>
 
         {/* Tabs */}
@@ -594,7 +594,7 @@ const BnbCoins = () => {
           data-tabs-container
         >
           <div
-            className="absolute h-full w-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-300 ease-in-out"
+            className="absolute h-full w-full rounded-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300 ease-in-out"
             style={getTabStyle()}
           />
           {[
@@ -735,14 +735,14 @@ const BnbCoins = () => {
                 to={category.path}
                 className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-medium
                   ${
-                    category.id === "bnb"
-                      ? "bg-yellow-50 text-yellow-600"
+                    category.id === "eth"
+                      ? "bg-blue-50 text-blue-600"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
               >
                 <span
                   className={`mr-1.5 ${
-                    category.id === "bnb" ? "text-yellow-500" : "text-gray-500"
+                    category.id === "eth" ? "text-blue-500" : "text-gray-500"
                   }`}
                 >
                   {category.icon}
@@ -756,10 +756,10 @@ const BnbCoins = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search BNB coins..."
+              placeholder="Search ETH coins..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm"
+              className="pl-10 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
             />
             <Search
               size={16}
@@ -771,7 +771,7 @@ const BnbCoins = () => {
         {/* Main coin list */}
         <div className="overflow-hidden rounded-xl">
           <table className="min-w-full table-fixed">
-            <thead className="bg-gradient-to-r from-yellow-400 to-yellow-500">
+            <thead className="bg-gradient-to-r from-blue-400 to-blue-500">
               <tr>
                 <th className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-white w-0"></th>
                 <th className="py-4 pl-5 text-left text-xs font-medium text-white uppercase tracking-wider w-0">
@@ -782,7 +782,7 @@ const BnbCoins = () => {
                 <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("coin")}
                     >
                       Coin
@@ -804,7 +804,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("price")}
                     >
                       Price
@@ -820,7 +820,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("change1h")}
                     >
                       1h
@@ -836,7 +836,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("change24h")}
                     >
                       24h
@@ -852,7 +852,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("change7d")}
                     >
                       7d
@@ -868,7 +868,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("volume")}
                     >
                       Volume 24h
@@ -884,7 +884,7 @@ const BnbCoins = () => {
                         <ArrowUp size={14} />
                       ))}
                     <span
-                      className="cursor-pointer hover:text-yellow-200 transition-colors"
+                      className="cursor-pointer hover:text-blue-200 transition-colors"
                       onClick={() => handleSort("marketCap")}
                     >
                       Market Cap
@@ -902,12 +902,12 @@ const BnbCoins = () => {
                 return (
                   <tr
                     key={coin.id}
-                    className="hover:bg-yellow-50/50 transition-colors cursor-pointer"
+                    className="hover:bg-blue-50/50 transition-colors cursor-pointer"
                   >
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
                         size={16}
-                        className="text-gray-400 hover:text-yellow-500"
+                        className="text-gray-400 hover:text-blue-500"
                       />
                     </td>
                     <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
@@ -915,7 +915,7 @@ const BnbCoins = () => {
                     </td>
                     <td className="py-4 pl-7 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}
                         </div>
                         <div className="flex items-center gap-2">
@@ -996,4 +996,4 @@ const BnbCoins = () => {
   );
 };
 
-export default BnbCoins;
+export default EthCoins;

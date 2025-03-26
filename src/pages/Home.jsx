@@ -529,6 +529,12 @@ const Home = () => {
       <div className="flex flex-wrap gap-1 mb-2 p-1 w-fit">
         {[
           {
+            id: "eth",
+            label: "ETH",
+            icon: <Zap size={14} />,
+            path: "/category/eth",
+          },
+          {
             id: "bnb",
             label: "BNB",
             icon: <Coins size={14} />,
@@ -537,14 +543,8 @@ const Home = () => {
           {
             id: "sol",
             label: "SOL",
-            icon: <Zap size={14} />,
-            path: "/category/sol",
-          },
-          {
-            id: "dot",
-            label: "DOT",
             icon: <Globe size={14} />,
-            path: "/category/dot",
+            path: "/category/sol",
           },
           {
             id: "smart-contract",

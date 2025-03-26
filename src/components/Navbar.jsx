@@ -48,6 +48,14 @@ const Navbar = () => {
                   <ul className="absolute left-full top-0 bg-white shadow-lg rounded-md w-56 opacity-0 invisible group-hover/inner:opacity-100 group-hover/inner:visible transition-all duration-200">
                     <li>
                       <Link
+                        to="/category/eth"
+                        className="flex items-center px-4 py-2 hover:bg-gray-100"
+                      >
+                        <Zap className="w-4 h-4 mr-2" /> ETH
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
                         to="/category/bnb"
                         className="flex items-center px-4 py-2 hover:bg-gray-100"
                       >
@@ -59,15 +67,7 @@ const Navbar = () => {
                         to="/category/sol"
                         className="flex items-center px-4 py-2 hover:bg-gray-100"
                       >
-                        <Zap className="w-4 h-4 mr-2" /> SOL
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/category/dot"
-                        className="flex items-center px-4 py-2 hover:bg-gray-100"
-                      >
-                        <Globe className="w-4 h-4 mr-2" /> DOT
+                        <Globe className="w-4 h-4 mr-2" /> SOL
                       </Link>
                     </li>
                     <li>

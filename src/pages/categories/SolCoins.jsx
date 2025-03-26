@@ -910,7 +910,7 @@ const SolCoins = () => {
                         className="text-gray-400 hover:text-purple-500"
                       />
                     </td>
-                    <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
+                    <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 max-w-[28px]">
                       {marketCapRanking.get(coin.id)}
                     </td>
                     <td className="py-4 pl-7 whitespace-nowrap">

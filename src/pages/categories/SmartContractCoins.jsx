@@ -786,7 +786,7 @@ const SmartContractCoins = () => {
                     <span className="text-white">#</span>
                   </div>
                 </th>
-                <th className="py-4 pl-8.5 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th className="py-4 pl-7 text-left text-xs font-medium text-white uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <span
                       className="cursor-pointer hover:text-indigo-200 transition-colors"
@@ -917,10 +917,10 @@ const SmartContractCoins = () => {
                         className="text-gray-400 hover:text-indigo-500"
                       />
                     </td>
-                    <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
+                    <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 max-w-[28px]">
                       {marketCapRanking.get(coin.id)}
                     </td>
-                    <td className="py-4 pl-8.5 whitespace-nowrap">
+                    <td className="py-4 pl-7 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold mr-3 shadow-md">
                           {coin.symbol.charAt(0)}

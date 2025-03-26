@@ -907,7 +907,7 @@ const EthCoins = () => {
                     <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                       <Star
                         size={16}
-                        className="text-gray-300 hover:text-gray-500"
+                        className="text-gray-400 hover:text-gray-500"
                       />
                     </td>
                     <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 w-0">

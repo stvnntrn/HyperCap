@@ -9,6 +9,7 @@ export const coins = [
     change7d: 5.32,
     volume: 38521456789,
     marketCap: 1323456789012,
+    circulatingSupply: 19600000,
     categories: ["store-of-value", "pow", "layer-1"],
   },
   {
@@ -21,6 +22,7 @@ export const coins = [
     change7d: 4.21,
     volume: 15234567890,
     marketCap: 389012345678,
+    circulatingSupply: 120000000,
     categories: ["eth", "smart-contracts", "defi", "nft", "layer-1"],
   },
   {
@@ -33,6 +35,7 @@ export const coins = [
     change7d: 45.8,
     volume: 234567890,
     marketCap: 1234567890,
+    circulatingSupply: 1200000000,
     categories: ["ai", "blockchain-ai", "ethereum"],
   },
   {
@@ -45,6 +48,7 @@ export const coins = [
     change7d: 38.2,
     volume: 189567890,
     marketCap: 987654321,
+    circulatingSupply: 800000000,
     categories: ["ai", "blockchain-ai", "smart-contracts", "cosmos"],
   },
   {
@@ -57,6 +61,7 @@ export const coins = [
     change7d: 25.4,
     volume: 145678901,
     marketCap: 567890123,
+    circulatingSupply: 1000000000,
     categories: ["ai", "data-marketplace", "ethereum"],
   },
   {
@@ -69,6 +74,7 @@ export const coins = [
     change7d: 18.6,
     volume: 98765432,
     marketCap: 345678901,
+    circulatingSupply: 5000000000,
     categories: ["ai", "privacy", "smart-contracts", "layer-1"],
   },
   {
@@ -81,6 +87,7 @@ export const coins = [
     change7d: 22.3,
     volume: 123456789,
     marketCap: 789012345,
+    circulatingSupply: 9000000000,
     categories: ["ai", "data-indexing", "ethereum"],
   },
   {
@@ -93,19 +100,21 @@ export const coins = [
     change7d: 42.3,
     volume: 345678901,
     marketCap: 2345678901,
+    circulatingSupply: 80000000,
     categories: ["ai", "defi", "cosmos", "layer-1"],
   },
   {
     id: "worldcoin",
     name: "Worldcoin",
     symbol: "WLD",
-    price: 5.67,
+    price: 4.25,
     change1h: 1.2,
-    change24h: 9.5,
-    change7d: 28.4,
-    volume: 234567890,
-    marketCap: 1234567890,
-    categories: ["ai", "identity", "optimism"],
+    change24h: 8.5,
+    change7d: 25.4,
+    volume: 145678901,
+    marketCap: 567890123,
+    circulatingSupply: 100000000,
+    categories: ["ai", "identity", "ethereum"],
   },
   {
     id: "bittensor",
@@ -117,6 +126,7 @@ export const coins = [
     change7d: 55.8,
     volume: 456789012,
     marketCap: 3456789012,
+    circulatingSupply: 1000000000,
     categories: ["ai", "blockchain-ai", "layer-1"],
   },
   {
@@ -129,6 +139,7 @@ export const coins = [
     change7d: 35.6,
     volume: 234567890,
     marketCap: 1567890123,
+    circulatingSupply: 1000000000,
     categories: ["ai", "gpu-rendering", "ethereum"],
   },
   {
@@ -141,6 +152,7 @@ export const coins = [
     change7d: 24.5,
     volume: 123456789,
     marketCap: 789012345,
+    circulatingSupply: 1000000000,
     categories: ["ai", "cloud-computing", "cosmos"],
   },
   {
@@ -153,6 +165,7 @@ export const coins = [
     change7d: 6.78,
     volume: 2345678901,
     marketCap: 65432109876,
+    circulatingSupply: 150000000,
     categories: ["bnb", "exchange-token", "smart-contracts", "layer-1"],
   },
   {
@@ -165,6 +178,7 @@ export const coins = [
     change7d: 3.67,
     volume: 1234567890,
     marketCap: 23456789012,
+    circulatingSupply: 45000000000,
     categories: ["smart-contracts", "pos", "layer-1"],
   },
   {
@@ -177,6 +191,7 @@ export const coins = [
     change7d: 12.34,
     volume: 3456789012,
     marketCap: 54321098765,
+    circulatingSupply: 5000000000,
     categories: ["sol", "smart-contracts", "pos", "layer-1"],
   },
   {
@@ -189,6 +204,7 @@ export const coins = [
     change7d: 15.8,
     volume: 500000000,
     marketCap: 400000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "defi"],
   },
   {
@@ -201,6 +217,7 @@ export const coins = [
     change7d: 10.2,
     volume: 300000000,
     marketCap: 200000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "defi"],
   },
   {
@@ -213,6 +230,7 @@ export const coins = [
     change7d: 18.5,
     volume: 200000000,
     marketCap: 150000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "defi"],
   },
   {
@@ -225,6 +243,7 @@ export const coins = [
     change7d: 7.2,
     volume: 150000000,
     marketCap: 100000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "defi"],
   },
   {
@@ -237,6 +256,7 @@ export const coins = [
     change7d: 12.5,
     volume: 180000000,
     marketCap: 120000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "defi"],
   },
   {
@@ -249,6 +269,7 @@ export const coins = [
     change7d: 16.5,
     volume: 250000000,
     marketCap: 180000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "gaming"],
   },
   {
@@ -261,6 +282,7 @@ export const coins = [
     change7d: 13.8,
     volume: 300000000,
     marketCap: 220000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "gaming"],
   },
   {
@@ -273,6 +295,7 @@ export const coins = [
     change7d: 19.5,
     volume: 350000000,
     marketCap: 250000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "gaming"],
   },
   {
@@ -285,6 +308,7 @@ export const coins = [
     change7d: 9.2,
     volume: 400000000,
     marketCap: 280000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "infrastructure"],
   },
   {
@@ -297,6 +321,7 @@ export const coins = [
     change7d: 15.2,
     volume: 450000000,
     marketCap: 300000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "infrastructure"],
   },
   {
@@ -309,6 +334,7 @@ export const coins = [
     change7d: 6.8,
     volume: 500000000,
     marketCap: 350000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "infrastructure"],
   },
   {
@@ -321,6 +347,7 @@ export const coins = [
     change7d: 21.2,
     volume: 550000000,
     marketCap: 380000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "nft"],
   },
   {
@@ -333,6 +360,7 @@ export const coins = [
     change7d: 12.8,
     volume: 600000000,
     marketCap: 400000000,
+    circulatingSupply: 1000000000,
     categories: ["bnb", "nft"],
   },
   {
@@ -345,6 +373,7 @@ export const coins = [
     change7d: 13.8,
     volume: 300000000,
     marketCap: 220000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "defi"],
   },
   {
@@ -357,6 +386,7 @@ export const coins = [
     change7d: 7.2,
     volume: 150000000,
     marketCap: 100000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "defi"],
   },
   {
@@ -369,6 +399,7 @@ export const coins = [
     change7d: 12.5,
     volume: 180000000,
     marketCap: 120000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "defi"],
   },
   {
@@ -381,6 +412,7 @@ export const coins = [
     change7d: 16.5,
     volume: 250000000,
     marketCap: 180000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "defi"],
   },
   {
@@ -393,6 +425,7 @@ export const coins = [
     change7d: 13.8,
     volume: 300000000,
     marketCap: 220000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "nft"],
   },
   {
@@ -405,6 +438,7 @@ export const coins = [
     change7d: 19.5,
     volume: 350000000,
     marketCap: 250000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "nft"],
   },
   {
@@ -417,6 +451,7 @@ export const coins = [
     change7d: 9.2,
     volume: 400000000,
     marketCap: 280000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "nft"],
   },
   {
@@ -429,6 +464,7 @@ export const coins = [
     change7d: 15.2,
     volume: 450000000,
     marketCap: 300000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "gaming"],
   },
   {
@@ -441,6 +477,7 @@ export const coins = [
     change7d: 6.8,
     volume: 500000000,
     marketCap: 350000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "gaming"],
   },
   {
@@ -453,6 +490,7 @@ export const coins = [
     change7d: 21.2,
     volume: 550000000,
     marketCap: 380000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "gaming"],
   },
   {
@@ -465,6 +503,7 @@ export const coins = [
     change7d: 12.8,
     volume: 600000000,
     marketCap: 400000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "infrastructure"],
   },
   {
@@ -477,6 +516,7 @@ export const coins = [
     change7d: 14.8,
     volume: 650000000,
     marketCap: 420000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "defi"],
   },
   {
@@ -489,6 +529,7 @@ export const coins = [
     change7d: 11.5,
     volume: 700000000,
     marketCap: 450000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "meme"],
   },
   {
@@ -501,6 +542,7 @@ export const coins = [
     change7d: 16.8,
     volume: 750000000,
     marketCap: 480000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "meme"],
   },
   {
@@ -513,6 +555,7 @@ export const coins = [
     change7d: 9.5,
     volume: 800000000,
     marketCap: 500000000,
+    circulatingSupply: 1000000000,
     categories: ["sol", "meme"],
   },
   {
@@ -525,6 +568,7 @@ export const coins = [
     change7d: 13.8,
     volume: 850000000,
     marketCap: 550000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "defi"],
   },
   {
@@ -537,6 +581,7 @@ export const coins = [
     change7d: 7.2,
     volume: 450000000,
     marketCap: 1200000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "defi"],
   },
   {
@@ -549,6 +594,7 @@ export const coins = [
     change7d: 12.5,
     volume: 280000000,
     marketCap: 2200000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "defi"],
   },
   {
@@ -561,6 +607,7 @@ export const coins = [
     change7d: 16.5,
     volume: 350000000,
     marketCap: 450000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "defi"],
   },
   {
@@ -573,6 +620,7 @@ export const coins = [
     change7d: 13.8,
     volume: 400000000,
     marketCap: 850000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "defi"],
   },
   {
@@ -585,6 +633,7 @@ export const coins = [
     change7d: 13.8,
     volume: 300000000,
     marketCap: 220000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "nft"],
   },
   {
@@ -597,6 +646,7 @@ export const coins = [
     change7d: 19.5,
     volume: 350000000,
     marketCap: 250000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "nft"],
   },
   {
@@ -609,6 +659,7 @@ export const coins = [
     change7d: 9.2,
     volume: 400000000,
     marketCap: 280000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "nft"],
   },
   {
@@ -621,6 +672,7 @@ export const coins = [
     change7d: 15.2,
     volume: 450000000,
     marketCap: 900000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "gaming"],
   },
   {
@@ -633,6 +685,7 @@ export const coins = [
     change7d: 6.8,
     volume: 500000000,
     marketCap: 1200000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "gaming"],
   },
   {
@@ -645,6 +698,7 @@ export const coins = [
     change7d: 21.2,
     volume: 550000000,
     marketCap: 950000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "gaming"],
   },
   {
@@ -657,6 +711,7 @@ export const coins = [
     change7d: 12.8,
     volume: 600000000,
     marketCap: 8500000000,
+    circulatingSupply: 10000000000,
     categories: ["eth", "infrastructure"],
   },
   {
@@ -669,6 +724,7 @@ export const coins = [
     change7d: 14.8,
     volume: 650000000,
     marketCap: 1500000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "layer2", "infrastructure"],
   },
   {
@@ -681,6 +737,7 @@ export const coins = [
     change7d: 11.5,
     volume: 700000000,
     marketCap: 2800000000,
+    circulatingSupply: 1000000000,
     categories: ["eth", "layer2", "infrastructure"],
   },
   {
@@ -693,6 +750,7 @@ export const coins = [
     change7d: 16.8,
     volume: 750000000,
     marketCap: 9500000000,
+    circulatingSupply: 10000000000,
     categories: ["eth", "layer2", "infrastructure"],
   },
   {
@@ -705,6 +763,7 @@ export const coins = [
     change7d: 9.5,
     volume: 800000000,
     marketCap: 5500000000,
+    circulatingSupply: 100000000000,
     categories: ["eth", "meme"],
   },
   {
@@ -717,6 +776,7 @@ export const coins = [
     change7d: 16.8,
     volume: 750000000,
     marketCap: 350000000,
+    circulatingSupply: 100000000000,
     categories: ["eth", "meme"],
   },
   {
@@ -729,6 +789,7 @@ export const coins = [
     change7d: 9.5,
     volume: 800000000,
     marketCap: 12000000000,
+    circulatingSupply: 100000000000,
     categories: ["eth", "meme"],
   },
   {
@@ -741,6 +802,7 @@ export const coins = [
     change7d: 18.4,
     volume: 280000000,
     marketCap: 950000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -753,6 +815,7 @@ export const coins = [
     change7d: 9.8,
     volume: 320000000,
     marketCap: 1100000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -765,6 +828,7 @@ export const coins = [
     change7d: 14.2,
     volume: 420000000,
     marketCap: 1300000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -777,6 +841,7 @@ export const coins = [
     change7d: 16.7,
     volume: 180000000,
     marketCap: 450000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -789,6 +854,7 @@ export const coins = [
     change7d: 10.5,
     volume: 150000000,
     marketCap: 380000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -801,6 +867,7 @@ export const coins = [
     change7d: 22.3,
     volume: 95000000,
     marketCap: 280000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -813,6 +880,7 @@ export const coins = [
     change7d: 13.8,
     volume: 250000000,
     marketCap: 750000000,
+    circulatingSupply: 1000000000,
     categories: ["layer2", "eth"],
   },
   {
@@ -825,6 +893,7 @@ export const coins = [
     change7d: 22.3,
     volume: 95000000,
     marketCap: 280000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "real-estate", "eth"],
   },
   {
@@ -837,6 +906,7 @@ export const coins = [
     change7d: 15.6,
     volume: 85000000,
     marketCap: 250000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "defi", "eth"],
   },
   {
@@ -849,6 +919,7 @@ export const coins = [
     change7d: 18.4,
     volume: 120000000,
     marketCap: 350000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "defi", "eth"],
   },
   {
@@ -861,6 +932,7 @@ export const coins = [
     change7d: 12.8,
     volume: 75000000,
     marketCap: 180000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "defi", "eth"],
   },
   {
@@ -873,6 +945,7 @@ export const coins = [
     change7d: 16.7,
     volume: 65000000,
     marketCap: 150000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "defi", "eth"],
   },
   {
@@ -885,6 +958,7 @@ export const coins = [
     change7d: 3.8,
     volume: 450000000,
     marketCap: 950000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "commodities", "eth"],
   },
   {
@@ -897,6 +971,7 @@ export const coins = [
     change7d: 4.2,
     volume: 350000000,
     marketCap: 750000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "commodities", "eth"],
   },
   {
@@ -909,6 +984,7 @@ export const coins = [
     change7d: 2.5,
     volume: 250000000,
     marketCap: 550000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "real-estate", "eth"],
   },
   {
@@ -921,6 +997,7 @@ export const coins = [
     change7d: 8.8,
     volume: 850000000,
     marketCap: 1800000000,
+    circulatingSupply: 1000000000,
     categories: ["rwa", "stocks", "eth"],
   },
 ];

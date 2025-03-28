@@ -1,14 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { coins } from "../data/coins";
+import { Search, ArrowDown, X, TrendingUp, ArrowLeftRight } from "lucide-react";
 import {
-  Search,
-  ArrowDown,
-  X,
-  TrendingUp,
-  ArrowLeftRight,
-  Crosshair,
-  ArrowUpRight,
-} from "lucide-react";
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 const Compare = () => {
   const [coin1, setCoin1] = useState("");
@@ -19,6 +25,8 @@ const Compare = () => {
   const [showDropdown2, setShowDropdown2] = useState(false);
   const dropdownRef1 = useRef(null);
   const dropdownRef2 = useRef(null);
+  const [timeRange1, setTimeRange1] = useState("24h");
+  const [timeRange2, setTimeRange2] = useState("24h");
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,137 +67,279 @@ const Compare = () => {
   const selectedCoin1 = coins.find((coin) => coin.id === coin1);
   const selectedCoin2 = coins.find((coin) => coin.id === coin2);
 
-  // Generate sample chart data
-  const getChartData = (coin) => {
+  // Generate sample chart data based on time range
+  const getChartData = (coin, timeRange) => {
     if (!coin) return [];
-    // Generate a simpler set of data points with fixed values
-    const basePrice = coin.price || 0;
-    return [
-      { value: basePrice * 0.95 },
-      { value: basePrice * 1.02 },
-      { value: basePrice * 0.98 },
-      { value: basePrice * 1.05 },
-      { value: basePrice * 1.01 },
-      { value: basePrice },
-    ];
-  };
+    const currentPrice = coin.price || 0;
+    let data = [];
+    const now = new Date();
 
-  // Generate line chart
-  const generateLineChart = (data) => {
-    if (!data || data.length === 0) return null;
-
-    const width = 1000;
-    const height = 120;
-    const padding = { top: 20, right: 20, bottom: 30, left: 80 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-
-    const values = data.map((d) => d.value || 0);
-    const maxValue = Math.max(...values);
-    const minValue = Math.min(...values);
-
-    // Format large numbers for y-axis
-    const formatYAxisValue = (value) => {
-      if (!value) return "$0";
-      if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-      if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-      if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-      return `$${value.toFixed(0)}`;
-    };
-
-    // Scale data points
-    const scaledData = values.map((value) => {
-      const range = maxValue - minValue;
-      if (range === 0) return padding.top;
-      return (
-        height - padding.bottom - ((value - minValue) / range) * chartHeight
-      );
-    });
-
-    // Generate path
-    const pathString = scaledData
-      .map((point, index) => {
-        const x = padding.left + (index / (data.length - 1)) * chartWidth;
-        return `${index === 0 ? "M" : "L"} ${x} ${point}`;
-      })
-      .join(" ");
-
-    // Calculate y-axis values (3 points)
-    const yAxisValues = [
-      maxValue,
-      minValue + (maxValue - minValue) / 2,
-      minValue,
-    ];
-
-    return (
-      <svg width={width} height={height} className="w-full">
-        {/* Y-axis */}
-        <line
-          x1={padding.left}
-          y1={padding.top}
-          x2={padding.left}
-          y2={height - padding.bottom}
-          stroke="#e5e7eb"
-          strokeWidth="1"
-        />
-        {/* X-axis */}
-        <line
-          x1={padding.left}
-          y1={height - padding.bottom}
-          x2={width - padding.right}
-          y2={height - padding.bottom}
-          stroke="#e5e7eb"
-          strokeWidth="1"
-        />
-
-        {/* Y-axis labels */}
-        {yAxisValues.map((value, i) => {
-          const y = padding.top + (i * chartHeight) / 2;
-          return (
-            <g key={i}>
-              <line
-                x1={padding.left - 5}
-                y1={y}
-                x2={padding.left}
-                y2={y}
-                stroke="#e5e7eb"
-                strokeWidth="1"
-              />
-              <text
-                x={padding.left - 10}
-                y={y}
-                textAnchor="end"
-                alignmentBaseline="middle"
-                className="text-xs text-gray-500"
-              >
-                {formatYAxisValue(value)}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Line */}
-        <path d={pathString} stroke="#14b8a6" strokeWidth="2" fill="none" />
-      </svg>
-    );
+    switch (timeRange) {
+      case "24h":
+        // Generate 6 points for the last 24 hours
+        data = [
+          {
+            name: new Date(now - 24 * 60 * 60 * 1000).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice * 0.95,
+          },
+          {
+            name: new Date(now - 19.2 * 60 * 60 * 1000).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice * 0.98,
+          },
+          {
+            name: new Date(now - 14.4 * 60 * 60 * 1000).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice * 1.02,
+          },
+          {
+            name: new Date(now - 9.6 * 60 * 60 * 1000).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice * 1.05,
+          },
+          {
+            name: new Date(now - 4.8 * 60 * 60 * 1000).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice * 1.01,
+          },
+          {
+            name: now.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            value: currentPrice,
+          },
+        ];
+        break;
+      case "7d":
+        // Generate 7 points for the last 7 days
+        data = [
+          {
+            name: new Date(now - 7 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.98,
+          },
+          {
+            name: new Date(now - 5.8 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.95,
+          },
+          {
+            name: new Date(now - 4.6 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 1.02,
+          },
+          {
+            name: new Date(now - 3.4 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.97,
+          },
+          {
+            name: new Date(now - 2.2 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 1.03,
+          },
+          {
+            name: new Date(now - 1 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.99,
+          },
+          {
+            name: now.toLocaleDateString([], {
+              month: "short",
+              day: "numeric",
+            }),
+            value: currentPrice,
+          },
+        ];
+        break;
+      case "30d":
+        // Generate 6 points for the last 30 days
+        data = [
+          {
+            name: new Date(now - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.95,
+          },
+          {
+            name: new Date(now - 24 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 1.02,
+          },
+          {
+            name: new Date(now - 18 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 0.98,
+          },
+          {
+            name: new Date(now - 12 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 1.05,
+          },
+          {
+            name: new Date(now - 6 * 24 * 60 * 60 * 1000).toLocaleDateString(
+              [],
+              {
+                month: "short",
+                day: "numeric",
+              }
+            ),
+            value: currentPrice * 1.01,
+          },
+          {
+            name: now.toLocaleDateString([], {
+              month: "short",
+              day: "numeric",
+            }),
+            value: currentPrice,
+          },
+        ];
+        break;
+      case "all":
+        // Generate 6 points for the last year
+        data = [
+          {
+            name: new Date(
+              now - 12 * 30 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice * 0.95,
+          },
+          {
+            name: new Date(
+              now - 8 * 30 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice * 1.02,
+          },
+          {
+            name: new Date(
+              now - 6 * 30 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice * 0.98,
+          },
+          {
+            name: new Date(
+              now - 4 * 30 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice * 1.05,
+          },
+          {
+            name: new Date(
+              now - 2 * 30 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice * 1.01,
+          },
+          {
+            name: now.toLocaleDateString([], {
+              month: "short",
+              year: "numeric",
+            }),
+            value: currentPrice,
+          },
+        ];
+        break;
+    }
+    return data;
   };
 
   // Format number with appropriate suffix
   const formatNumber = (num) => {
     if (!num) return "0";
-    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
-    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-    if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(0)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(0)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(0)}M`;
+    if (num >= 1e3) {
+      const kValue = num / 1e3;
+      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+    }
     return `$${num.toFixed(2)}`;
   };
 
   const formatPrice = (price) => {
     if (!price) return "$0.00";
-    return `$${price.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+    if (price >= 1e12) return `$${(price / 1e12).toFixed(0)}T`;
+    if (price >= 1e9) return `$${(price / 1e9).toFixed(0)}B`;
+    if (price >= 1e6) return `$${(price / 1e6).toFixed(0)}M`;
+    if (price >= 1e3) {
+      const kValue = price / 1e3;
+      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+    }
+    return `$${price.toFixed(2)}`;
   };
 
   const formatPercentage = (change) => {
@@ -199,9 +349,13 @@ const Compare = () => {
 
   const formatSupply = (supply) => {
     if (!supply) return "0";
-    if (supply >= 1e9) return `${(supply / 1e9).toFixed(2)}B`;
-    if (supply >= 1e6) return `${(supply / 1e6).toFixed(2)}M`;
-    if (supply >= 1e3) return `${(supply / 1e3).toFixed(2)}K`;
+    if (supply >= 1e12) return `${(supply / 1e12).toFixed(0)}T`;
+    if (supply >= 1e9) return `${(supply / 1e9).toFixed(0)}B`;
+    if (supply >= 1e6) return `${(supply / 1e6).toFixed(0)}M`;
+    if (supply >= 1e3) {
+      const kValue = supply / 1e3;
+      return `${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+    }
     return supply.toString();
   };
 
@@ -215,6 +369,35 @@ const Compare = () => {
     const tempQuery = searchQuery1;
     setSearchQuery1(searchQuery2);
     setSearchQuery2(tempQuery);
+  };
+
+  // Calculate Y-axis domain
+  const calculateYAxisDomain = (data) => {
+    if (!data || data.length === 0) return [0, 0];
+
+    const values = data.map((d) => d.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    // Calculate 10% padding for better visualization
+    const padding = (max - min) * 0.1;
+    const domainMin = Math.max(0, min - padding);
+    const domainMax = max + padding;
+
+    // Round the values to make the chart look cleaner
+    const roundToSignificantFigures = (num, sigFigs) => {
+      if (num === 0) return 0;
+      const d = Math.ceil(Math.log10(Math.abs(num)));
+      const power = sigFigs - d;
+      const magnitude = Math.pow(10, power);
+      const shifted = Math.round(num * magnitude);
+      return shifted / magnitude;
+    };
+
+    return [
+      roundToSignificantFigures(domainMin, 2),
+      roundToSignificantFigures(domainMax, 2),
+    ];
   };
 
   return (
@@ -402,7 +585,7 @@ const Compare = () => {
       {/* Coin Cards */}
       <div className="relative grid grid-cols-2 gap-8 max-w-6xl mx-auto mt-8">
         {/* First Coin Card */}
-        <div className="bg-white rounded-2xl p-6 space-y-6 border border-gray-200 shadow-lg">
+        <div className="bg-white rounded-2xl px-6 pt-6 pb-4 border border-gray-200 shadow-lg">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center">
@@ -440,7 +623,7 @@ const Compare = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-3 gap-4 mt-6 pl-4">
             <div>
               <div className="text-sm text-gray-500">Market Cap</div>
               <div className="text-lg font-semibold">
@@ -450,7 +633,7 @@ const Compare = () => {
             <div>
               <div className="text-sm text-gray-500">24h Volume</div>
               <div className="text-lg font-semibold">
-                {formatNumber(selectedCoin1?.volume24h)}
+                {formatNumber(selectedCoin1?.volume)}
               </div>
             </div>
             <div>
@@ -461,9 +644,64 @@ const Compare = () => {
             </div>
           </div>
 
-          <div className="h-48">
+          <div className="h-48 relative mt-6">
             {selectedCoin1 ? (
-              generateLineChart(getChartData(selectedCoin1))
+              <>
+                <div className="absolute -top-3 right-5 z-10 flex space-x-1 bg-white rounded-lg shadow-sm p-1">
+                  {["24h", "7d", "30d", "all"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange1(range)}
+                      className={`px-2 py-1 text-xs rounded ${
+                        timeRange1 === range
+                          ? "bg-teal-500 text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+                <div className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={getChartData(selectedCoin1, timeRange1)}
+                      margin={{ top: 30, right: 20, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#6b7280"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => formatPrice(value)}
+                        domain={calculateYAxisDomain(
+                          getChartData(selectedCoin1, timeRange1)
+                        )}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "white",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "0.5rem",
+                          color: "#1f2937",
+                        }}
+                        formatter={(value) => [formatPrice(value), "Price"]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#14b8a6"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400">
                 Select a coin to view chart
@@ -483,7 +721,7 @@ const Compare = () => {
         </button>
 
         {/* Second Coin Card */}
-        <div className="bg-white rounded-2xl p-6 space-y-6 border border-gray-200 shadow-lg">
+        <div className="bg-white rounded-2xl px-6 pt-6 pb-4 border border-gray-200 shadow-lg">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center">
@@ -521,7 +759,7 @@ const Compare = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-3 gap-4 mt-6 pl-4">
             <div>
               <div className="text-sm text-gray-500">Market Cap</div>
               <div className="text-lg font-semibold">
@@ -531,7 +769,7 @@ const Compare = () => {
             <div>
               <div className="text-sm text-gray-500">24h Volume</div>
               <div className="text-lg font-semibold">
-                {formatNumber(selectedCoin2?.volume24h)}
+                {formatNumber(selectedCoin2?.volume)}
               </div>
             </div>
             <div>
@@ -542,9 +780,64 @@ const Compare = () => {
             </div>
           </div>
 
-          <div className="h-48">
+          <div className="h-48 relative mt-6">
             {selectedCoin2 ? (
-              generateLineChart(getChartData(selectedCoin2))
+              <>
+                <div className="absolute -top-3 right-5 z-10 flex space-x-1 bg-white rounded-lg shadow-sm p-1">
+                  {["24h", "7d", "30d", "all"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange2(range)}
+                      className={`px-2 py-1 text-xs rounded ${
+                        timeRange2 === range
+                          ? "bg-teal-500 text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+                <div className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={getChartData(selectedCoin2, timeRange2)}
+                      margin={{ top: 30, right: 20, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#6b7280"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => formatPrice(value)}
+                        domain={calculateYAxisDomain(
+                          getChartData(selectedCoin2, timeRange2)
+                        )}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "white",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "0.5rem",
+                          color: "#1f2937",
+                        }}
+                        formatter={(value) => [formatPrice(value), "Price"]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#14b8a6"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400">
                 Select a coin to view chart
@@ -554,98 +847,140 @@ const Compare = () => {
         </div>
       </div>
 
-      {/* Comparative Metrics */}
+      {/* Comparative Charts */}
       {selectedCoin1 && selectedCoin2 && (
         <div className="grid grid-cols-4 gap-4 max-w-6xl mx-auto mt-8">
-          {/* Market Cap Multiplier */}
-          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
-            <p className="text-sm text-gray-500 mb-2">Market Cap Multiplier</p>
-            <p
-              className={`text-2xl font-bold ${
-                selectedCoin2.marketCap / selectedCoin1.marketCap >= 1
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {Math.round(selectedCoin2.marketCap / selectedCoin1.marketCap)}x
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {selectedCoin1.name} will increase by{" "}
-              {Math.round(selectedCoin2.marketCap / selectedCoin1.marketCap)}x
-              if it reaches {selectedCoin2.name}&apos;s market cap
-            </p>
+          {/* Market Cap Pie Chart */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Market Cap
+            </h3>
+            <ResponsiveContainer width="100%" height={120}>
+              <PieChart>
+                <Pie
+                  data={[
+                    {
+                      name: selectedCoin1.name,
+                      value: selectedCoin1.marketCap,
+                    },
+                    {
+                      name: selectedCoin2.name,
+                      value: selectedCoin2.marketCap,
+                    },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={50}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                >
+                  <Cell fill="#14b8a6" />
+                  <Cell fill="#3b82f6" />
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    color: "#1f2937",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Price Potential */}
-          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
-            <p className="text-sm text-gray-500 mb-2">Price Potential</p>
-            <p
-              className={`text-2xl font-bold ${
-                selectedCoin2.price / selectedCoin1.price >= 1
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {Math.round((selectedCoin2.price / selectedCoin1.price) * 100) /
-                100}
-              x
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {selectedCoin1.name} will increase by{" "}
-              {Math.round((selectedCoin2.price / selectedCoin1.price) * 100) /
-                100}
-              x if it reaches {selectedCoin2.name}&apos;s price
-            </p>
+          {/* Volume Bar Chart */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Volume</h3>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart
+                data={[
+                  {
+                    name: "Volume",
+                    [selectedCoin1.name]: selectedCoin1.volume,
+                    [selectedCoin2.name]: selectedCoin2.volume,
+                  },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    color: "#1f2937",
+                  }}
+                />
+                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
+                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Volume Ratio */}
-          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
-            <p className="text-sm text-gray-500 mb-2">Volume Ratio</p>
-            <p
-              className={`text-2xl font-bold ${
-                selectedCoin2.volume / selectedCoin1.volume >= 1
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {Math.round((selectedCoin2.volume / selectedCoin1.volume) * 10) /
-                10}
-              x
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {selectedCoin1.name} will increase by{" "}
-              {Math.round((selectedCoin2.volume / selectedCoin1.volume) * 10) /
-                10}
-              x if it reaches {selectedCoin2.name}&apos;s volume
-            </p>
+          {/* Price Bar Chart */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Price</h3>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart
+                data={[
+                  {
+                    name: "Price",
+                    [selectedCoin1.name]: selectedCoin1.price,
+                    [selectedCoin2.name]: selectedCoin2.price,
+                  },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    color: "#1f2937",
+                  }}
+                />
+                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
+                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Supply Difference */}
-          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
-            <p className="text-sm text-gray-500 mb-2">Supply Difference</p>
-            <p
-              className={`text-2xl font-bold ${
-                selectedCoin2.circulatingSupply /
-                  selectedCoin1.circulatingSupply >=
-                1
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {Math.round(
-                selectedCoin2.circulatingSupply /
-                  selectedCoin1.circulatingSupply
-              )}
-              x
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {selectedCoin1.name} will increase by{" "}
-              {Math.round(
-                selectedCoin2.circulatingSupply /
-                  selectedCoin1.circulatingSupply
-              )}{" "}
-              x if it reaches {selectedCoin2.name}&apos;s supply
-            </p>
+          {/* Supply Bar Chart */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Circulating Supply
+            </h3>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart
+                data={[
+                  {
+                    name: "Supply",
+                    [selectedCoin1.name]: selectedCoin1.circulatingSupply,
+                    [selectedCoin2.name]: selectedCoin2.circulatingSupply,
+                  },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    color: "#1f2937",
+                  }}
+                />
+                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
+                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}

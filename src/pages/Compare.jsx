@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { coins } from "../data/coins";
-import { Search, ArrowDown, X, TrendingUp } from "lucide-react";
+import {
+  Search,
+  ArrowDown,
+  X,
+  TrendingUp,
+  ArrowLeftRight,
+  Crosshair,
+  ArrowUpRight,
+} from "lucide-react";
 
 const Compare = () => {
   const [coin1, setCoin1] = useState("");
@@ -197,6 +205,18 @@ const Compare = () => {
     return supply.toString();
   };
 
+  const switchCoins = () => {
+    // Switch coin1 and coin2
+    const temp = coin1;
+    setCoin1(coin2);
+    setCoin2(temp);
+
+    // Switch search queries
+    const tempQuery = searchQuery1;
+    setSearchQuery1(searchQuery2);
+    setSearchQuery2(tempQuery);
+  };
+
   return (
     <div className="container mx-auto bg-white text-gray-800 p-6 rounded-xl max-w-7xl">
       <h1 className="text-3xl font-bold mb-8 text-center">
@@ -380,7 +400,7 @@ const Compare = () => {
       </div>
 
       {/* Coin Cards */}
-      <div className="grid grid-cols-2 gap-8 max-w-6xl mx-auto mt-8">
+      <div className="relative grid grid-cols-2 gap-8 max-w-6xl mx-auto mt-8">
         {/* First Coin Card */}
         <div className="bg-white rounded-2xl p-6 space-y-6 border border-gray-200 shadow-lg">
           <div className="flex justify-between items-center">
@@ -451,6 +471,16 @@ const Compare = () => {
             )}
           </div>
         </div>
+
+        {/* Switch Button */}
+        <button
+          onClick={switchCoins}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                     bg-teal-500 rounded-full p-3 z-10 hover:bg-teal-600 transition-colors
+                     shadow-lg hover:shadow-xl"
+        >
+          <ArrowLeftRight className="text-white" size={24} />
+        </button>
 
         {/* Second Coin Card */}
         <div className="bg-white rounded-2xl p-6 space-y-6 border border-gray-200 shadow-lg">
@@ -523,6 +553,102 @@ const Compare = () => {
           </div>
         </div>
       </div>
+
+      {/* Comparative Metrics */}
+      {selectedCoin1 && selectedCoin2 && (
+        <div className="grid grid-cols-4 gap-4 max-w-6xl mx-auto mt-8">
+          {/* Market Cap Multiplier */}
+          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
+            <p className="text-sm text-gray-500 mb-2">Market Cap Multiplier</p>
+            <p
+              className={`text-2xl font-bold ${
+                selectedCoin2.marketCap / selectedCoin1.marketCap >= 1
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
+              {Math.round(selectedCoin2.marketCap / selectedCoin1.marketCap)}x
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {selectedCoin1.name} will increase by{" "}
+              {Math.round(selectedCoin2.marketCap / selectedCoin1.marketCap)}x
+              if it reaches {selectedCoin2.name}&apos;s market cap
+            </p>
+          </div>
+
+          {/* Price Potential */}
+          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
+            <p className="text-sm text-gray-500 mb-2">Price Potential</p>
+            <p
+              className={`text-2xl font-bold ${
+                selectedCoin2.price / selectedCoin1.price >= 1
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
+              {Math.round((selectedCoin2.price / selectedCoin1.price) * 100) /
+                100}
+              x
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {selectedCoin1.name} will increase by{" "}
+              {Math.round((selectedCoin2.price / selectedCoin1.price) * 100) /
+                100}
+              x if it reaches {selectedCoin2.name}&apos;s price
+            </p>
+          </div>
+
+          {/* Volume Ratio */}
+          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
+            <p className="text-sm text-gray-500 mb-2">Volume Ratio</p>
+            <p
+              className={`text-2xl font-bold ${
+                selectedCoin2.volume / selectedCoin1.volume >= 1
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
+              {Math.round((selectedCoin2.volume / selectedCoin1.volume) * 10) /
+                10}
+              x
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {selectedCoin1.name} will increase by{" "}
+              {Math.round((selectedCoin2.volume / selectedCoin1.volume) * 10) /
+                10}
+              x if it reaches {selectedCoin2.name}&apos;s volume
+            </p>
+          </div>
+
+          {/* Supply Difference */}
+          <div className="bg-white rounded-2xl p-4 flex flex-col items-center text-center border border-gray-200 shadow-lg">
+            <p className="text-sm text-gray-500 mb-2">Supply Difference</p>
+            <p
+              className={`text-2xl font-bold ${
+                selectedCoin2.circulatingSupply /
+                  selectedCoin1.circulatingSupply >=
+                1
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
+              {Math.round(
+                selectedCoin2.circulatingSupply /
+                  selectedCoin1.circulatingSupply
+              )}
+              x
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {selectedCoin1.name} will increase by{" "}
+              {Math.round(
+                selectedCoin2.circulatingSupply /
+                  selectedCoin1.circulatingSupply
+              )}{" "}
+              x if it reaches {selectedCoin2.name}&apos;s supply
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

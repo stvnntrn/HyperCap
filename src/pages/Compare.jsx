@@ -848,9 +848,56 @@ const Compare = () => {
         </div>
       </div>
 
+      {/* Market Cap Comparison Section */}
+      {selectedCoin1 && selectedCoin2 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-6">
+            If {selectedCoin1.name} reaches {selectedCoin2.name}&apos;s market
+            cap
+          </h2>
+          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {/* Market Cap Multiplier Card */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 text-center mb-2">
+                Market Cap Multiplier
+              </h3>
+              <div
+                className={`text-2xl font-bold text-center ${
+                  selectedCoin2.marketCap > selectedCoin1.marketCap
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
+              >
+                {(selectedCoin2.marketCap / selectedCoin1.marketCap).toFixed(2)}
+                x
+              </div>
+            </div>
+
+            {/* Potential Price Card */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 text-center mb-2">
+                {selectedCoin1.name} Price
+              </h3>
+              <div
+                className={`text-2xl font-bold text-center ${
+                  selectedCoin2.marketCap > selectedCoin1.marketCap
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
+              >
+                {formatPrice(
+                  selectedCoin1.price *
+                    (selectedCoin2.marketCap / selectedCoin1.marketCap)
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Comparative Charts */}
       {selectedCoin1 && selectedCoin2 && (
-        <div className="mt-12">
+        <div className="mt-8">
           <h2 className="text-xl font-bold text-gray-900 text-center mb-4">
             Comparison Charts
           </h2>

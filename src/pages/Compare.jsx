@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 
 const Compare = () => {
@@ -320,24 +321,24 @@ const Compare = () => {
   // Format number with appropriate suffix
   const formatNumber = (num) => {
     if (!num) return "0";
-    if (num >= 1e12) return `$${(num / 1e12).toFixed(0)}T`;
-    if (num >= 1e9) return `$${(num / 1e9).toFixed(0)}B`;
-    if (num >= 1e6) return `$${(num / 1e6).toFixed(0)}M`;
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
     if (num >= 1e3) {
       const kValue = num / 1e3;
-      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(2)}K`;
     }
     return `$${num.toFixed(2)}`;
   };
 
   const formatPrice = (price) => {
     if (!price) return "$0.00";
-    if (price >= 1e12) return `$${(price / 1e12).toFixed(0)}T`;
-    if (price >= 1e9) return `$${(price / 1e9).toFixed(0)}B`;
-    if (price >= 1e6) return `$${(price / 1e6).toFixed(0)}M`;
+    if (price >= 1e12) return `$${(price / 1e12).toFixed(2)}T`;
+    if (price >= 1e9) return `$${(price / 1e9).toFixed(2)}B`;
+    if (price >= 1e6) return `$${(price / 1e6).toFixed(2)}M`;
     if (price >= 1e3) {
       const kValue = price / 1e3;
-      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+      return `$${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(2)}K`;
     }
     return `$${price.toFixed(2)}`;
   };
@@ -349,12 +350,12 @@ const Compare = () => {
 
   const formatSupply = (supply) => {
     if (!supply) return "0";
-    if (supply >= 1e12) return `${(supply / 1e12).toFixed(0)}T`;
-    if (supply >= 1e9) return `${(supply / 1e9).toFixed(0)}B`;
-    if (supply >= 1e6) return `${(supply / 1e6).toFixed(0)}M`;
+    if (supply >= 1e12) return `${(supply / 1e12).toFixed(2)}T`;
+    if (supply >= 1e9) return `${(supply / 1e9).toFixed(2)}B`;
+    if (supply >= 1e6) return `${(supply / 1e6).toFixed(2)}M`;
     if (supply >= 1e3) {
       const kValue = supply / 1e3;
-      return `${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1)}K`;
+      return `${kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(2)}K`;
     }
     return supply.toString();
   };
@@ -849,138 +850,202 @@ const Compare = () => {
 
       {/* Comparative Charts */}
       {selectedCoin1 && selectedCoin2 && (
-        <div className="grid grid-cols-4 gap-4 max-w-6xl mx-auto mt-8">
-          {/* Market Cap Pie Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">
-              Market Cap
-            </h3>
-            <ResponsiveContainer width="100%" height={120}>
-              <PieChart>
-                <Pie
+        <div className="mt-12">
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-4">
+            Comparison Charts
+          </h2>
+          <div className="flex justify-center items-center gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-teal-500"></div>
+              <span className="text-sm text-gray-600">
+                {selectedCoin1.name}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+              <span className="text-sm text-gray-600">
+                {selectedCoin2.name}
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 max-w-6xl mx-auto">
+            {/* Market Cap Pie Chart */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 text-center mb-2">
+                Market Cap
+              </h3>
+              <ResponsiveContainer width="100%" height={120}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      {
+                        name: selectedCoin1.name,
+                        value: selectedCoin1.marketCap,
+                        color: "#14b8a6",
+                      },
+                      {
+                        name: selectedCoin2.name,
+                        value: selectedCoin2.marketCap,
+                        color: "#3b82f6",
+                      },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={50}
+                    dataKey="value"
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    activeShape={{
+                      stroke: "none",
+                      strokeWidth: 0,
+                    }}
+                  >
+                    <Cell fill="#14b8a6" />
+                    <Cell fill="#3b82f6" />
+                  </Pie>
+                  <Tooltip
+                    content={({ payload }) => (
+                      <div className="bg-white p-2 rounded shadow border border-gray-200">
+                        <div className="font-semibold text-gray-700">
+                          Marketcap
+                        </div>
+                        {payload.map((entry, index) => (
+                          <div
+                            key={`item-${index}`}
+                            style={{
+                              color: index === 0 ? "#14b8a6" : "#3b82f6",
+                            }}
+                          >
+                            {entry.name}: {formatNumber(entry.value)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Volume Bar Chart */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 text-center mb-2">
+                Volume
+              </h3>
+              <ResponsiveContainer width="100%" height={120}>
+                <BarChart
                   data={[
                     {
                       name: selectedCoin1.name,
-                      value: selectedCoin1.marketCap,
+                      value: selectedCoin1.volume,
+                      fill: "#14b8a6",
                     },
                     {
                       name: selectedCoin2.name,
-                      value: selectedCoin2.marketCap,
+                      value: selectedCoin2.volume,
+                      fill: "#3b82f6",
                     },
                   ]}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={50}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                  layout="vertical"
                 >
-                  <Cell fill="#14b8a6" />
-                  <Cell fill="#3b82f6" />
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "0.5rem",
-                    color: "#1f2937",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#e5e7eb"
+                    horizontal={false}
+                  />
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" hide />
+                  <Tooltip
+                    trigger="hover"
+                    shared={false}
+                    cursor={{ fill: "transparent" }}
+                    content={({ payload }) => (
+                      <div className="bg-white p-2 rounded shadow border border-gray-200">
+                        <div className="font-semibold text-gray-700">
+                          Volume
+                        </div>
+                        {payload?.map((entry, index) => (
+                          <div
+                            key={`item-${index}`}
+                            style={{ color: entry.payload.fill }}
+                          >
+                            {entry.payload.name}: {formatNumber(entry.value)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="#14b8a6"
+                    radius={[0, 4, 4, 0]}
+                    barSize={30}
+                    barGap={20}
+                  >
+                    <LabelList
+                      dataKey="value"
+                      position="top"
+                      formatter={(value) => formatNumber(value)}
+                      style={{
+                        fontSize: "12px",
+                        fill: "#1f2937",
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-          {/* Volume Bar Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Volume</h3>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart
-                data={[
-                  {
-                    name: "Volume",
-                    [selectedCoin1.name]: selectedCoin1.volume,
-                    [selectedCoin2.name]: selectedCoin2.volume,
-                  },
-                ]}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "0.5rem",
-                    color: "#1f2937",
-                  }}
-                />
-                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
-                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Price Bar Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Price</h3>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart
-                data={[
-                  {
-                    name: "Price",
-                    [selectedCoin1.name]: selectedCoin1.price,
-                    [selectedCoin2.name]: selectedCoin2.price,
-                  },
-                ]}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "0.5rem",
-                    color: "#1f2937",
-                  }}
-                />
-                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
-                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Supply Bar Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">
-              Circulating Supply
-            </h3>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart
-                data={[
-                  {
-                    name: "Supply",
-                    [selectedCoin1.name]: selectedCoin1.circulatingSupply,
-                    [selectedCoin2.name]: selectedCoin2.circulatingSupply,
-                  },
-                ]}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "0.5rem",
-                    color: "#1f2937",
-                  }}
-                />
-                <Bar dataKey={selectedCoin1.name} fill="#14b8a6" />
-                <Bar dataKey={selectedCoin2.name} fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
+            {/* Supply Bar Chart */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 text-center mb-2">
+                Circulating Supply
+              </h3>
+              <div className="pr-8">
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart
+                    data={[
+                      {
+                        name: "Supply",
+                        [selectedCoin1.name]: selectedCoin1.circulatingSupply,
+                        [selectedCoin2.name]: selectedCoin2.circulatingSupply,
+                      },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" stroke="#6b7280" hide />
+                    <YAxis
+                      stroke="#6b7280"
+                      tickFormatter={(value) => formatSupply(value)}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip
+                      trigger="hover"
+                      shared={false}
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "0.5rem",
+                        color: "#1f2937",
+                      }}
+                      formatter={(value, name) => [formatSupply(value), name]}
+                      labelStyle={{ color: "#1f2937", fontWeight: "600" }}
+                      cursor={{ fill: "transparent" }}
+                    />
+                    <Bar
+                      dataKey={selectedCoin1.name}
+                      fill="#14b8a6"
+                      barSize={30}
+                    />
+                    <Bar
+                      dataKey={selectedCoin2.name}
+                      fill="#3b82f6"
+                      barSize={30}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </div>
       )}

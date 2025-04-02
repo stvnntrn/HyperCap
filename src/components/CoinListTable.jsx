@@ -29,13 +29,13 @@ const CoinListTable = ({
   categoryId = null,
   title = "Cryptocurrency Prices by Market Cap",
   colors = {
-    gradient: "from-yellow-400 to-yellow-500",
-    bg: "bg-yellow-50",
-    text: "text-yellow-600",
-    highlight: "text-yellow-500",
-    hover: "hover:text-yellow-200",
-    ring: "yellow",
-    hoverBg: "yellow",
+    gradient: "from-teal-400 to-teal-500",
+    bg: "bg-teal-50",
+    text: "text-teal-600",
+    highlight: "text-teal-500",
+    hover: "hover:text-teal-200",
+    ring: "teal",
+    hoverBg: "teal",
   },
 }) => {
   const [activeTab, setActiveTab] = useState("top");
@@ -534,12 +534,12 @@ const CoinListTable = ({
               return (
                 <tr
                   key={coin.id}
-                  className={`hover:bg-${colors.hoverBg}-50/50 transition-colors cursor-pointer`}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <td className="py-4 pl-3 whitespace-nowrap text-sm font-medium text-gray-700 w-0">
                     <Star
                       size={16}
-                      className={`text-gray-400 hover:text-${colors.ring}-500`}
+                      className={`text-gray-400 hover:text-yellow-500`}
                     />
                   </td>
                   <td className="py-4 pl-5 whitespace-nowrap text-sm font-medium text-gray-700 max-w-[28px]">

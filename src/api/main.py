@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Optional
 
@@ -12,24 +13,30 @@ app = FastAPI()
 
 BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/price"
 BINANCE_24HR_URL = "https://api.binance.com/api/v3/ticker/24hr"
+BINANACE_INFO_URL = "https://api.binance.com/api/v3/exchangeInfo"
 
 
 async def fetch_all_ticker_data():
     async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(BINANCE_24HR_URL)
-            response.raise_for_status()
-            data = response.json()
-            if not data:
-                logger.warning("Binance returned empty ticker data")
-                return []
-            return data
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Binance API error: {str(e)}")
-            raise HTTPException(status_code=e.response.status_code, detail="Binance API issue")
-        except Exception as e:
-            logger.error(f"Error fetching ticker data: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
+        for attempt in range(3):
+            try:
+                response = await client.get(BINANCE_24HR_URL)
+                response.raise_for_status()
+                data = response.json()
+                if not data:
+                    logger.warning("Binance returned empty ticker data")
+                    return []
+                return data
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    wait_time = 2**attempt
+                    logger.warning(f"Rate limit hit, retrying in {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"Binance API error: {str(e)}")
+                    raise HTTPException(status_code=e.response.status_code, detail="Binance API issue")
+        logger.error("Max retries exceeded for Binance API")
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
 
 def process_ticker_data(data):

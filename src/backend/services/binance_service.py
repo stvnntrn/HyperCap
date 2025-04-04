@@ -1,22 +1,16 @@
 import asyncio
 import logging
-from typing import Optional
+from typing import Any, Dict, List
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+from ..config import BINANCE_24HR_URL, BINANCE_API_URL
+
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
 
-BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/price"
-BINANCE_24HR_URL = "https://api.binance.com/api/v3/ticker/24hr"
-BINANACE_INFO_URL = "https://api.binance.com/api/v3/exchangeInfo"
-
-
-async def fetch_all_ticker_data():
+async def fetch_all_ticker_data() -> List[Dict[str, Any]]:
     async with httpx.AsyncClient() as client:
         for attempt in range(3):
             try:
@@ -39,7 +33,7 @@ async def fetch_all_ticker_data():
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
 
-def process_ticker_data(data):
+def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     # Step 1: Collect reference prices for conversion (USDT-based pairs)
     reference_prices = {}
     for item in data:
@@ -68,7 +62,7 @@ def process_ticker_data(data):
             continue
 
         try:
-            price = float(item.get("lastPrice", 0))  # Default to 0 if missing
+            price = float(item.get("lastPrice", 0))
             coin_data = {
                 "symbol": symbol,
                 "price_usdt": price,
@@ -105,48 +99,7 @@ def process_ticker_data(data):
     return list(processed_coins.values())
 
 
-@app.get("/alldata/")
-async def get_all_data(limit: Optional[int] = None):
-    data = await fetch_all_ticker_data()
-    filtered_data = [
-        {
-            "symbol": item["symbol"],
-            "price": float(item.get("lastPrice", 0)),
-            "price_change": float(item.get("priceChange", 0)),
-            "price_change_percent": float(item.get("priceChangePercent", 0)),
-            "high_24h": float(item.get("highPrice", 0)),
-            "low_24h": float(item.get("lowPrice", 0)),
-            "volume": float(item.get("volume", 0)),
-            "quote_volume": float(item.get("quoteVolume", 0)),
-            "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
-        }
-        for item in data
-    ]
-    return {"status": "success", "data": filtered_data[:limit] if limit else filtered_data, "total": len(filtered_data)}
-
-
-@app.get("/marketcap/")
-async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100):
-    if page < 1 or size < 1:
-        raise HTTPException(status_code=400, detail="Page and size must be positive")
-
-    data = await fetch_all_ticker_data()
-    if not data:
-        raise HTTPException(status_code=404, detail="No ticker data available from Binance")
-
-    processed_data = process_ticker_data(data)
-    sorted_data = sorted(processed_data, key=lambda x: x["quote_volume"], reverse=True)
-
-    start = (page - 1) * size
-    if start >= len(sorted_data):
-        return {"status": "success", "data": [], "total": len(sorted_data)}
-    end = min(start + size, len(sorted_data))
-
-    return {"status": "success", "data": sorted_data[start:end], "total": len(sorted_data)}
-
-
-@app.get("/price/{symbol}")
-async def get_crypto_price(symbol: str):
+async def get_crypto_price(symbol: str) -> Dict[str, Any]:
     symbol = symbol.upper()
     async with httpx.AsyncClient() as client:
         try:
@@ -164,8 +117,3 @@ async def get_crypto_price(symbol: str):
         except Exception as e:
             logger.error(f"Error fetching {symbol}: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
-
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to your crypto API!"}

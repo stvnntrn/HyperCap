@@ -1,11 +1,15 @@
 import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any, Dict, List
 
 import httpx
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from ..config import BINANCE_24HR_URL, BINANCE_API_URL
+from ..crud.coin import bulk_upsert_coins
+from ..database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +69,22 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             price = float(item.get("lastPrice", 0))
             coin_data = {
                 "symbol": symbol,
+                "coin_name": base,
                 "price_usdt": price,
                 "price_change": float(item.get("priceChange", 0)),
                 "price_change_percent": float(item.get("priceChangePercent", 0)),
                 "high_24h": float(item.get("highPrice", 0)),
                 "low_24h": float(item.get("lowPrice", 0)),
-                "volume": float(item.get("volume", 0)),
-                "quote_volume": float(item.get("quoteVolume", 0)),
+                "open_price_24h": float(item.get("openPrice", 0)),
+                "close_price_24h": float(item.get("prevClosePrice", 0)),
+                "volume_24h": float(item.get("volume", 0)),
+                "quote_volume_24h": float(item.get("quoteVolume", 0)),
                 "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
+                "market_cap": 0.0,
+                "circulating_supply": 0.0,
+                "total_supply": 0.0,
+                "max_supply": 0.0,
+                "last_updated": datetime.now(UTC),
             }
         except (ValueError, TypeError) as e:
             logger.warning(f"Invalid data for {symbol}: {str(e)}")
@@ -82,14 +94,15 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if quote in ["USDT", "USDC", "FDUSD"]:
             processed_coins[base] = coin_data
             seen_bases.add(base)
-        # Convert non-stablecoin pairs to USDT
         elif quote in reference_prices and base not in seen_bases:
             conversion_rate = reference_prices[quote]
             coin_data["price_usdt"] = price * conversion_rate
             coin_data["price_change"] = coin_data["price_change"] * conversion_rate
             coin_data["high_24h"] = coin_data["high_24h"] * conversion_rate
             coin_data["low_24h"] = coin_data["low_24h"] * conversion_rate
-            coin_data["quote_volume"] = coin_data["quote_volume"] * conversion_rate
+            coin_data["open_price_24h"] = coin_data["open_price_24h"] * conversion_rate
+            coin_data["close_price_24h"] = coin_data["close_price_24h"] * conversion_rate
+            coin_data["quote_volume_24h"] = coin_data["quote_volume_24h"] * conversion_rate
             coin_data["weighted_avg_price"] = coin_data["weighted_avg_price"] * conversion_rate
             processed_coins[base] = coin_data
             seen_bases.add(base)
@@ -97,6 +110,20 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             logger.debug(f"Skipping {symbol} - no stablecoin pair or reference price")
 
     return list(processed_coins.values())
+
+
+async def fetch_and_store_ticker_data(db: Session = Depends(get_db)):
+    try:
+        ticker_data = await fetch_all_ticker_data()
+        if not ticker_data:
+            logger.info("No data to process")
+            return
+        processed_data = process_ticker_data(ticker_data)
+        await bulk_upsert_coins(db, processed_data)  # Using await since it’s async in crud
+        logger.info("Ticker data fetched and stored successfully")
+    except Exception as e:
+        logger.error(f"Error fetching and storing ticker data: {str(e)}")
+        raise
 
 
 async def get_crypto_price(symbol: str) -> Dict[str, Any]:

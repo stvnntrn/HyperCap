@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Dict, List
 
 import httpx
@@ -38,7 +38,6 @@ async def fetch_all_ticker_data() -> List[Dict[str, Any]]:
 
 
 def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    # Step 1: Collect reference prices for conversion (USDT-based pairs)
     reference_prices = {}
     for item in data:
         symbol = item["symbol"]
@@ -53,7 +52,6 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             except (ValueError, TypeError) as e:
                 logger.warning(f"Invalid price data for {symbol}: {str(e)}")
 
-    # Step 2: Process pairs
     processed_coins = {}
     seen_bases = set()
 
@@ -84,13 +82,12 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "circulating_supply": 0.0,
                 "total_supply": 0.0,
                 "max_supply": 0.0,
-                "last_updated": datetime.now(UTC),
+                "last_updated": datetime.utcnow(),
             }
         except (ValueError, TypeError) as e:
             logger.warning(f"Invalid data for {symbol}: {str(e)}")
             continue
 
-        # Priority: Direct stablecoin pairs
         if quote in ["USDT", "USDC", "FDUSD"]:
             processed_coins[base] = coin_data
             seen_bases.add(base)
@@ -119,7 +116,7 @@ async def fetch_and_store_ticker_data(db: Session = Depends(get_db)):
             logger.info("No data to process")
             return
         processed_data = process_ticker_data(ticker_data)
-        await bulk_upsert_coins(db, processed_data)  # Using await since it’s async in crud
+        bulk_upsert_coins(db, processed_data)  # Synchronous call
         logger.info("Ticker data fetched and stored successfully")
     except Exception as e:
         logger.error(f"Error fetching and storing ticker data: {str(e)}")

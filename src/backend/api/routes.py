@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/alldata/")
 async def get_all_data(limit: Optional[int] = None, db: Session = Depends(get_db)):
-    coins = await get_coins(db, limit=limit if limit else 1000)
+    coins = get_coins(db, limit=limit if limit else 1000)
     return {"status": "success", "data": [coin.__dict__ for coin in coins], "total": len(coins)}
 
 
@@ -22,8 +22,8 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
         raise HTTPException(status_code=400, detail="Page and size must be positive")
 
     skip = (page - 1) * size
-    coins = await get_coins(db, skip=skip, limit=size, sort_by="quote_volume_24h", sort_order="desc")
-    total = len(await get_coins(db))  # Simplified total; could optimize with a count query
+    coins = get_coins(db, skip=skip, limit=size, sort_by="quote_volume_24h", sort_order="desc")
+    total = len(get_coins(db))  # Simplified total
 
     if not coins:
         return {"status": "success", "data": [], "total": total}
@@ -33,7 +33,7 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
 
 @router.get("/price/{symbol}")
 async def get_price(symbol: str, db: Session = Depends(get_db)):
-    coin = await get_coin(db, symbol.upper())
+    coin = get_coin(db, symbol.upper())
     if not coin:
         return await get_crypto_price(symbol)
     return {"status": "success", "symbol": coin.symbol, "price": coin.price_usdt}
@@ -42,7 +42,8 @@ async def get_price(symbol: str, db: Session = Depends(get_db)):
 @router.get("/db-test/")
 async def test_db_connection(db: Session = Depends(get_db)):
     try:
-        count = len(await get_coins(db))
+        # Test connection by querying all coins synchronously
+        count = len(get_coins(db))
         return {"status": "success", "message": "Database connection successful", "total_records": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")

@@ -14,13 +14,10 @@ def get_coins(
     db: Session, skip: int = 0, limit: int = 100, sort_by: str = "quote_volume_24h", sort_order: str = "desc"
 ) -> List[CoinData]:
     query = db.query(CoinData)
-
-    # Apply sorting
     if sort_order.lower() == "desc":
         query = query.order_by(desc(getattr(CoinData, sort_by)))
     else:
         query = query.order_by(getattr(CoinData, sort_by))
-
     return query.offset(skip).limit(limit).all()
 
 
@@ -51,11 +48,11 @@ def delete_coin(db: Session, symbol: str) -> bool:
     return False
 
 
-async def bulk_upsert_coins(db: Session, coins_data: List[dict]) -> None:
+def bulk_upsert_coins(db: Session, coins_data: List[dict]) -> None:
     for coin_data in coins_data:
         symbol = coin_data["symbol"]
-        existing_coin = await get_coin(db, symbol)
+        existing_coin = get_coin(db, symbol)
         if existing_coin:
-            await update_coin(db, symbol, coin_data)
+            update_coin(db, symbol, coin_data)
         else:
-            await create_coin(db, coin_data)
+            create_coin(db, coin_data)

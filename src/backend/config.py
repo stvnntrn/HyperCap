@@ -19,9 +19,6 @@ BINANCE_API_URL: str = os.getenv("BINANCE_API_URL", "")
 BINANCE_24HR_URL: str = os.getenv("BINANCE_24HR_URL", "")
 BINANCE_INFO_URL: str = os.getenv("BINANCE_INFO_URL", "")
 
-# API configuration
-API_PREFIX: str = "/api/v1"
-
 # Logging configuration
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 

@@ -3,8 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.crypto_routes import router as crypto_router
-from .config import API_PREFIX
+from .api.routes import router as crypto_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +21,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(crypto_router, prefix=API_PREFIX)
+app.include_router(crypto_router)
 
 
 @app.get("/")

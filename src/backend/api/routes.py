@@ -1,7 +1,10 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from ..database import get_db
+from ..models.coin import CoinData
 from ..services.binance_service import fetch_all_ticker_data, get_crypto_price, process_ticker_data
 
 router = APIRouter()
@@ -48,5 +51,15 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100)
 
 
 @router.get("/price/{symbol}")
-async def get_crypto_price(symbol: str):
+async def get_price(symbol: str):
     return await get_crypto_price(symbol)
+
+
+@router.get("/db-test/")
+async def test_db_connection(db: Session = Depends(get_db)):
+    try:
+        # Test database connection by trying to get count of records
+        count = db.query(CoinData).count()
+        return {"status": "success", "message": "Database connection successful", "total_records": count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")

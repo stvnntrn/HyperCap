@@ -51,12 +51,11 @@ def delete_coin(db: Session, symbol: str) -> bool:
     return False
 
 
-def bulk_upsert_coins(db: Session, coins_data: List[dict]) -> None:
+async def bulk_upsert_coins(db: Session, coins_data: List[dict]) -> None:
     for coin_data in coins_data:
         symbol = coin_data["symbol"]
-        existing_coin = get_coin(db, symbol)
-
+        existing_coin = await get_coin(db, symbol)
         if existing_coin:
-            update_coin(db, symbol, coin_data)
+            await update_coin(db, symbol, coin_data)
         else:
-            create_coin(db, coin_data)
+            await create_coin(db, coin_data)

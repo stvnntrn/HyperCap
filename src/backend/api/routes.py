@@ -3,63 +3,52 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ..crud.coin import get_coin, get_coins
 from ..database import get_db
-from ..models.coin import CoinData
-from ..services.binance_service import fetch_all_ticker_data, get_crypto_price, process_ticker_data
+from ..services.binance_service import fetch_and_store_ticker_data, get_crypto_price
 
 router = APIRouter()
 
 
 @router.get("/alldata/")
-async def get_all_data(limit: Optional[int] = None):
-    data = await fetch_all_ticker_data()
-    filtered_data = [
-        {
-            "symbol": item["symbol"],
-            "price": float(item.get("lastPrice", 0)),
-            "price_change": float(item.get("priceChange", 0)),
-            "price_change_percent": float(item.get("priceChangePercent", 0)),
-            "high_24h": float(item.get("highPrice", 0)),
-            "low_24h": float(item.get("lowPrice", 0)),
-            "volume": float(item.get("volume", 0)),
-            "quote_volume": float(item.get("quoteVolume", 0)),
-            "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
-        }
-        for item in data
-    ]
-    return {"status": "success", "data": filtered_data[:limit] if limit else filtered_data, "total": len(filtered_data)}
+async def get_all_data(limit: Optional[int] = None, db: Session = Depends(get_db)):
+    coins = await get_coins(db, limit=limit if limit else 1000)
+    return {"status": "success", "data": [coin.__dict__ for coin in coins], "total": len(coins)}
 
 
 @router.get("/marketcap/")
-async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100):
+async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100, db: Session = Depends(get_db)):
     if page < 1 or size < 1:
         raise HTTPException(status_code=400, detail="Page and size must be positive")
 
-    data = await fetch_all_ticker_data()
-    if not data:
-        raise HTTPException(status_code=404, detail="No ticker data available from Binance")
+    skip = (page - 1) * size
+    coins = await get_coins(db, skip=skip, limit=size, sort_by="quote_volume_24h", sort_order="desc")
+    total = len(await get_coins(db))  # Simplified total; could optimize with a count query
 
-    processed_data = process_ticker_data(data)
-    sorted_data = sorted(processed_data, key=lambda x: x["quote_volume"], reverse=True)
+    if not coins:
+        return {"status": "success", "data": [], "total": total}
 
-    start = (page - 1) * size
-    if start >= len(sorted_data):
-        return {"status": "success", "data": [], "total": len(sorted_data)}
-    end = min(start + size, len(sorted_data))
-
-    return {"status": "success", "data": sorted_data[start:end], "total": len(sorted_data)}
+    return {"status": "success", "data": [coin.__dict__ for coin in coins], "total": total}
 
 
 @router.get("/price/{symbol}")
-async def get_price(symbol: str):
-    return await get_crypto_price(symbol)
+async def get_price(symbol: str, db: Session = Depends(get_db)):
+    coin = await get_coin(db, symbol.upper())
+    if not coin:
+        return await get_crypto_price(symbol)
+    return {"status": "success", "symbol": coin.symbol, "price": coin.price_usdt}
 
 
 @router.get("/db-test/")
 async def test_db_connection(db: Session = Depends(get_db)):
     try:
-        # Test database connection by trying to get count of records
-        count = db.query(CoinData).count()
+        count = len(await get_coins(db))
         return {"status": "success", "message": "Database connection successful", "total_records": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
+
+@router.get("/fetch-and-store/")
+async def fetch_and_store(db: Session = Depends(get_db)):
+    await fetch_and_store_ticker_data(db)
+    return {"status": "success", "message": "Data fetched and stored"}

@@ -34,4 +34,4 @@ class CoinUpdate(CoinBase):
 
 class CoinInDB(CoinBase):
     class Config:
-        orm_mode = True
+        from_attributes = True

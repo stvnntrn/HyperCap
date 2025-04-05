@@ -25,7 +25,7 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
         raise HTTPException(status_code=400, detail="Page and size must be positive")
 
     skip = (page - 1) * size
-    coins = get_coins(db, skip=skip, limit=size, sort_by="quote_volume_24h", sort_order="desc")
+    coins = get_coins(db, skip=skip, limit=size, sort_by="market_cap", sort_order="desc")  # Changed to market_cap
     total = len(get_coins(db))
 
     if not coins:

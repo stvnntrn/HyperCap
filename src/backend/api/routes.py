@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from ..crud.coin import get_coin, get_coins
 from ..database import get_db
 from ..schemas.coin import CoinInDB
-from ..services.binance_service import fetch_and_store_ticker_data, get_crypto_price
+from ..services.binance_service import fetch_ticker_data, get_crypto_price
+from ..services.coin_service import store_coin_data
+from ..services.coingecko_service import fetch_supply_data
 
 router = APIRouter()
 
@@ -37,7 +39,7 @@ async def get_price(symbol: str, db: Session = Depends(get_db)):
     coin = get_coin(db, symbol.upper())
     if not coin:
         return await get_crypto_price(symbol)
-    return {"status": "success", "symbol": coin.symbol, "price": coin.price_usdt}  # Could use CoinInDB here too
+    return {"status": "success", "symbol": coin.symbol, "price": coin.price_usdt}
 
 
 @router.get("/db-test/")
@@ -51,4 +53,13 @@ async def test_db_connection(db: Session = Depends(get_db)):
 
 @router.get("/fetch-and-store/")
 async def fetch_and_store(db: Session = Depends(get_db)):
-    return await fetch_and_store_ticker_data(db)
+    ticker_data = await fetch_ticker_data(db)
+    records = store_coin_data(db, ticker_data)
+    return {"status": "success", "message": "Ticker data fetched and stored", "records": records}
+
+
+@router.get("/fetch-and-store-supply/")
+async def fetch_and_store_supply(db: Session = Depends(get_db)):
+    supply_data = await fetch_supply_data(db)
+    records = store_coin_data(db, supply_data)
+    return {"status": "success", "message": "Supply data fetched and stored", "records": records}

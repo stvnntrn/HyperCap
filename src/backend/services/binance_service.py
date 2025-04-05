@@ -4,17 +4,16 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import httpx
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..config import BINANCE_24HR_URL, BINANCE_API_URL
-from ..crud.coin import bulk_upsert_coins
-from ..database import get_db
+from ..crud.coin import get_coin  # Add this import
 
 logger = logging.getLogger(__name__)
 
 
-async def fetch_all_ticker_data() -> List[Dict[str, Any]]:
+async def fetch_ticker_data(db: Session) -> List[Dict[str, Any]]:
     async with httpx.AsyncClient() as client:
         for attempt in range(3):
             try:
@@ -24,7 +23,7 @@ async def fetch_all_ticker_data() -> List[Dict[str, Any]]:
                 if not data:
                     logger.warning("Binance returned empty ticker data")
                     return []
-                return data
+                return process_ticker_data(db, data)  # Pass db to process_ticker_data
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:
                     wait_time = 2**attempt
@@ -37,7 +36,7 @@ async def fetch_all_ticker_data() -> List[Dict[str, Any]]:
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
 
-def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     reference_prices = {}
     for item in data:
         symbol = item["symbol"]
@@ -65,6 +64,12 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
         try:
             price = float(item.get("lastPrice", 0))
+            # Fetch existing coin data from DB to preserve supply
+            existing_coin = get_coin(db, symbol)
+            circulating_supply = existing_coin.circulating_supply if existing_coin else 0.0
+            total_supply = existing_coin.total_supply if existing_coin else 0.0
+            max_supply = existing_coin.max_supply if existing_coin else 0.0
+
             coin_data = {
                 "symbol": symbol,
                 "coin_name": base,
@@ -78,10 +83,10 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "volume_24h": float(item.get("volume", 0)),
                 "quote_volume_24h": float(item.get("quoteVolume", 0)),
                 "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
-                "market_cap": 0.0,
-                "circulating_supply": 0.0,
-                "total_supply": 0.0,
-                "max_supply": 0.0,
+                "market_cap": price * circulating_supply if circulating_supply else 0.0,  # Recalculate
+                "circulating_supply": circulating_supply,  # Preserve
+                "total_supply": total_supply,  # Preserve
+                "max_supply": max_supply,  # Preserve
                 "last_updated": datetime.utcnow(),
             }
         except (ValueError, TypeError) as e:
@@ -101,26 +106,15 @@ def process_ticker_data(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             coin_data["close_price_24h"] = coin_data["close_price_24h"] * conversion_rate
             coin_data["quote_volume_24h"] = coin_data["quote_volume_24h"] * conversion_rate
             coin_data["weighted_avg_price"] = coin_data["weighted_avg_price"] * conversion_rate
+            coin_data["market_cap"] = (
+                coin_data["price_usdt"] * circulating_supply if circulating_supply else 0.0
+            )  # Recalculate after conversion
             processed_coins[base] = coin_data
             seen_bases.add(base)
         else:
             logger.debug(f"Skipping {symbol} - no stablecoin pair or reference price")
 
     return list(processed_coins.values())
-
-
-async def fetch_and_store_ticker_data(db: Session = Depends(get_db)):
-    try:
-        ticker_data = await fetch_all_ticker_data()
-        if not ticker_data:
-            logger.info("No data to process")
-            return
-        processed_data = process_ticker_data(ticker_data)
-        bulk_upsert_coins(db, processed_data)  # Synchronous call
-        logger.info("Ticker data fetched and stored successfully")
-    except Exception as e:
-        logger.error(f"Error fetching and storing ticker data: {str(e)}")
-        raise
 
 
 async def get_crypto_price(symbol: str) -> Dict[str, Any]:

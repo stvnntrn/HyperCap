@@ -1,3 +1,3 @@
-from .coin import CoinData
+from .coin import BinanceCoinData
 
-__all__ = ["CoinData"]
+__all__ = ["BinanceCoinData"]

@@ -5,18 +5,21 @@ from pydantic import BaseModel
 
 
 class CoinBase(BaseModel):
-    symbol: str
+    pair: str
     coin_name: Optional[str] = None
+    coin_abbr: str
+    quote_currency: str
+    price: float
     price_usdt: Optional[float] = None
-    price_change: Optional[float] = None
-    price_change_percent: Optional[float] = None
-    high_24h: Optional[float] = None
-    low_24h: Optional[float] = None
-    open_price_24h: Optional[float] = None
-    close_price_24h: Optional[float] = None
-    volume_24h: Optional[float] = None
-    quote_volume_24h: Optional[float] = None
-    weighted_avg_price: Optional[float] = None
+    price_change: float
+    price_change_percent: float
+    high_24h: float
+    low_24h: float
+    open_price_24h: float
+    close_price_24h: float
+    volume_24h: float
+    quote_volume_24h: float
+    weighted_avg_price: float
     market_cap: Optional[float] = None
     circulating_supply: Optional[float] = None
     total_supply: Optional[float] = None

@@ -10,12 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 def store_coin_data(db: Session, coin_data: List[Dict[str, Any]]) -> int:
+    """Store Binance coin data into binance_coin_data table."""
     try:
         if not coin_data:
             logger.info("No coin data to store")
             return 0
-        bulk_upsert_coins(db, coin_data)
-        logger.info(f"Stored {len(coin_data)} coins successfully")
+        bulk_upsert_coins(db, coin_data)  # Use CRUD function
+        logger.info(f"Stored {len(coin_data)} Binance pairs successfully")
         return len(coin_data)
     except Exception as e:
         logger.error(f"Error storing coin data: {str(e)}")

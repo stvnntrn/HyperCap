@@ -8,6 +8,7 @@ from ..models import BinanceCoinData
 from ..schemas.coin import CoinInDB
 from ..services.binance_service import fetch_ticker_data, get_crypto_price
 from ..services.coin_service import store_coin_data
+from ..services.coingecko_service import append_supply_data
 
 router = APIRouter()
 
@@ -56,6 +57,14 @@ async def fetch_and_store(db: Session = Depends(get_db)):
     ticker_data = await fetch_ticker_data(db)
     records = store_coin_data(db, ticker_data)
     return {"status": "success", "message": "Binance data fetched and stored", "records": records}
+
+
+@router.get("/update-supply-data/")
+async def update_supply_data(db: Session = Depends(get_db)):
+    ticker_data = await fetch_ticker_data(db)  # Get latest prices
+    updated_data = await append_supply_data(db, ticker_data)  # Append CoinGecko data
+    records = store_coin_data(db, updated_data)
+    return {"status": "success", "message": "Supply data updated from CoinGecko", "records": records}
 
 
 @router.get("/price/{pair}")

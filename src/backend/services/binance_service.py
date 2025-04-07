@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..config import BINANCE_24HR_URL, BINANCE_API_URL
+from ..models import BinanceCoinData
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +89,15 @@ async def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[D
                 if quote == "USDT"
                 else (price * reference_prices.get(quote, 0) if quote in reference_prices else None)
             )
+
+            # Query existing circulating_supply from DB
+            existing_coin = db.query(BinanceCoinData).filter(BinanceCoinData.pair == pair).first()
+            circulating_supply = existing_coin.circulating_supply if existing_coin else None
+            market_cap = price_usdt * circulating_supply if price_usdt and circulating_supply else None
+
             pair_data = {
                 "pair": pair,
-                "coin_name": None,
+                "coin_name": existing_coin.coin_name if existing_coin else None,  # Preserve existing
                 "coin_abbr": abbr,
                 "quote_currency": quote,
                 "price": price,
@@ -104,10 +111,10 @@ async def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[D
                 "volume_24h": float(item.get("volume", 0)),
                 "quote_volume_24h": float(item.get("quoteVolume", 0)),
                 "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
-                "market_cap": None,
-                "circulating_supply": None,
-                "total_supply": None,
-                "max_supply": None,
+                "market_cap": market_cap,  # Recalculated with new price_usdt
+                "circulating_supply": circulating_supply,  # Preserve existing
+                "total_supply": existing_coin.total_supply if existing_coin else None,  # Preserve
+                "max_supply": existing_coin.max_supply if existing_coin else None,  # Preserve
                 "last_updated": datetime.now(UTC),
             }
             processed_pairs.append(pair_data)

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List
 
 import httpx
@@ -23,7 +23,7 @@ async def fetch_ticker_data(db: Session) -> List[Dict[str, Any]]:
                     logger.warning("Binance returned empty ticker data")
                     return []
                 logger.info(f"Fetched {len(data)} pairs from Binance")
-                return process_ticker_data(db, data)
+                return await process_ticker_data(db, data)
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:
                     wait_time = 2**attempt
@@ -36,13 +36,32 @@ async def fetch_ticker_data(db: Session) -> List[Dict[str, Any]]:
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
 
-def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+async def fetch_exchange_info():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{BINANCE_API_URL}/exchangeInfo")
+            response.raise_for_status()
+            data = response.json()
+            return {s["symbol"]: {"base": s["baseAsset"], "quote": s["quoteAsset"]} for s in data["symbols"]}
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Failed to fetch exchange info: {str(e)}")
+        return {}  # Return empty dict as fallback
+    except Exception as e:
+        logger.error(f"Unexpected error fetching exchange info: {str(e)}")
+        return {}
+
+
+async def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    # Fetch exchange info for accurate pair splitting
+    exchange_info = await fetch_exchange_info()
+
+    # Build reference prices for USDT conversion
     reference_prices = {}
     for item in data:
         pair = item["symbol"]
         if pair.endswith("USDT"):
             try:
-                base = pair[:-4]
+                base = exchange_info.get(pair, {}).get("base", pair[:-4])
                 price = float(item.get("lastPrice", 0))
                 reference_prices[base] = price
             except (ValueError, TypeError):
@@ -51,8 +70,17 @@ def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[st
     processed_pairs = []
     for item in data:
         pair = item["symbol"]
-        quote = pair[-3:] if len(pair) <= 6 else pair[-4:]
-        abbr = pair[: -len(quote)]
+        # Get base and quote from exchange info
+        pair_info = exchange_info.get(pair, {})
+        abbr = pair_info.get("base")
+        quote = pair_info.get("quote")
+
+        # Fallback if pair not in exchange info (unlikely, but safety net)
+        if not abbr or not quote:
+            logger.warning(f"Pair {pair} not found in exchange info, using fallback split")
+            quote = pair[-4:] if len(pair) > 6 else pair[-3:]
+            abbr = pair[: -len(quote)]
+
         try:
             price = float(item.get("lastPrice", 0))
             price_usdt = (
@@ -62,7 +90,7 @@ def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[st
             )
             pair_data = {
                 "pair": pair,
-                "coin_name": None,  # Placeholder
+                "coin_name": None,
                 "coin_abbr": abbr,
                 "quote_currency": quote,
                 "price": price,
@@ -76,11 +104,11 @@ def process_ticker_data(db: Session, data: List[Dict[str, Any]]) -> List[Dict[st
                 "volume_24h": float(item.get("volume", 0)),
                 "quote_volume_24h": float(item.get("quoteVolume", 0)),
                 "weighted_avg_price": float(item.get("weightedAvgPrice", 0)),
-                "market_cap": None,  # Placeholder
-                "circulating_supply": None,  # Placeholder
-                "total_supply": None,  # Placeholder
-                "max_supply": None,  # Placeholder
-                "last_updated": datetime.utcnow(),
+                "market_cap": None,
+                "circulating_supply": None,
+                "total_supply": None,
+                "max_supply": None,
+                "last_updated": datetime.now(UTC),
             }
             processed_pairs.append(pair_data)
         except (ValueError, TypeError) as e:

@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/marketcap/")
 async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100, db: Session = Depends(get_db)):
-    """List USDT pairs, sorted by price_usdt (market_cap later when supply is added)."""
+    """List USDT pairs, sorted by market_cap."""
     if page < 1 or size < 1:
         raise HTTPException(status_code=400, detail="Page and size must be positive")
     skip = (page - 1) * size
@@ -23,7 +23,7 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
     coins = (
         db.query(BinanceCoinData)
         .filter(BinanceCoinData.quote_currency == "USDT")
-        .order_by(BinanceCoinData.price_usdt.desc())
+        .order_by(BinanceCoinData.market_cap.desc())
         .offset(skip)
         .limit(size)
         .all()

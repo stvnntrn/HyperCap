@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import Any, Dict, List
 
 import httpx
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-COINGECKO_API_URL = "https://api.coingecko.com/api/v3"
+COINGECKO_API_URL = os.getenv("COINGECKO_API_URL")
 
 
 async def fetch_coingecko_coin_list() -> Dict[str, str]:
@@ -82,25 +83,34 @@ async def fetch_coingecko_supply_data(db: Session, coin_abbrs: List[str]) -> Dic
 
 async def append_supply_data(db: Session, binance_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Append CoinGecko supply data to Binance ticker data for unique coin_abbrs."""
-    # Get unique coin_abbrs from binance_data
     unique_abbrs = list({coin["coin_abbr"] for coin in binance_data})
     logger.debug(f"Fetching supply data for {len(unique_abbrs)} unique coin_abbrs")
 
-    # Fetch supply data for these coins
     coingecko_data = await fetch_coingecko_supply_data(db, unique_abbrs)
 
-    # Append to binance_data
     for coin in binance_data:
         cg_data = coingecko_data.get(coin["coin_abbr"], {})
         coin["coin_name"] = cg_data.get("coin_name", coin.get("coin_name"))
         coin["circulating_supply"] = cg_data.get("circulating_supply", coin.get("circulating_supply"))
         coin["total_supply"] = cg_data.get("total_supply", coin.get("total_supply"))
         coin["max_supply"] = cg_data.get("max_supply", coin.get("max_supply"))
-        coin["market_cap"] = (
-            coin["price_usdt"] * coin["circulating_supply"]
-            if coin.get("price_usdt") and coin.get("circulating_supply")
-            else coin.get("market_cap")
-        )
+
+        # Calculate market_cap: prefer circulating_supply, fall back to total_supply
+        price_usdt = coin.get("price_usdt")
+        circulating_supply = coin["circulating_supply"]
+        total_supply = coin["total_supply"]
+
+        if price_usdt:
+            if circulating_supply is not None and circulating_supply > 0:
+                coin["market_cap"] = price_usdt * circulating_supply
+            elif total_supply is not None and total_supply > 0:
+                coin["market_cap"] = price_usdt * total_supply
+                logger.debug(f"Used total_supply for market_cap of {coin['pair']} due to missing circulating_supply")
+            else:
+                coin["market_cap"] = None
+                logger.warning(f"No supply data for {coin['pair']}, market_cap set to null")
+        else:
+            coin["market_cap"] = None  # No price_usdt, keep null
 
     logger.info(f"Appended supply data to {len(binance_data)} Binance pairs")
     return binance_data

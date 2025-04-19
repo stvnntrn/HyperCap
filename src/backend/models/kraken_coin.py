@@ -2,11 +2,12 @@ from datetime import UTC, datetime
 
 from sqlalchemy import TIMESTAMP, Column, Float, String
 
-from ..database import Base  # ✅ Import from database.py
+from ..database import Base
 
 
-class BinanceCoinData(Base):
-    __tablename__ = "binance_coin_data"
+class KrakenCoinData(Base):
+    __tablename__ = "kraken_coin_data"
+
     pair = Column(String, primary_key=True)  # "BTCUSDT"
     coin_name = Column(String, nullable=True)  # NULL now, "Bitcoin" later
     coin_abbr = Column(String, index=True)  # "BTC"

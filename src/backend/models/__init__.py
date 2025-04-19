@@ -1,3 +1,4 @@
-from .coin import BinanceCoinData
+from .binance_coin import BinanceCoinData
+from .kraken_coin import KrakenCoinData
 
-__all__ = ["BinanceCoinData"]
+__all__ = ["BinanceCoinData", "KrakenCoinData"]

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..config import BINANCE_24HR_URL, BINANCE_API_URL
-from ..models import BinanceCoinData
+from ..models.binance_coin import BinanceCoinData
 
 logger = logging.getLogger(__name__)
 

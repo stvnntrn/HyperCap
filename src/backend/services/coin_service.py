@@ -9,15 +9,15 @@ from ..crud.coin import bulk_upsert_coins
 logger = logging.getLogger(__name__)
 
 
-def store_coin_data(db: Session, coin_data: List[Dict[str, Any]]) -> int:
-    """Store Binance coin data into binance_coin_data table."""
+def store_coin_data(db: Session, coin_data: List[Dict[str, Any]], table: str = "binance") -> int:
+    """Store coin data into the specified table."""
     try:
         if not coin_data:
             logger.info("No coin data to store")
             return 0
-        bulk_upsert_coins(db, coin_data)  # Use CRUD function
-        logger.info(f"Stored {len(coin_data)} Binance pairs successfully")
+        bulk_upsert_coins(db, coin_data, table=table)
+        logger.info(f"Stored {len(coin_data)} {table} pairs successfully")
         return len(coin_data)
     except Exception as e:
-        logger.error(f"Error storing coin data: {str(e)}")
+        logger.error(f"Error storing {table} coin data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error storing data: {str(e)}")

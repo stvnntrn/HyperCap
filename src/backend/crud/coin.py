@@ -3,14 +3,18 @@ from typing import List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from ..models.coin import BinanceCoinData
+from ..models import BinanceCoinData, KrakenCoinData
 
 
-def get_coin(db: Session, pair: str) -> Optional[BinanceCoinData]:
+def get_binance_coin(db: Session, pair: str) -> Optional[BinanceCoinData]:
     return db.query(BinanceCoinData).filter(BinanceCoinData.pair == pair).first()
 
 
-def get_coins(
+def get_kraken_coin(db: Session, pair: str) -> Optional[KrakenCoinData]:
+    return db.query(KrakenCoinData).filter(KrakenCoinData.pair == pair).first()
+
+
+def get_binance_coins(
     db: Session, skip: int = 0, limit: int = 100, sort_by: str = "quote_volume_24h", sort_order: str = "desc"
 ) -> List[BinanceCoinData]:
     query = db.query(BinanceCoinData)
@@ -21,7 +25,7 @@ def get_coins(
     return query.offset(skip).limit(limit).all()
 
 
-def create_coin(db: Session, coin_data: dict) -> BinanceCoinData:
+def create_binance_coin(db: Session, coin_data: dict) -> BinanceCoinData:
     db_coin = BinanceCoinData(**coin_data)
     db.add(db_coin)
     db.commit()
@@ -29,8 +33,16 @@ def create_coin(db: Session, coin_data: dict) -> BinanceCoinData:
     return db_coin
 
 
-def update_coin(db: Session, pair: str, coin_data: dict) -> Optional[BinanceCoinData]:
-    db_coin = get_coin(db, pair)
+def create_kraken_coin(db: Session, coin_data: dict) -> KrakenCoinData:
+    db_coin = KrakenCoinData(**coin_data)
+    db.add(db_coin)
+    db.commit()
+    db.refresh(db_coin)
+    return db_coin
+
+
+def update_binance_coin(db: Session, pair: str, coin_data: dict) -> Optional[BinanceCoinData]:
+    db_coin = get_binance_coin(db, pair)
     if db_coin:
         for key, value in coin_data.items():
             setattr(db_coin, key, value)
@@ -39,8 +51,18 @@ def update_coin(db: Session, pair: str, coin_data: dict) -> Optional[BinanceCoin
     return db_coin
 
 
-def delete_coin(db: Session, pair: str) -> bool:
-    db_coin = get_coin(db, pair)
+def update_kraken_coin(db: Session, pair: str, coin_data: dict) -> Optional[KrakenCoinData]:
+    db_coin = get_kraken_coin(db, pair)
+    if db_coin:
+        for key, value in coin_data.items():
+            setattr(db_coin, key, value)
+        db.commit()
+        db.refresh(db_coin)
+    return db_coin
+
+
+def delete_binance_coin(db: Session, pair: str) -> bool:
+    db_coin = get_binance_coin(db, pair)
     if db_coin:
         db.delete(db_coin)
         db.commit()
@@ -48,11 +70,27 @@ def delete_coin(db: Session, pair: str) -> bool:
     return False
 
 
-def bulk_upsert_coins(db: Session, coins_data: List[dict]) -> None:
+def delete_kraken_coin(db: Session, pair: str) -> bool:
+    db_coin = get_kraken_coin(db, pair)
+    if db_coin:
+        db.delete(db_coin)
+        db.commit()
+        return True
+    return False
+
+
+def bulk_upsert_coins(db: Session, coins_data: List[dict], table: str = "binance") -> None:
     for coin_data in coins_data:
         pair = coin_data["pair"]
-        existing_coin = get_coin(db, pair)
-        if existing_coin:
-            update_coin(db, pair, coin_data)
-        else:
-            create_coin(db, coin_data)
+        if table == "binance":
+            existing_coin = get_binance_coin(db, pair)
+            if existing_coin:
+                update_binance_coin(db, pair, coin_data)
+            else:
+                create_binance_coin(db, coin_data)
+        elif table == "kraken":
+            existing_coin = get_kraken_coin(db, pair)
+            if existing_coin:
+                update_kraken_coin(db, pair, coin_data)
+            else:
+                create_kraken_coin(db, coin_data)

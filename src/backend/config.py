@@ -22,6 +22,9 @@ BINANCE_INFO_URL: str = os.getenv("BINANCE_INFO_URL", "")
 # Kraken API configuration
 KRAKEN_API_URL: str = os.getenv("KRAKEN_API_URL", "")
 
+# MEXC API configuration
+MEXC_API_URL: str = os.getenv("MEXC_API_URL", "")
+
 # Logging configuration
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 

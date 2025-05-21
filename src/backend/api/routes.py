@@ -38,7 +38,7 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
     total_average = db.query(AverageCoinData).filter(AverageCoinData.quote_currency == "USDT").count()
 
     # Normalize coin_abbr and fetch exchange details
-    coin_abbr_mapping = {"XBT": "BTC", "BCHABC": "BCH"}  # Consistent with coin_service.py
+    coin_abbr_mapping = {"XBT": "BTC", "BCHABC": "BCH"}  # Consistent with coin_service.py  # noqa: F841
     response_data = []
     for coin in average_coins:
         coin_abbr = coin.coin_abbr

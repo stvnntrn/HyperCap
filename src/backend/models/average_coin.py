@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import TIMESTAMP, Column, Float, String
+from sqlalchemy import TIMESTAMP, Column, Float, Integer, String
 
 from ..database import Base
 
@@ -20,4 +20,5 @@ class AverageCoinData(Base):
     circulating_supply = Column(Float, nullable=True)  # From CoinGecko
     total_supply = Column(Float, nullable=True)  # From CoinGecko
     max_supply = Column(Float, nullable=True)  # From CoinGecko
+    exchange_count = Column(Integer, nullable=True)  # Number of exchanges used
     last_updated = Column(TIMESTAMP, default=lambda: datetime.now(UTC))

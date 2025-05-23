@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -193,7 +193,7 @@ async def fetch_and_store_mexc(db: Session = Depends(get_db)):
 
 
 @router.get("/update-supply-data/")
-async def update_supply_data(db: Session = Depends(get_db)):
+async def update_supply_data(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Update supply data for Binance, Kraken, and MEXC from CoinGecko, and compute averages."""
     binance_ticker_data = await fetch_binance_ticker_data(db)
     kraken_ticker_data = await fetch_kraken_ticker_data(db)
@@ -204,15 +204,18 @@ async def update_supply_data(db: Session = Depends(get_db)):
     binance_records = store_coin_data(db, updated_binance, table="binance")
     kraken_records = store_coin_data(db, updated_kraken, table="kraken")
     mexc_records = store_coin_data(db, updated_mexc, table="mexc")
-    average_records = compute_average_coin_data(db)
+
+    # Run averaging in background
+    background_tasks.add_task(compute_average_coin_data, db)
+
     return {
         "status": "success",
-        "message": "Supply data updated from CoinGecko and averages computed",
+        "message": "Supply data updated from CoinGecko, averaging started in background",
         "records": {
             "binance": binance_records,
             "kraken": kraken_records,
             "mexc": mexc_records,
-            "average": average_records,
+            "average": "pending",  # Averaging runs asynchronously
         },
     }
 

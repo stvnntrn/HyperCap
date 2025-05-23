@@ -12,28 +12,63 @@ from ..models.kraken_coin import KrakenCoinData
 
 logger = logging.getLogger(__name__)
 
+# Cache for asset pairs data
+_pairs_cache = {}
+_last_pairs_update = None
+_CACHE_DURATION = 3600  # Cache for 1 hour
+
+
+async def _fetch_asset_pairs(client: httpx.AsyncClient) -> Dict[str, Any]:
+    """Fetch and cache asset pairs data."""
+    global _pairs_cache, _last_pairs_update
+
+    current_time = datetime.now(UTC)
+    if _last_pairs_update and (current_time - _last_pairs_update).total_seconds() < _CACHE_DURATION:
+        return _pairs_cache
+
+    response = await client.get(f"{KRAKEN_API_URL}/0/public/AssetPairs")
+    response.raise_for_status()
+    _pairs_cache = response.json().get("result", {})
+    _last_pairs_update = current_time
+    return _pairs_cache
+
+
+async def _fetch_ticker_batch(client: httpx.AsyncClient, pair_string: str) -> Dict[str, Any]:
+    """Fetch ticker data for a batch of pairs."""
+    response = await client.get(f"{KRAKEN_API_URL}/0/public/Ticker", params={"pair": pair_string})
+    response.raise_for_status()
+    return response.json().get("result", {})
+
 
 async def fetch_kraken_ticker_data(db: Session) -> List[Dict[str, Any]]:
     async with httpx.AsyncClient() as client:
         for attempt in range(3):
             try:
-                # Fetch asset pairs
-                pairs_response = await client.get(f"{KRAKEN_API_URL}/0/public/AssetPairs")
-                pairs_response.raise_for_status()
-                pairs_data = pairs_response.json().get("result", {})
-                pair_names = ",".join(pairs_data.keys())  # e.g., "XXBTZUSD,XETHZUSD"
+                # Fetch asset pairs (using cache)
+                pairs_data = await _fetch_asset_pairs(client)
 
-                # Fetch ticker data
-                ticker_response = await client.get(f"{KRAKEN_API_URL}/0/public/Ticker", params={"pair": pair_names})
-                ticker_response.raise_for_status()
-                ticker_data = ticker_response.json().get("result", {})
+                # Process pairs in batches of 20
+                pair_names = list(pairs_data.keys())
+                batch_size = 20
+                batches = [pair_names[i : i + batch_size] for i in range(0, len(pair_names), batch_size)]
 
-                if not ticker_data:
+                # Create tasks for concurrent requests
+                tasks = [_fetch_ticker_batch(client, ",".join(batch)) for batch in batches]
+
+                # Execute all requests concurrently
+                results = await asyncio.gather(*tasks)
+
+                # Combine all results
+                all_ticker_data = {}
+                for batch_data in results:
+                    all_ticker_data.update(batch_data)
+
+                if not all_ticker_data:
                     logger.warning("Kraken returned empty ticker data")
                     return []
 
-                logger.info(f"Fetched {len(ticker_data)} pairs from Kraken")
-                return await process_ticker_data(db, ticker_data, pairs_data)
+                logger.info(f"Fetched {len(all_ticker_data)} pairs from Kraken")
+                return await process_ticker_data(db, all_ticker_data, pairs_data)
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:
                     wait_time = 2**attempt
@@ -110,7 +145,7 @@ async def process_ticker_data(
                 "high_24h": float(data.get("h", [0])[1]),  # 24hr high
                 "low_24h": float(data.get("l", [0])[1]),  # 24hr low
                 "open_price_24h": open_price,
-                "close_price_24h": price,  # Kraken’s "c" is last close
+                "close_price_24h": price,  # Kraken's "c" is last close
                 "volume_24h": volume_24h,
                 "quote_volume_24h": quote_volume_24h,
                 "weighted_avg_price": weighted_avg_price,

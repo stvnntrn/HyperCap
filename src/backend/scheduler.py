@@ -1,0 +1,99 @@
+import logging
+from datetime import UTC, datetime
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from sqlalchemy.orm import Session
+
+from .database import get_db
+from .services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
+from .services.coin_service import compute_average_coin_data, store_coin_data
+from .services.coingecko_service import append_supply_data
+from .services.kraken_service import fetch_kraken_ticker_data
+from .services.mexc_service import fetch_mexc_ticker_data
+
+logger = logging.getLogger(__name__)
+
+scheduler = AsyncIOScheduler()
+
+
+async def fetch_price_data():
+    """Fetch price data from exchanges and compute averages."""
+    db: Session = next(get_db())
+    try:
+        logger.info(f"Starting price data fetch at {datetime.now(UTC)}")
+
+        # Fetch ticker data
+        binance_data = await fetch_binance_ticker_data(db)
+        kraken_data = await fetch_kraken_ticker_data(db)
+        mexc_data = await fetch_mexc_ticker_data(db)
+
+        # Store data (preserve existing supply data)
+        binance_records = store_coin_data(db, binance_data, table="binance")
+        kraken_records = store_coin_data(db, kraken_data, table="kraken")
+        mexc_records = store_coin_data(db, mexc_data, table="mexc")
+
+        # Compute and store averages
+        avg_records = compute_average_coin_data(db)
+
+        logger.info(
+            f"Price update completed: {binance_records} Binance, {kraken_records} Kraken, "
+            f"{mexc_records} MEXC, {avg_records} average records"
+        )
+    except Exception as e:
+        logger.error(f"Error in price data fetch: {str(e)}")
+    finally:
+        db.close()
+
+
+async def fetch_supply_data():
+    """Fetch supply data from CoinGecko and update market caps."""
+    db: Session = next(get_db())
+    try:
+        logger.info(f"Starting supply data fetch at {datetime.now(UTC)}")
+
+        # Fetch ticker data to get latest coin_abbrs
+        binance_data = await fetch_binance_ticker_data(db)
+        kraken_data = await fetch_kraken_ticker_data(db)
+        mexc_data = await fetch_mexc_ticker_data(db)
+
+        # Append CoinGecko supply data
+        updated_binance = await append_supply_data(db, binance_data)
+        updated_kraken = await append_supply_data(db, kraken_data)
+        updated_mexc = await append_supply_data(db, mexc_data)
+
+        # Store updated data
+        binance_records = store_coin_data(db, updated_binance, table="binance")
+        kraken_records = store_coin_data(db, updated_kraken, table="kraken")
+        mexc_records = store_coin_data(db, updated_mexc, table="mexc")
+
+        # Compute averages with updated supply data
+        avg_records = compute_average_coin_data(db)
+
+        logger.info(
+            f"Supply update completed: {binance_records} Binance, {kraken_records} Kraken, "
+            f"{mexc_records} MEXC, {avg_records} average records"
+        )
+    except Exception as e:
+        logger.error(f"Error in supply data fetch: {str(e)}")
+    finally:
+        db.close()
+
+
+def start_scheduler():
+    """Start the scheduler for price and supply data updates."""
+    scheduler.add_job(
+        fetch_price_data,
+        "interval",
+        seconds=30,  # Fetch prices every 30 seconds
+        id="fetch_price_data",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        fetch_supply_data,
+        "interval",
+        hours=1,  # Fetch supply data every 1 hour
+        id="fetch_supply_data",
+        replace_existing=True,
+    )
+    scheduler.start()
+    logger.info("Scheduler started for periodic data updates")

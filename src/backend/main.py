@@ -1,16 +1,29 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router as crypto_router
-from .scheduler import start_scheduler
+from .scheduler import scheduler, start_scheduler  # Import scheduler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Start the scheduler
+    start_scheduler()
+    logger.info("FastAPI application started")
+    yield
+    # Shutdown: Stop the scheduler
+    scheduler.shutdown()
+    logger.info("Scheduler and FastAPI application shut down")
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Configure CORS
 app.add_middleware(
@@ -23,20 +36,6 @@ app.add_middleware(
 
 # Include routers
 app.include_router(crypto_router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    start_scheduler()
-    logger.info("FastAPI application started")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    from .scheduler import scheduler
-
-    scheduler.shutdown()
-    logger.info("Scheduler and FastAPI application shut down")
 
 
 @app.get("/")

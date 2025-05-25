@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -9,22 +9,18 @@ class CoinBase(BaseModel):
     coin_name: Optional[str] = None
     coin_abbr: str
     quote_currency: str
-    price: Optional[float] = None  # Optional for average_coin_data
     price_usdt: Optional[float] = None
-    price_change: Optional[float] = None  # Optional for average_coin_data
-    price_change_percent: Optional[float] = None
-    high_24h: Optional[float] = None  # Optional for average_coin_data
-    low_24h: Optional[float] = None  # Optional for average_coin_data
-    open_price_24h: Optional[float] = None  # Optional for average_coin_data
-    close_price_24h: Optional[float] = None  # Optional for average_coin_data
+    change_1h: Optional[float] = None
+    change_24h: Optional[float] = None
+    change_7d: Optional[float] = None
     volume_24h: Optional[float] = None
     quote_volume_24h: Optional[float] = None
-    weighted_avg_price: Optional[float] = None  # Optional for average_coin_data
     market_cap: Optional[float] = None
     circulating_supply: Optional[float] = None
     total_supply: Optional[float] = None
     max_supply: Optional[float] = None
-    exchange_count: Optional[int] = None  # For average_coin_data
+    categories: Optional[List[str]] = None
+    exchange_count: Optional[int] = None
     last_updated: Optional[datetime] = None
 
 

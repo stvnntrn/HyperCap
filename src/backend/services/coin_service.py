@@ -161,6 +161,13 @@ def compute_coin_data(db: Session, batch_size: int = 100) -> int:
                 avg_price_change_percent = price_change_percent_sum / count
                 market_cap = avg_price_usdt * circulating_supply if circulating_supply else None
 
+                # Get categories from any coin that has them
+                categories = []
+                for coin in coin_data_list:
+                    if coin.get("categories"):
+                        categories = coin["categories"]
+                        break
+
                 # Calculate historical price changes
                 historical_prices = (
                     db.query(HistoricalCoinData)
@@ -206,9 +213,7 @@ def compute_coin_data(db: Session, batch_size: int = 100) -> int:
                         "total_supply": total_supply,
                         "max_supply": max_supply,
                         "exchange_count": count,
-                        "categories": coin_data_list[0]["categories"]
-                        if coin_data_list and coin_data_list[0].get("categories")
-                        else [],
+                        "categories": categories,
                         "last_updated": datetime.now(UTC),
                     }
                 )

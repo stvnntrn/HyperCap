@@ -31,6 +31,29 @@ async def fetch_coingecko_coin_list() -> Dict[str, str]:
             raise HTTPException(status_code=e.response.status_code, detail="CoinGecko API error")
 
 
+async def fetch_coingecko_coin_details(coin_id: str) -> Dict[str, Any]:
+    """Fetch detailed coin data including categories from CoinGecko."""
+    async with httpx.AsyncClient() as client:
+        try:
+            logger.debug(f"Fetching CoinGecko details for coin {coin_id}")
+            response = await client.get(
+                f"{COINGECKO_API_URL}/coins/{coin_id}",
+                params={"tickers": False, "market_data": False, "community_data": False, "developer_data": False},
+            )
+            response.raise_for_status()
+            data = response.json()
+            categories = data.get("categories", []) or []
+            logger.debug(f"Coin {coin_id}: categories={categories}")
+            return {
+                "categories": [category for category in categories if category],  # Filter out null/empty categories
+            }
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"Error fetching CoinGecko details for {coin_id}: {e.response.status_code} - {e.response.text}"
+            )
+            return {"categories": []}
+
+
 async def fetch_coingecko_supply_data(db: Session, coin_abbrs: List[str]) -> Dict[str, Dict[str, Any]]:
     """Fetch supply data from CoinGecko for specific coin_abbrs."""
     # Get mapping from symbol to CoinGecko id
@@ -65,13 +88,16 @@ async def fetch_coingecko_supply_data(db: Session, coin_abbrs: List[str]) -> Dic
 
                 for coin in data:
                     symbol = coin["symbol"].upper()
+                    coin_id = coin["id"]
+                    coin_details = await fetch_coingecko_coin_details(coin_id)
                     all_coins[symbol] = {
                         "coin_name": coin["name"],
                         "circulating_supply": coin["circulating_supply"],
                         "total_supply": coin["total_supply"],
                         "max_supply": coin["max_supply"],
-                        "categories": coin.get("categories", []),  # Fetch categories
+                        "categories": coin_details["categories"],  # Fetch categories
                     }
+                    logger.debug(f"Coin {symbol}: categories={coin_details['categories']}")
 
                 if len(chunk) > 1:  # Avoid delay on single request
                     await asyncio.sleep(1.2)  # ~50 requests/minute safety
@@ -126,6 +152,7 @@ async def append_supply_data(db: Session, coin_data: List[Dict[str, Any]]) -> Li
         coin["total_supply"] = cg_data.get("total_supply", coin.get("total_supply"))
         coin["max_supply"] = cg_data.get("max_supply", coin.get("max_supply"))
         coin["categories"] = cg_data.get("categories", coin.get("categories", []))
+        logger.debug(f"Appending categories for {coin['coin_abbr']}: {coin['categories']}")
 
         # Calculate market_cap: prefer circulating_supply, fall back to total_supply
         price_usdt = coin.get("price_usdt")

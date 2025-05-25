@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from datetime import UTC, datetime
 from typing import Any, Dict, List
 
 import httpx
@@ -79,6 +80,34 @@ async def fetch_coingecko_supply_data(db: Session, coin_abbrs: List[str]) -> Dic
 
         logger.info(f"Fetched supply data for {len(all_coins)} coins from CoinGecko")
         return all_coins
+
+
+async def fetch_coingecko_historical_data(db: Session, coin_id: str, days: int = 30) -> List[Dict[str, Any]]:
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{COINGECKO_API_URL}/coins/{coin_id}/market_chart",
+                params={"vs_currency": "usd", "days": days, "interval": "daily"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            prices = data.get("prices", [])  # [[timestamp_ms, price], ...]
+            historical_data = []
+            for price in prices:
+                timestamp = datetime.fromtimestamp(price[0] / 1000, UTC)
+                historical_data.append(
+                    {
+                        "coin_id": coin_id,
+                        "exchange": "coingecko",
+                        "price_usdt": float(price[1]),
+                        "timestamp": timestamp,
+                    }
+                )
+            logger.info(f"Fetched {len(historical_data)} historical prices for {coin_id}")
+            return historical_data
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Error fetching historical data for {coin_id}: {e.response.status_code}")
+            return []
 
 
 async def append_supply_data(db: Session, binance_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

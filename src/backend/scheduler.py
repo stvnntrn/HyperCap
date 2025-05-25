@@ -4,7 +4,9 @@ from datetime import UTC, datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.orm import Session
 
+from .crud.coin import create_historical_coin
 from .database import get_db
+from .models.historical_coin_data import HistoricalCoinData
 from .services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
 from .services.coin_service import compute_average_coin_data, store_coin_data
 from .services.coingecko_service import append_supply_data
@@ -17,7 +19,7 @@ scheduler = AsyncIOScheduler()
 
 
 async def fetch_price_data():
-    """Fetch price data from exchanges and compute averages."""
+    """Fetch price data from exchanges and store in historical_coin_data."""
     db: Session = next(get_db())
     try:
         logger.info(f"Starting price data fetch at {datetime.now(UTC)}")
@@ -26,6 +28,23 @@ async def fetch_price_data():
         binance_data = await fetch_binance_ticker_data(db)
         kraken_data = await fetch_kraken_ticker_data(db)
         mexc_data = await fetch_mexc_ticker_data(db)
+
+        # Store historical data
+        for data, exchange in [
+            (binance_data, "binance"),
+            (kraken_data, "kraken"),
+            (mexc_data, "mexc"),
+        ]:
+            for coin in data:
+                if coin.get("price_usdt") and coin.get("coin_abbr"):
+                    coin_id = coin["coin_abbr"].lower()  # Use CoinGecko ID mapping later
+                    historical_entry = {
+                        "coin_id": coin_id,
+                        "exchange": exchange,
+                        "price_usdt": coin["price_usdt"],
+                        "timestamp": datetime.now(UTC),
+                    }
+                    create_historical_coin(db, historical_entry)
 
         # Store data (preserve existing supply data)
         binance_records = store_coin_data(db, binance_data, table="binance")

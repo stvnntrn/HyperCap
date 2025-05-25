@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..models.average_coin import AverageCoinData
 from ..models.binance_coin import BinanceCoinData
+from ..models.historical_coin_data import HistoricalCoinData
 from ..models.kraken_coin import KrakenCoinData
 from ..models.mexc_coin import MexCCoinData
 
@@ -62,6 +63,14 @@ def create_mexc_coin(db: Session, coin_data: dict) -> MexCCoinData:
 
 def create_average_coin(db: Session, coin_data: dict) -> AverageCoinData:
     db_coin = AverageCoinData(**coin_data)
+    db.add(db_coin)
+    db.commit()
+    db.refresh(db_coin)
+    return db_coin
+
+
+def create_historical_coin(db: Session, coin_data: dict) -> HistoricalCoinData:
+    db_coin = HistoricalCoinData(**coin_data)
     db.add(db_coin)
     db.commit()
     db.refresh(db_coin)

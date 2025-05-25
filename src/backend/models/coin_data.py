@@ -14,7 +14,7 @@ class CoinData(Base):
     quote_currency = Column(String, index=True)  # e.g., "USDT"
     price_usdt = Column(Float)  # Average price across exchanges
     change_1h = Column(Float, nullable=True)  # 1-hour price change %
-    change_24h = Column(Float)  # 24-hour price change % (renamed from price_change_percent)
+    change_24h = Column(Float, nullable=True)  # 24-hour price change %
     change_7d = Column(Float, nullable=True)  # 7-day price change %
     volume_24h = Column(Float)  # Sum of 24hr volume
     quote_volume_24h = Column(Float)  # Sum of 24hr quote volume
@@ -22,6 +22,6 @@ class CoinData(Base):
     circulating_supply = Column(Float, nullable=True)  # From CoinGecko
     total_supply = Column(Float, nullable=True)  # From CoinGecko
     max_supply = Column(Float, nullable=True)  # From CoinGecko
+    categories = Column(JSON, nullable=True)  # e.g., ["cryptocurrency", "layer-1"]
     exchange_count = Column(Integer, nullable=True)  # Number of exchanges used
-    categories = Column(JSON, nullable=True)  # e.g., ["bnb", "defi"]
-    last_updated = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
+    last_updated = Column(TIMESTAMP, index=True, default=lambda: datetime.now(UTC))

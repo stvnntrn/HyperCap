@@ -3,10 +3,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, List
 
 from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..crud.coin import bulk_upsert_coins
 from ..models.binance_coin import BinanceCoinData
+from ..models.historical_coin_data import HistoricalCoinData
 from ..models.kraken_coin import KrakenCoinData
 from ..models.mexc_coin import MexCCoinData
 
@@ -58,6 +60,11 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
 
         # Filter for fresh data (last 5 minutes)
         freshness_threshold = datetime.now(UTC) - timedelta(minutes=5)
+        time_1h_ago = datetime.now(UTC) - timedelta(hours=1)
+        time_24h_ago = datetime.now(UTC) - timedelta(hours=24)
+        time_7d_ago = datetime.now(UTC) - timedelta(days=7)
+        time_30d_ago = datetime.now(UTC) - timedelta(days=30)
+
         average_coin_data = []
         total_processed = 0
 
@@ -96,23 +103,7 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
 
                 # Combine coin data
                 coin_data_list = []
-                for coin in binance_coins:
-                    coin_data_list.append(
-                        {
-                            "pair": coin.pair,
-                            "coin_name": coin.coin_name,
-                            "coin_abbr": coin_abbr,
-                            "quote_currency": "USDT",
-                            "price_usdt": coin.price_usdt,
-                            "price_change_percent": coin.price_change_percent,
-                            "volume_24h": coin.volume_24h,
-                            "quote_volume_24h": coin.quote_volume_24h,
-                            "circulating_supply": coin.circulating_supply,
-                            "total_supply": coin.total_supply,
-                            "max_supply": coin.max_supply,
-                        }
-                    )
-                for coin in kraken_coins:
+                for coin in binance_coins + kraken_coins + mexc_coins:
                     normalized_abbr = coin_abbr_mapping.get(coin.coin_abbr, coin.coin_abbr)
                     if normalized_abbr == coin_abbr:
                         coin_data_list.append(
@@ -130,22 +121,6 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                                 "max_supply": coin.max_supply,
                             }
                         )
-                for coin in mexc_coins:
-                    coin_data_list.append(
-                        {
-                            "pair": coin.pair,
-                            "coin_name": coin.coin_name,
-                            "coin_abbr": coin_abbr,
-                            "quote_currency": "USDT",
-                            "price_usdt": coin.price_usdt,
-                            "price_change_percent": coin.price_change_percent,
-                            "volume_24h": coin.volume_24h,
-                            "quote_volume_24h": coin.quote_volume_24h,
-                            "circulating_supply": coin.circulating_supply,
-                            "total_supply": coin.total_supply,
-                            "max_supply": coin.max_supply,
-                        }
-                    )
 
                 if not coin_data_list:
                     logger.debug(f"No fresh data for {coin_abbr}")
@@ -187,6 +162,33 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                 avg_price_change_percent = price_change_percent_sum / count
                 market_cap = avg_price_usdt * circulating_supply if circulating_supply else None
 
+                # Calculate historical price changes
+                historical_prices = (
+                    db.query(HistoricalCoinData)
+                    .filter(HistoricalCoinData.coin_id == coin_abbr.lower())
+                    .order_by(HistoricalCoinData.timestamp.desc())
+                    .all()
+                )
+
+                change_1h = change_24h = change_7d = change_30d = None
+                for price in historical_prices:
+                    if not change_1h and price.timestamp >= time_1h_ago:
+                        change_1h = (
+                            ((avg_price_usdt - price.price_usdt) / price.price_usdt * 100) if price.price_usdt else None
+                        )
+                    if not change_24h and price.timestamp >= time_24h_ago:
+                        change_24h = (
+                            ((avg_price_usdt - price.price_usdt) / price.price_usdt * 100) if price.price_usdt else None
+                        )
+                    if not change_7d and price.timestamp >= time_7d_ago:
+                        change_7d = (
+                            ((avg_price_usdt - price.price_usdt) / price.price_usdt * 100) if price.price_usdt else None
+                        )
+                    if not change_30d and price.timestamp >= time_30d_ago:
+                        change_30d = (
+                            ((avg_price_usdt - price.price_usdt) / price.price_usdt * 100) if price.price_usdt else None
+                        )
+
                 average_coin_data.append(
                     {
                         "pair": f"{coin_abbr}/USDT",
@@ -194,7 +196,10 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                         "coin_abbr": coin_abbr,
                         "quote_currency": "USDT",
                         "price_usdt": avg_price_usdt,
-                        "price_change_percent": avg_price_change_percent,
+                        "change_1h": change_1h,
+                        "change_24h": avg_price_change_percent,  # Use exchange data for 24h for now
+                        "change_7d": change_7d,
+                        "change_30d": change_30d,
                         "volume_24h": volume_24h_sum,
                         "quote_volume_24h": quote_volume_24h_sum,
                         "market_cap": market_cap,
@@ -206,12 +211,11 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                     }
                 )
 
-            # Store batch
             if average_coin_data:
                 bulk_upsert_coins(db, average_coin_data, table="average")
                 total_processed += len(average_coin_data)
                 logger.info(f"Stored {len(average_coin_data)} average coin records for batch {i // batch_size + 1}")
-                average_coin_data = []  # Clear for next batch
+                average_coin_data = []
 
         logger.info(f"Completed averaging, stored {total_processed} average coin records")
         return total_processed

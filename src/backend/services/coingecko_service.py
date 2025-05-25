@@ -112,14 +112,14 @@ async def fetch_coingecko_historical_data(db: Session, coin_id: str, days: str =
             return []
 
 
-async def append_supply_data(db: Session, binance_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+async def append_supply_data(db: Session, coin_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Append CoinGecko supply data to Binance ticker data for unique coin_abbrs."""
-    unique_abbrs = list({coin["coin_abbr"] for coin in ticker_data})
+    unique_abbrs = list({coin["coin_abbr"] for coin in coin_data})
     logger.debug(f"Fetching supply data for {len(unique_abbrs)} unique coin_abbrs")
 
     coingecko_data = await fetch_coingecko_supply_data(db, unique_abbrs)
 
-    for coin in ticker_data:
+    for coin in coin_data:
         cg_data = coingecko_data.get(coin["coin_abbr"], {})
         coin["coin_name"] = cg_data.get("coin_name", coin.get("coin_name"))
         coin["circulating_supply"] = cg_data.get("circulating_supply", coin.get("circulating_supply"))
@@ -144,5 +144,5 @@ async def append_supply_data(db: Session, binance_data: List[Dict[str, Any]]) ->
         else:
             coin["market_cap"] = None  # No price_usdt, keep null
 
-    logger.info(f"Appended supply data and categories to {len(ticker_data)} pairs")
-    return ticker_data
+    logger.info(f"Appended supply data and categories to {len(coin_data)} pairs")
+    return coin_data

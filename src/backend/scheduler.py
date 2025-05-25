@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.orm import Session
 
-from .crud.coin import create_historical_coin, get_historical_coin
+from .crud.coin import create_historical_coin
 from .database import get_db
 from .models.historical_coin_data import HistoricalCoinData
 from .services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
@@ -26,6 +26,7 @@ async def fetch_price_data():
         logger.info(f"Starting price data fetch at {datetime.now(UTC)}")
 
         # Fetch ticker data
+        symbol_to_id = await fetch_coingecko_coin_list()
         binance_data = await fetch_binance_ticker_data(db)
         kraken_data = await fetch_kraken_ticker_data(db)
         mexc_data = await fetch_mexc_ticker_data(db)
@@ -38,7 +39,7 @@ async def fetch_price_data():
         ]:
             for coin in data:
                 if coin.get("price_usdt") and coin.get("coin_abbr"):
-                    coin_id = coin["coin_abbr"].lower()  # Use CoinGecko ID mapping later
+                    coin_id = symbol_to_id.get(coin["coin_abbr"], coin["coin_abbr"].lower())
                     historical_entry = {
                         "coin_id": coin_id,
                         "exchange": exchange,

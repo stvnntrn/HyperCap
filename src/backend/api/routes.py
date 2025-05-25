@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -6,13 +7,14 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.binance_coin import BinanceCoinData
 from ..models.coin_data import CoinData
+from ..models.historical_coin_data import HistoricalCoinData
 from ..models.kraken_coin import KrakenCoinData
 from ..models.mexc_coin import MexCCoinData
 from ..schemas.coin import CoinInDB
 from ..services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
 from ..services.binance_service import get_crypto_price
 from ..services.coin_service import compute_coin_data, store_coin_data
-from ..services.coingecko_service import append_supply_data
+from ..services.coingecko_service import append_supply_data, fetch_coingecko_coin_list
 from ..services.kraken_service import fetch_kraken_ticker_data, get_kraken_price
 from ..services.mexc_service import fetch_mexc_ticker_data, get_mexc_price
 
@@ -158,6 +160,34 @@ async def get_coin_details(coin_abbr: str, db: Session = Depends(get_db)):
     }
 
     return response
+
+
+@router.get("/historical-prices/{coin_abbr}")
+async def get_historical_prices(
+    coin_abbr: str, start_date: Optional[str] = None, end_date: Optional[str] = None, db: Session = Depends(get_db)
+):
+    """Get historical price data for a coin."""
+    coin_abbr = coin_abbr.upper()
+    symbol_to_id = await fetch_coingecko_coin_list()
+    coin_id = symbol_to_id.get(coin_abbr, coin_abbr.lower())
+
+    query = db.query(HistoricalCoinData).filter(HistoricalCoinData.coin_id == coin_id)
+    if start_date:
+        query = query.filter(HistoricalCoinData.timestamp >= datetime.fromisoformat(start_date))
+    if end_date:
+        query = query.filter(HistoricalCoinData.timestamp <= datetime.fromisoformat(end_date))
+
+    historical_data = query.order_by(HistoricalCoinData.timestamp.asc()).all()
+
+    if not historical_data:
+        raise HTTPException(status_code=404, detail="No historical data found for coin")
+
+    response_data = [
+        {"timestamp": record.timestamp.isoformat(), "price_usdt": record.price_usdt, "exchange": record.exchange}
+        for record in historical_data
+    ]
+
+    return {"status": "success", "coin_abbr": coin_abbr, "data": response_data}
 
 
 @router.get("/fetch-and-store/")

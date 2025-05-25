@@ -3,7 +3,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, List
 
 from fastapi import HTTPException
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..crud.coin import bulk_upsert_coins

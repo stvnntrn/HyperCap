@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import TIMESTAMP, Column, Float, Integer, String
+from sqlalchemy import JSON, TIMESTAMP, Column, Float, Integer, String
 
 from ..database import Base
 
@@ -21,4 +21,7 @@ class AverageCoinData(Base):
     total_supply = Column(Float, nullable=True)  # From CoinGecko
     max_supply = Column(Float, nullable=True)  # From CoinGecko
     exchange_count = Column(Integer, nullable=True)  # Number of exchanges used
+    change_1h = Column(Float, nullable=True)  # 1-hour price change %
+    change_7d = Column(Float, nullable=True)  # 7-day price change %
+    categories = Column(JSON, nullable=True)  # e.g., ["bnb", "defi"]
     last_updated = Column(TIMESTAMP, default=lambda: datetime.now(UTC))

@@ -29,8 +29,8 @@ def store_coin_data(db: Session, coin_data: List[Dict[str, Any]], table: str = "
         raise HTTPException(status_code=500, detail=f"Error storing data: {str(e)}")
 
 
-def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
-    """Compute average coin data from Binance, Kraken, and MEXC, and store in average_coin_data."""
+def compute_coin_data(db: Session, batch_size: int = 100) -> int:
+    """Compute average coin data from Binance, Kraken, and MEXC, and store in coin_data."""
     try:
         # Map non-standard coin_abbr (consistent with routes.py)
         coin_abbr_mapping = {
@@ -65,7 +65,7 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
         time_7d_ago = datetime.now(UTC) - timedelta(days=7)
         time_30d_ago = datetime.now(UTC) - timedelta(days=30)
 
-        average_coin_data = []
+        coin_data = []
         total_processed = 0
 
         # Process in batches
@@ -189,7 +189,7 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                             ((avg_price_usdt - price.price_usdt) / price.price_usdt * 100) if price.price_usdt else None
                         )
 
-                average_coin_data.append(
+                coin_data.append(
                     {
                         "pair": f"{coin_abbr}/USDT",
                         "coin_name": coin_name,
@@ -207,18 +207,21 @@ def compute_average_coin_data(db: Session, batch_size: int = 100) -> int:
                         "total_supply": total_supply,
                         "max_supply": max_supply,
                         "exchange_count": count,
+                        "categories": coin_data_list[0]["categories"]
+                        if coin_data_list and coin_data_list[0].get("categories")
+                        else [],
                         "last_updated": datetime.now(UTC),
                     }
                 )
 
-            if average_coin_data:
-                bulk_upsert_coins(db, average_coin_data, table="average")
-                total_processed += len(average_coin_data)
-                logger.info(f"Stored {len(average_coin_data)} average coin records for batch {i // batch_size + 1}")
-                average_coin_data = []
+            if coin_data:
+                bulk_upsert_coins(db, coin_data, table="coin")
+                total_processed += len(coin_data)
+                logger.info(f"Stored {len(coin_data)} coin records for batch {i // batch_size + 1}")
+                coin_data = []
 
-        logger.info(f"Completed averaging, stored {total_processed} average coin records")
+        logger.info(f"Completed averaging, stored {total_processed} coin records")
         return total_processed
     except Exception as e:
-        logger.error(f"Error computing average coin data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error computing averages: {str(e)}")
+        logger.error(f"Error computing coin data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error computing coin data: {str(e)}")

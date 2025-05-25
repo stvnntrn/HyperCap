@@ -5,8 +5,8 @@ from sqlalchemy import JSON, TIMESTAMP, Column, Float, Integer, String
 from ..database import Base
 
 
-class AverageCoinData(Base):
-    __tablename__ = "average_coin_data"
+class CoinData(Base):
+    __tablename__ = "coin_data"
 
     pair = Column(String, primary_key=True)  # e.g., "BTC/USDT"
     coin_name = Column(String, nullable=True)  # e.g., "Bitcoin"

@@ -4,14 +4,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.average_coin import AverageCoinData
 from ..models.binance_coin import BinanceCoinData
+from ..models.coin_data import CoinData
 from ..models.kraken_coin import KrakenCoinData
 from ..models.mexc_coin import MexCCoinData
 from ..schemas.coin import CoinInDB
 from ..services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
 from ..services.binance_service import get_crypto_price
-from ..services.coin_service import compute_average_coin_data, store_coin_data
+from ..services.coin_service import compute_coin_data, store_coin_data
 from ..services.coingecko_service import append_supply_data
 from ..services.kraken_service import fetch_kraken_ticker_data, get_kraken_price
 from ..services.mexc_service import fetch_mexc_ticker_data, get_mexc_price
@@ -21,26 +21,26 @@ router = APIRouter()
 
 @router.get("/marketcap/")
 async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100, db: Session = Depends(get_db)):
-    """List USDT pairs from average_coin_data, sorted by market_cap, with exchange details."""
+    """List USDT pairs from coin_data, sorted by market_cap, with exchange details."""
     if page < 1 or size < 1:
         raise HTTPException(status_code=400, detail="Page and size must be positive")
     skip = (page - 1) * size
 
-    # Get coins from average_coin_data
-    average_coins = (
-        db.query(AverageCoinData)
-        .filter(AverageCoinData.quote_currency == "USDT")
-        .order_by(AverageCoinData.market_cap.desc())
+    # Get coins from coin_data
+    coins = (
+        db.query(CoinData)
+        .filter(CoinData.quote_currency == "USDT")
+        .order_by(CoinData.market_cap.desc())
         .offset(skip)
         .limit(size)
         .all()
     )
-    total_average = db.query(AverageCoinData).filter(AverageCoinData.quote_currency == "USDT").count()
+    total_coins = db.query(CoinData).filter(CoinData.quote_currency == "USDT").count()
 
     # Normalize coin_abbr and fetch exchange details
     coin_abbr_mapping = {"XBT": "BTC", "BCHABC": "BCH"}  # Consistent with coin_service.py  # noqa: F841
     response_data = []
-    for coin in average_coins:
+    for coin in coins:
         coin_abbr = coin.coin_abbr
         # Fetch exchange-specific data
         binance_coin = (
@@ -86,7 +86,7 @@ async def get_marketcap_data(page: Optional[int] = 1, size: Optional[int] = 100,
     return {
         "status": "success",
         "data": response_data,
-        "total": total_average,
+        "total": total_coins,
     }
 
 
@@ -117,11 +117,7 @@ async def get_coin_details(coin_abbr: str, db: Session = Depends(get_db)):
         .filter(MexCCoinData.coin_abbr == coin_abbr, MexCCoinData.quote_currency == "USDT")
         .first()
     )
-    average_coin = (
-        db.query(AverageCoinData)
-        .filter(AverageCoinData.coin_abbr == coin_abbr, AverageCoinData.quote_currency == "USDT")
-        .first()
-    )
+    coin = db.query(CoinData).filter(CoinData.coin_abbr == coin_abbr, CoinData.quote_currency == "USDT").first()
 
     # Normalize coin_abbr in response
     if kraken_coin and kraken_coin.coin_abbr in coin_abbr_mapping:
@@ -134,7 +130,7 @@ async def get_coin_details(coin_abbr: str, db: Session = Depends(get_db)):
         available_on.append("Kraken")
     if mexc_coin:
         available_on.append("MEXC")
-    if average_coin:
+    if coin:
         available_on.append("Average")
     if not available_on:
         raise HTTPException(status_code=404, detail="Coin not found in USDT pair")
@@ -156,11 +152,7 @@ async def get_coin_details(coin_abbr: str, db: Session = Depends(get_db)):
             "mexc": (
                 CoinInDB.model_validate(mexc_coin).model_dump() | {"coin_abbr": normalized_abbr} if mexc_coin else None
             ),
-            "average": (
-                CoinInDB.model_validate(average_coin).model_dump() | {"coin_abbr": normalized_abbr}
-                if average_coin
-                else None
-            ),
+            "average": (CoinInDB.model_validate(coin).model_dump() | {"coin_abbr": normalized_abbr} if coin else None),
         },
         "available_on": available_on,
     }
@@ -206,7 +198,7 @@ async def update_supply_data(background_tasks: BackgroundTasks, db: Session = De
     mexc_records = store_coin_data(db, updated_mexc, table="mexc")
 
     # Run averaging in background
-    background_tasks.add_task(compute_average_coin_data, db)
+    background_tasks.add_task(compute_coin_data, db)
 
     return {
         "status": "success",
@@ -223,7 +215,7 @@ async def update_supply_data(background_tasks: BackgroundTasks, db: Session = De
 @router.get("/compute-averages/")
 async def compute_averages(db: Session = Depends(get_db)):
     """Compute and store average coin data across exchanges."""
-    records = compute_average_coin_data(db)
+    records = compute_coin_data(db)
     return {"status": "success", "message": "Average coin data computed and stored", "records": records}
 
 

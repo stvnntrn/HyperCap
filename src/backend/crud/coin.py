@@ -3,8 +3,8 @@ from typing import List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from ..models.average_coin import AverageCoinData
 from ..models.binance_coin import BinanceCoinData
+from ..models.coin_data import CoinData
 from ..models.historical_coin_data import HistoricalCoinData
 from ..models.kraken_coin import KrakenCoinData
 from ..models.mexc_coin import MexCCoinData
@@ -22,8 +22,8 @@ def get_mexc_coin(db: Session, pair: str) -> Optional[MexCCoinData]:
     return db.query(MexCCoinData).filter(MexCCoinData.pair == pair).first()
 
 
-def get_average_coin(db: Session, pair: str) -> Optional[AverageCoinData]:
-    return db.query(AverageCoinData).filter(AverageCoinData.pair == pair).first()
+def get_coin(db: Session, pair: str) -> Optional[CoinData]:
+    return db.query(CoinData).filter(CoinData.pair == pair).first()
 
 
 def get_binance_coins(
@@ -61,8 +61,8 @@ def create_mexc_coin(db: Session, coin_data: dict) -> MexCCoinData:
     return db_coin
 
 
-def create_average_coin(db: Session, coin_data: dict) -> AverageCoinData:
-    db_coin = AverageCoinData(**coin_data)
+def create_coin(db: Session, coin_data: dict) -> CoinData:
+    db_coin = CoinData(**coin_data)
     db.add(db_coin)
     db.commit()
     db.refresh(db_coin)
@@ -107,8 +107,8 @@ def update_mexc_coin(db: Session, pair: str, coin_data: dict) -> Optional[MexCCo
     return db_coin
 
 
-def update_average_coin(db: Session, pair: str, coin_data: dict) -> Optional[AverageCoinData]:
-    db_coin = get_average_coin(db, pair)
+def update_coin(db: Session, pair: str, coin_data: dict) -> Optional[CoinData]:
+    db_coin = get_coin(db, pair)
     if db_coin:
         for key, value in coin_data.items():
             setattr(db_coin, key, value)
@@ -144,8 +144,8 @@ def delete_mexc_coin(db: Session, pair: str) -> bool:
     return False
 
 
-def delete_average_coin(db: Session, pair: str) -> bool:
-    db_coin = get_average_coin(db, pair)
+def delete_coin(db: Session, pair: str) -> bool:
+    db_coin = get_coin(db, pair)
     if db_coin:
         db.delete(db_coin)
         db.commit()
@@ -174,9 +174,9 @@ def bulk_upsert_coins(db: Session, coins_data: List[dict], table: str = "binance
                 update_mexc_coin(db, pair, coin_data)
             else:
                 create_mexc_coin(db, coin_data)
-        elif table == "average":
-            existing_coin = get_average_coin(db, pair)
+        elif table == "coin":
+            existing_coin = get_coin(db, pair)
             if existing_coin:
-                update_average_coin(db, pair, coin_data)
+                update_coin(db, pair, coin_data)
             else:
-                create_average_coin(db, coin_data)
+                create_coin(db, coin_data)

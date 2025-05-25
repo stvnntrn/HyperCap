@@ -1,14 +1,15 @@
+import asyncio
 import logging
 from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.orm import Session
 
-from .crud.coin import create_historical_coin
+from .crud.coin import create_historical_coin, get_historical_coin
 from .database import get_db
 from .models.historical_coin_data import HistoricalCoinData
 from .services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
-from .services.coin_service import compute_average_coin_data, store_coin_data
+from .services.coin_service import compute_coin_data, store_coin_data
 from .services.coingecko_service import append_supply_data, fetch_coingecko_coin_list, fetch_coingecko_historical_data
 from .services.kraken_service import fetch_kraken_ticker_data
 from .services.mexc_service import fetch_mexc_ticker_data
@@ -52,7 +53,7 @@ async def fetch_price_data():
         mexc_records = store_coin_data(db, mexc_data, table="mexc")
 
         # Compute and store averages
-        avg_records = compute_average_coin_data(db)
+        avg_records = compute_coin_data(db)
 
         logger.info(
             f"Price update completed: {binance_records} Binance, {kraken_records} Kraken, "
@@ -86,7 +87,7 @@ async def fetch_supply_data():
         mexc_records = store_coin_data(db, updated_mexc, table="mexc")
 
         # Compute averages with updated supply data
-        avg_records = compute_average_coin_data(db)
+        avg_records = compute_coin_data(db)
 
         logger.info(
             f"Supply update completed: {binance_records} Binance, {kraken_records} Kraken, "
@@ -99,15 +100,23 @@ async def fetch_supply_data():
 
 
 async def fetch_historical_data():
-    """Fetch historical price data from CoinGecko."""
+    """Fetch full historical price data from CoinGecko for coins without history."""
     db: Session = next(get_db())
     try:
         logger.info(f"Starting historical data fetch at {datetime.now(UTC)}")
         symbol_to_id = await fetch_coingecko_coin_list()
         for symbol, coin_id in symbol_to_id.items():
-            historical_data = await fetch_coingecko_historical_data(db, coin_id, days=30)
-            for entry in historical_data:
-                create_historical_coin(db, entry)
+            # Check if historical data exists for this coin
+            existing_data = (
+                db.query(HistoricalCoinData)
+                .filter(HistoricalCoinData.coin_id == coin_id, HistoricalCoinData.exchange == "coingecko")
+                .first()
+            )
+            if not existing_data:
+                historical_data = await fetch_coingecko_historical_data(db, coin_id, days="max")
+                for entry in historical_data:
+                    create_historical_coin(db, entry)
+                await asyncio.sleep(1.2)  # Respect CoinGecko rate limits
         logger.info("Historical data fetch completed")
     except Exception as e:
         logger.error(f"Error in historical data fetch: {str(e)}")
@@ -134,7 +143,7 @@ def start_scheduler():
     scheduler.add_job(
         fetch_historical_data,
         "interval",
-        days=1,
+        days=7,  # Run weekly to catch new coins
         id="fetch_historical_data",
         replace_existing=True,
     )

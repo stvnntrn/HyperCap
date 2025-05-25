@@ -9,7 +9,7 @@ from .database import get_db
 from .models.historical_coin_data import HistoricalCoinData
 from .services.binance_service import fetch_ticker_data as fetch_binance_ticker_data
 from .services.coin_service import compute_average_coin_data, store_coin_data
-from .services.coingecko_service import append_supply_data
+from .services.coingecko_service import append_supply_data, fetch_coingecko_coin_list, fetch_coingecko_historical_data
 from .services.kraken_service import fetch_kraken_ticker_data
 from .services.mexc_service import fetch_mexc_ticker_data
 
@@ -98,6 +98,23 @@ async def fetch_supply_data():
         db.close()
 
 
+async def fetch_historical_data():
+    """Fetch historical price data from CoinGecko."""
+    db: Session = next(get_db())
+    try:
+        logger.info(f"Starting historical data fetch at {datetime.now(UTC)}")
+        symbol_to_id = await fetch_coingecko_coin_list()
+        for symbol, coin_id in symbol_to_id.items():
+            historical_data = await fetch_coingecko_historical_data(db, coin_id, days=30)
+            for entry in historical_data:
+                create_historical_coin(db, entry)
+        logger.info("Historical data fetch completed")
+    except Exception as e:
+        logger.error(f"Error in historical data fetch: {str(e)}")
+    finally:
+        db.close()
+
+
 def start_scheduler():
     """Start the scheduler for price and supply data updates."""
     scheduler.add_job(
@@ -112,6 +129,13 @@ def start_scheduler():
         "interval",
         hours=1,  # Fetch supply data every 1 hour
         id="fetch_supply_data",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        fetch_historical_data,
+        "interval",
+        days=1,
+        id="fetch_historical_data",
         replace_existing=True,
     )
     scheduler.start()

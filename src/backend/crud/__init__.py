@@ -1,3 +1,0 @@
-"""
-CRUD operations package initialization
-"""

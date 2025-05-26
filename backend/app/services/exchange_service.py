@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
@@ -21,11 +22,18 @@ class ExchangeService:
         self.timeout = 30.0
         self.max_retries = 3
 
+        # Load URLs from environment
+        self.binance_api_url = os.getenv("BINANCE_API_URL", "https://api.binance.com/api/v3")
+        self.binance_24hr_url = os.getenv("BINANCE_24HR_URL", "https://api.binance.com/api/v3/ticker/24hr")
+        self.kraken_api_url = os.getenv("KRAKEN_API_URL", "https://api.kraken.com")
+        self.mexc_api_url = os.getenv("MEXC_API_URL", "https://www.mexc.com/open/api/v2")
+        self.coingecko_api_url = os.getenv("COINGECKO_API_URL", "https://api.coingecko.com/api/v3")
+
     # ==================== BINANCE API ====================
 
     async def fetch_binance_data(self) -> List[Dict[str, Any]]:
-        """Fetch ticker data from Binance"""
-        url = "https://api.binance.com/api/v3/ticker/24hr"
+        """Fetch ticker data from Binance - ALL pairs"""
+        url = self.binance_24hr_url
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
@@ -34,29 +42,48 @@ class ExchangeService:
                 data = response.json()
 
                 processed_data = []
+                usd_reference_prices = {}
+
+                # First pass: collect USDT prices for conversion
+                for ticker in data:
+                    symbol = ticker["symbol"]
+                    if symbol.endswith("USDT"):
+                        base_symbol, _ = self._parse_binance_symbol(symbol)
+                        if base_symbol:
+                            usd_reference_prices[base_symbol] = float(ticker["lastPrice"])
+
+                # Second pass: process all pairs
                 for ticker in data:
                     try:
-                        # Extract symbol parts (e.g., BTCUSDT -> BTC + USDT)
                         symbol = ticker["symbol"]
 
-                        # Focus on USDT pairs for price consistency
-                        if not symbol.endswith("USDT"):
+                        # Skip very low volume pairs (less than $10k daily volume)
+                        quote_volume = float(ticker.get("quoteVolume", 0))
+                        if quote_volume < 10000:
                             continue
 
-                        base_symbol = symbol[:-4]  # Remove "USDT"
+                        # Parse symbol
+                        base_symbol, quote_currency = self._parse_binance_symbol(symbol)
+                        if not base_symbol or not quote_currency:
+                            continue
+
+                        last_price = float(ticker["lastPrice"])
+
+                        # Convert to USD
+                        price_usd = self._convert_to_usd(last_price, quote_currency, usd_reference_prices)
 
                         processed_data.append(
                             {
                                 "symbol": base_symbol,
                                 "exchange": "binance",
                                 "pair": symbol,
-                                "quote_currency": "USDT",
-                                "price_usd": float(ticker["lastPrice"]),
+                                "quote_currency": quote_currency,
+                                "price_usd": price_usd,
                                 "price_24h_high": float(ticker["highPrice"]),
                                 "price_24h_low": float(ticker["lowPrice"]),
                                 "price_change_24h": float(ticker["priceChangePercent"]),
                                 "volume_24h_base": float(ticker["volume"]),
-                                "volume_24h_usd": float(ticker["quoteVolume"]),
+                                "volume_24h_usd": quote_volume,
                                 "timestamp": datetime.now(UTC),
                             }
                         )
@@ -64,20 +91,41 @@ class ExchangeService:
                         logger.warning(f"Error processing Binance ticker {symbol}: {e}")
                         continue
 
-                logger.info(f"Fetched {len(processed_data)} USDT pairs from Binance")
+                logger.info(f"Fetched {len(processed_data)} pairs from Binance")
                 return processed_data
 
             except httpx.HTTPError as e:
                 logger.error(f"Binance API error: {e}")
                 return []
 
+    def _parse_binance_symbol(self, symbol: str) -> tuple[Optional[str], Optional[str]]:
+        """Parse Binance symbol into base and quote (simple but effective)"""
+        # Common quote currencies (order matters - longest first)
+        quote_currencies = ["USDT", "BUSD", "USDC", "TUSD", "BTC", "ETH", "BNB", "ADA", "XRP", "DOT", "USD"]
+
+        for quote in quote_currencies:
+            if symbol.endswith(quote):
+                base = symbol[: -len(quote)]
+                if len(base) > 0:
+                    return base, quote
+
+        return None, None
+
+    def _convert_to_usd(self, price: float, quote_currency: str, reference_prices: Dict[str, float]) -> Optional[float]:
+        """Convert price to USD using reference prices"""
+        if quote_currency in ["USDT", "BUSD", "USDC", "TUSD", "USD"]:
+            return price
+        elif quote_currency in reference_prices:
+            return price * reference_prices[quote_currency]
+        else:
+            return None
+
     # ==================== KRAKEN API ====================
 
     async def fetch_kraken_data(self) -> List[Dict[str, Any]]:
-        """Fetch ticker data from Kraken"""
-        # First get asset pairs
-        pairs_url = "https://api.kraken.com/0/public/AssetPairs"
-        ticker_url = "https://api.kraken.com/0/public/Ticker"
+        """Fetch ticker data from Kraken - ALL pairs"""
+        pairs_url = f"{self.kraken_api_url}/0/public/AssetPairs"
+        ticker_url = f"{self.kraken_api_url}/0/public/Ticker"
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
@@ -86,29 +134,45 @@ class ExchangeService:
                 pairs_response.raise_for_status()
                 pairs_data = pairs_response.json()["result"]
 
-                # Filter USD pairs
-                usd_pairs = [pair for pair in pairs_data.keys() if pair.endswith("USD") or pair.endswith("ZUSD")]
-
-                # Get ticker data for USD pairs
-                ticker_response = await client.get(ticker_url, params={"pair": ",".join(usd_pairs)})
+                # Get ticker data for all pairs
+                ticker_response = await client.get(ticker_url)
                 ticker_response.raise_for_status()
                 ticker_data = ticker_response.json()["result"]
 
                 processed_data = []
+                usd_reference_prices = {}
+
+                # First pass: collect USD prices for conversion
                 for pair, ticker in ticker_data.items():
-                    try:
-                        # Get pair info
+                    if pair.endswith("USD") or pair.endswith("ZUSD"):
                         pair_info = pairs_data.get(pair, {})
                         base = pair_info.get("base", "").replace("X", "").replace("Z", "")
-
-                        # Normalize Bitcoin symbol
                         if base == "XBT":
                             base = "BTC"
+                        usd_reference_prices[base] = float(ticker["c"][0])
+
+                # Second pass: process all pairs
+                for pair, ticker in ticker_data.items():
+                    try:
+                        pair_info = pairs_data.get(pair, {})
+                        base = pair_info.get("base", "").replace("X", "").replace("Z", "")
+                        quote = pair_info.get("quote", "").replace("X", "").replace("Z", "")
+
+                        # Normalize symbols
+                        if base == "XBT":
+                            base = "BTC"
+                        if quote == "XBT":
+                            quote = "BTC"
 
                         last_price = float(ticker["c"][0])
-                        high_24h = float(ticker["h"][1])
-                        low_24h = float(ticker["l"][1])
                         volume_24h = float(ticker["v"][1])
+
+                        # Skip very low volume pairs
+                        if volume_24h < 1:
+                            continue
+
+                        # Convert to USD
+                        price_usd = self._convert_to_usd(last_price, quote, usd_reference_prices)
 
                         # Calculate price change
                         open_price = float(ticker["o"])
@@ -119,13 +183,13 @@ class ExchangeService:
                                 "symbol": base,
                                 "exchange": "kraken",
                                 "pair": pair,
-                                "quote_currency": "USD",
-                                "price_usd": last_price,
-                                "price_24h_high": high_24h,
-                                "price_24h_low": low_24h,
+                                "quote_currency": quote,
+                                "price_usd": price_usd,
+                                "price_24h_high": float(ticker["h"][1]),
+                                "price_24h_low": float(ticker["l"][1]),
                                 "price_change_24h": price_change_24h,
                                 "volume_24h_base": volume_24h,
-                                "volume_24h_usd": volume_24h * last_price,
+                                "volume_24h_usd": volume_24h * last_price if price_usd else None,
                                 "timestamp": datetime.now(UTC),
                             }
                         )
@@ -133,7 +197,7 @@ class ExchangeService:
                         logger.warning(f"Error processing Kraken ticker {pair}: {e}")
                         continue
 
-                logger.info(f"Fetched {len(processed_data)} USD pairs from Kraken")
+                logger.info(f"Fetched {len(processed_data)} pairs from Kraken")
                 return processed_data
 
             except httpx.HTTPError as e:
@@ -143,8 +207,9 @@ class ExchangeService:
     # ==================== MEXC API ====================
 
     async def fetch_mexc_data(self) -> List[Dict[str, Any]]:
-        """Fetch ticker data from MEXC"""
-        url = "https://api.mexc.com/api/v3/ticker/24hr"
+        """Fetch ticker data from MEXC - ALL pairs"""
+        # MEXC v2 API endpoint for tickers
+        url = f"{self.mexc_api_url}/market/ticker"
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
@@ -152,29 +217,59 @@ class ExchangeService:
                 response.raise_for_status()
                 data = response.json()
 
-                processed_data = []
-                for ticker in data:
-                    try:
-                        symbol = ticker["symbol"]
+                # MEXC v2 returns different structure
+                ticker_data = data.get("data", [])
+                if not ticker_data:
+                    logger.warning("MEXC returned empty ticker data")
+                    return []
 
-                        # Focus on USDT pairs
-                        if not symbol.endswith("USDT"):
+                processed_data = []
+                usd_reference_prices = {}
+
+                # First pass: collect USDT prices for conversion
+                for ticker in ticker_data:
+                    symbol = ticker.get("symbol", "")
+                    if symbol.endswith("USDT"):
+                        base_symbol, _ = self._parse_mexc_symbol(symbol)
+                        if base_symbol:
+                            usd_reference_prices[base_symbol] = float(ticker.get("last", 0))
+
+                # Second pass: process all pairs
+                for ticker in ticker_data:
+                    try:
+                        symbol = ticker.get("symbol", "")
+
+                        # Skip very low volume pairs
+                        volume = float(ticker.get("volume", 0))
+                        if volume < 1000:  # Lower threshold for MEXC v2
                             continue
 
-                        base_symbol = symbol[:-4]  # Remove "USDT"
+                        base_symbol, quote_currency = self._parse_mexc_symbol(symbol)
+                        if not base_symbol or not quote_currency:
+                            continue
+
+                        last_price = float(ticker.get("last", 0))
+                        if last_price <= 0:
+                            continue
+
+                        # Convert to USD
+                        price_usd = self._convert_to_usd(last_price, quote_currency, usd_reference_prices)
+
+                        # Calculate 24h change (MEXC v2 provides change directly)
+                        price_change_24h = float(ticker.get("change_rate", 0)) * 100  # Convert to percentage
 
                         processed_data.append(
                             {
                                 "symbol": base_symbol,
                                 "exchange": "mexc",
                                 "pair": symbol,
-                                "quote_currency": "USDT",
-                                "price_usd": float(ticker["lastPrice"]),
-                                "price_24h_high": float(ticker["highPrice"]),
-                                "price_24h_low": float(ticker["lowPrice"]),
-                                "price_change_24h": float(ticker["priceChangePercent"]),
-                                "volume_24h_base": float(ticker["volume"]),
-                                "volume_24h_usd": float(ticker["quoteVolume"]),
+                                "quote_currency": quote_currency,
+                                "price_usd": price_usd,
+                                "price_24h_high": float(ticker.get("high", last_price)),
+                                "price_24h_low": float(ticker.get("low", last_price)),
+                                "price_change_24h": price_change_24h,
+                                "volume_24h_base": volume,
+                                "volume_24h_usd": volume * last_price if price_usd else None,
                                 "timestamp": datetime.now(UTC),
                             }
                         )
@@ -182,12 +277,24 @@ class ExchangeService:
                         logger.warning(f"Error processing MEXC ticker {symbol}: {e}")
                         continue
 
-                logger.info(f"Fetched {len(processed_data)} USDT pairs from MEXC")
+                logger.info(f"Fetched {len(processed_data)} pairs from MEXC")
                 return processed_data
 
             except httpx.HTTPError as e:
                 logger.error(f"MEXC API error: {e}")
                 return []
+
+    def _parse_mexc_symbol(self, symbol: str) -> tuple[Optional[str], Optional[str]]:
+        """Parse MEXC symbol into base and quote"""
+        quote_currencies = ["USDT", "USDC", "BTC", "ETH"]
+
+        for quote in quote_currencies:
+            if symbol.endswith(quote):
+                base = symbol[: -len(quote)]
+                if len(base) > 0:
+                    return base, quote
+
+        return None, None
 
     # ==================== AGGREGATE DATA ====================
 
@@ -274,13 +381,13 @@ class ExchangeService:
         symbol = symbol.upper()
 
         if exchange.lower() == "binance":
-            url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
+            url = f"{self.binance_api_url}/ticker/price?symbol={symbol}USDT"
         elif exchange.lower() == "kraken":
             # Convert BTC to XBT for Kraken
             kraken_symbol = "XBT" if symbol == "BTC" else symbol
-            url = f"https://api.kraken.com/0/public/Ticker?pair={kraken_symbol}USD"
+            url = f"{self.kraken_api_url}/0/public/Ticker?pair={kraken_symbol}USD"
         elif exchange.lower() == "mexc":
-            url = f"https://api.mexc.com/api/v3/ticker/price?symbol={symbol}USDT"
+            url = f"{self.mexc_api_url}/market/ticker?symbol={symbol}_USDT"
         else:
             return None
 

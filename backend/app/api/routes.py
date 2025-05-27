@@ -325,3 +325,32 @@ async def update_prices_task(exchange_service: ExchangeService, price_service: P
 
     except Exception as e:
         print(f"Error in price update task: {e}")
+
+
+# ==================== SEARCH ENDPOINTS ====================
+
+
+@router.get("/search", response_model=APIResponse[List[CoinResponse]])
+async def search_coins(
+    q: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(10, ge=1, le=50, description="Number of results"),
+    db: Session = Depends(get_db),
+):
+    """Search coins by name or symbol"""
+    coin_service = CoinService(db)
+
+    try:
+        coins = coin_service.search_coins(q, limit=limit)
+
+        coin_responses = []
+        for coin in coins:
+            coin_dict = coin_service.get_coin_with_exchange_pairs(coin.symbol)
+            if coin_dict:
+                coin_responses.append(CoinResponse(**coin_dict))
+
+        return APIResponse(
+            success=True, data=coin_responses, message=f"Found {len(coin_responses)} coins matching '{q}'"
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error searching coins: {str(e)}")

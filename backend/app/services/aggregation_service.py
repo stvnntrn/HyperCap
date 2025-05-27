@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.models.price_history import PriceHistory1h, PriceHistory5m, PriceHistoryRaw
+from app.models.price_history import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
 
 logger = logging.getLogger(__name__)
 
@@ -199,5 +199,190 @@ class AggregationService:
 
         except Exception as e:
             logger.error(f"Error creating 1h aggregates: {e}")
+            self.db.rollback()
+            return 0
+
+    # ==================== 1-DAY AGGREGATION ====================
+
+    def create_1d_aggregates(self, lookback_days: int = 2) -> int:
+        """
+        Create 1-day OHLC aggregates from 1-hour data
+        """
+        try:
+            # Calculate time window (round down to day boundary)
+            now = datetime.now(UTC)
+            end_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            start_time = end_time - timedelta(days=lookback_days)
+
+            logger.info(f"Creating 1d aggregates from {start_time} to {end_time}")
+
+            # Get all symbols and exchanges that have 1h data
+            symbols_exchanges = (
+                self.db.query(PriceHistory1h.symbol, PriceHistory1h.exchange)
+                .filter(and_(PriceHistory1h.timestamp >= start_time, PriceHistory1h.timestamp < end_time))
+                .distinct()
+                .all()
+            )
+
+            created_count = 0
+
+            for symbol, exchange in symbols_exchanges:
+                # Create 1-day windows
+                current_window = start_time
+                while current_window < end_time:
+                    window_end = current_window + timedelta(days=1)
+
+                    # Check if aggregate already exists
+                    existing = (
+                        self.db.query(PriceHistory1d)
+                        .filter(
+                            and_(
+                                PriceHistory1d.symbol == symbol,
+                                PriceHistory1d.exchange == exchange,
+                                PriceHistory1d.timestamp == current_window,
+                            )
+                        )
+                        .first()
+                    )
+
+                    if not existing:
+                        # Get 1h data for this day
+                        data_1h = (
+                            self.db.query(PriceHistory1h)
+                            .filter(
+                                and_(
+                                    PriceHistory1h.symbol == symbol,
+                                    PriceHistory1h.exchange == exchange,
+                                    PriceHistory1h.timestamp >= current_window,
+                                    PriceHistory1h.timestamp < window_end,
+                                )
+                            )
+                            .order_by(PriceHistory1h.timestamp.asc())
+                            .all()
+                        )
+
+                        if data_1h:
+                            # Calculate OHLC from 1h data
+                            open_price = float(data_1h[0].price_open)
+                            close_price = float(data_1h[-1].price_close)
+                            high_price = max(float(row.price_high) for row in data_1h)
+                            low_price = min(float(row.price_low) for row in data_1h)
+                            total_volume = sum(float(row.volume_sum or 0) for row in data_1h)
+
+                            ohlc_data = PriceHistory1d(
+                                symbol=symbol,
+                                exchange=exchange,
+                                price_open=Decimal(str(open_price)),
+                                price_close=Decimal(str(close_price)),
+                                price_high=Decimal(str(high_price)),
+                                price_low=Decimal(str(low_price)),
+                                volume_sum=Decimal(str(total_volume)),
+                                timestamp=current_window,
+                            )
+
+                            self.db.add(ohlc_data)
+                            created_count += 1
+
+                    current_window = window_end
+
+            self.db.commit()
+            logger.info(f"Created {created_count} new 1-day aggregates")
+            return created_count
+
+        except Exception as e:
+            logger.error(f"Error creating 1d aggregates: {e}")
+            self.db.rollback()
+            return 0
+
+    # ==================== 1-WEEK AGGREGATION ====================
+
+    def create_1w_aggregates(self, lookback_weeks: int = 2) -> int:
+        """
+        Create 1-week OHLC aggregates from 1-day data
+        """
+        try:
+            # Calculate time window (round down to Monday)
+            now = datetime.now(UTC)
+            days_since_monday = now.weekday()
+            end_time = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+            start_time = end_time - timedelta(weeks=lookback_weeks)
+
+            logger.info(f"Creating 1w aggregates from {start_time} to {end_time}")
+
+            # Get all symbols and exchanges that have 1d data
+            symbols_exchanges = (
+                self.db.query(PriceHistory1d.symbol, PriceHistory1d.exchange)
+                .filter(and_(PriceHistory1d.timestamp >= start_time, PriceHistory1d.timestamp < end_time))
+                .distinct()
+                .all()
+            )
+
+            created_count = 0
+
+            for symbol, exchange in symbols_exchanges:
+                # Create 1-week windows (starting on Mondays)
+                current_window = start_time
+                while current_window < end_time:
+                    window_end = current_window + timedelta(weeks=1)
+
+                    # Check if aggregate already exists
+                    existing = (
+                        self.db.query(PriceHistory1w)
+                        .filter(
+                            and_(
+                                PriceHistory1w.symbol == symbol,
+                                PriceHistory1w.exchange == exchange,
+                                PriceHistory1w.timestamp == current_window,
+                            )
+                        )
+                        .first()
+                    )
+
+                    if not existing:
+                        # Get 1d data for this week
+                        data_1d = (
+                            self.db.query(PriceHistory1d)
+                            .filter(
+                                and_(
+                                    PriceHistory1d.symbol == symbol,
+                                    PriceHistory1d.exchange == exchange,
+                                    PriceHistory1d.timestamp >= current_window,
+                                    PriceHistory1d.timestamp < window_end,
+                                )
+                            )
+                            .order_by(PriceHistory1d.timestamp.asc())
+                            .all()
+                        )
+
+                        if data_1d:
+                            # Calculate OHLC from 1d data
+                            open_price = float(data_1d[0].price_open)
+                            close_price = float(data_1d[-1].price_close)
+                            high_price = max(float(row.price_high) for row in data_1d)
+                            low_price = min(float(row.price_low) for row in data_1d)
+                            total_volume = sum(float(row.volume_sum or 0) for row in data_1d)
+
+                            ohlc_data = PriceHistory1w(
+                                symbol=symbol,
+                                exchange=exchange,
+                                price_open=Decimal(str(open_price)),
+                                price_close=Decimal(str(close_price)),
+                                price_high=Decimal(str(high_price)),
+                                price_low=Decimal(str(low_price)),
+                                volume_sum=Decimal(str(total_volume)),
+                                timestamp=current_window,
+                            )
+
+                            self.db.add(ohlc_data)
+                            created_count += 1
+
+                    current_window = window_end
+
+            self.db.commit()
+            logger.info(f"Created {created_count} new 1-week aggregates")
+            return created_count
+
+        except Exception as e:
+            logger.error(f"Error creating 1w aggregates: {e}")
             self.db.rollback()
             return 0

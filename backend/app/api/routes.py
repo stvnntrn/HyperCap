@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import List, Optional
 
@@ -12,6 +13,9 @@ from app.services.coin_service import CoinService
 from app.services.coingecko_service import CoinGeckoService
 from app.services.exchange_service import ExchangeService
 from app.services.price_service import PriceService
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -320,7 +324,196 @@ async def get_real_time_price(exchange: str, symbol: str, db: Session = Depends(
         raise HTTPException(status_code=500, detail=f"Error fetching price: {str(e)}")
 
 
-# ==================== DATA UPDATE ENDPOINTS ====================
+# ==================== ADMIN ENDPOINTS ====================
+
+
+@router.post("/admin/initialize")
+async def initialize_database(
+    fetch_prices: bool = Query(True, description="Fetch current prices"),
+    fetch_metadata: bool = Query(True, description="Fetch coin metadata"),
+    fetch_history: bool = Query(False, description="Fetch historical data (slow)"),
+    db: Session = Depends(get_db),
+):
+    """Complete database initialization (admin only)"""
+
+    try:
+        results = {}
+
+        if fetch_prices:
+            # 1. Fetch current prices from all exchanges
+            exchange_service = ExchangeService(db)
+            price_service = PriceService(db)
+
+            logger.info("Fetching prices from all exchanges...")
+            exchange_data = await exchange_service.fetch_all_exchange_data()
+            results["prices"] = price_service.process_exchange_data(exchange_data)
+
+        if fetch_metadata:
+            # 2. Fetch metadata for all coins found
+            coingecko_service = CoinGeckoService(db)
+            logger.info("Enriching coins with metadata...")
+            results["metadata"] = await coingecko_service.enrich_new_coins_only()
+
+        if fetch_history:
+            # 3. Historical data (placeholder for now)
+            results["history"] = "Historical data fetch not implemented yet"
+
+        return APIResponse(success=True, data=results, message="Database initialization completed successfully")
+
+    except Exception as e:
+        logger.error(f"Error during initialization: {e}")
+        raise HTTPException(status_code=500, detail=f"Initialization failed: {str(e)}")
+
+
+@router.get("/admin/status")
+async def get_system_status(db: Session = Depends(get_db)):
+    """Check system initialization and health status"""
+
+    try:
+        coin_service = CoinService(db)
+        coingecko_service = CoinGeckoService(db)
+
+        # Count data completeness
+        total_coins = coin_service.get_total_coins()
+        metadata_stats = coingecko_service.get_metadata_stats()
+
+        # Check recent price updates
+        from app.models.coin import Coin
+
+        recent_threshold = datetime.now(UTC) - timedelta(hours=1)
+        recent_updates = db.query(Coin).filter(Coin.last_updated >= recent_threshold).count()
+
+        # Check price history
+        from app.models.price_history import PriceHistory
+
+        total_price_records = db.query(PriceHistory).count()
+
+        # Determine system health
+        is_initialized = total_coins > 0
+        has_recent_data = recent_updates > 0
+        has_metadata = metadata_stats["names_percentage"] > 50
+
+        if is_initialized and has_recent_data and has_metadata:
+            health = "healthy"
+        elif is_initialized:
+            health = "needs_updates"
+        else:
+            health = "uninitialized"
+
+        # Generate recommendations
+        recommendations = []
+        if total_coins == 0:
+            recommendations.append("Run /admin/initialize to populate database")
+        elif recent_updates == 0:
+            recommendations.append("Price data is stale - trigger updates")
+        elif metadata_stats["names_percentage"] < 50:
+            recommendations.append("Run metadata enrichment")
+
+        status = {
+            "system_health": health,
+            "database_initialized": is_initialized,
+            "total_coins": total_coins,
+            "recent_price_updates": recent_updates,
+            "total_price_records": total_price_records,
+            "metadata_stats": metadata_stats,
+            "recommendations": recommendations,
+            "last_check": datetime.now(UTC).isoformat(),
+        }
+
+        return APIResponse(success=True, data=status, message=f"System status: {health}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error checking status: {str(e)}")
+
+
+@router.post("/admin/fetch-all-metadata")
+async def fetch_all_metadata(
+    include_categories: bool = Query(True, description="Include categories (slow)"),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+):
+    """Fetch complete metadata for ALL coins (slow operation)"""
+
+    try:
+        coingecko_service = CoinGeckoService(db)
+
+        # Run in background for long operations
+        background_tasks.add_task(fetch_all_metadata_task, coingecko_service, include_categories)
+
+        return APIResponse(
+            success=True,
+            data={"status": "started"},
+            message=f"Complete metadata fetch started in background (categories: {include_categories})",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting metadata fetch: {str(e)}")
+
+
+@router.post("/admin/cleanup")
+async def cleanup_old_data(
+    days_to_keep: int = Query(
+        365, ge=30, le=3650, description="Days of price history to keep (WARNING: This deletes historical data!)"
+    ),
+    confirm: bool = Query(False, description="Must be true to confirm deletion"),
+    db: Session = Depends(get_db),
+):
+    """⚠️ DANGER: Clean up old price history data (affects charts!)"""
+
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="This operation deletes historical price data permanently. Set confirm=true if you're sure.",
+        )
+
+    try:
+        price_service = PriceService(db)
+        deleted_count = price_service.cleanup_old_price_history(days_to_keep)
+
+        return APIResponse(
+            success=True,
+            data={
+                "deleted_records": deleted_count,
+                "days_kept": days_to_keep,
+                "warning": "Historical data has been permanently deleted",
+            },
+            message=f"⚠️ Deleted {deleted_count} price history records older than {days_to_keep} days",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during cleanup: {str(e)}")
+
+
+# ==================== BACKGROUND TASKS ====================
+
+
+async def update_prices_task(exchange_service: ExchangeService, price_service: PriceService):
+    """Background task for updating prices"""
+    try:
+        # Fetch from all exchanges
+        exchange_data = await exchange_service.fetch_all_exchange_data()
+
+        # Process and store
+        results = price_service.process_exchange_data(exchange_data)
+
+        logger.info(f"Price update completed: {results}")
+
+    except Exception as e:
+        logger.error(f"Error in price update task: {e}")
+
+
+async def fetch_all_metadata_task(coingecko_service: CoinGeckoService, include_categories: bool):
+    """Background task for fetching all metadata"""
+    try:
+        logger.info("Starting complete metadata fetch...")
+        updated_count = await coingecko_service.fetch_all_metadata(include_categories=include_categories)
+        logger.info(f"Metadata fetch completed: {updated_count} coins updated")
+
+    except Exception as e:
+        logger.error(f"Error in metadata fetch task: {e}")
+
+
+# ==================== DATA UPDATE ENDPOINTS (Updated) ====================
 
 
 @router.post("/update/prices")
@@ -333,11 +526,7 @@ async def update_prices(background_tasks: BackgroundTasks, db: Session = Depends
         # Run in background
         background_tasks.add_task(update_prices_task, exchange_service, price_service)
 
-        return {
-            "success": True,
-            "message": "Price update started in background",
-            "timestamp": datetime.now(UTC).isoformat(),
-        }
+        return APIResponse(success=True, data={"status": "started"}, message="Price update started in background")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error starting price update: {str(e)}")
@@ -361,40 +550,10 @@ async def update_metadata(
             background_tasks.add_task(coingecko_service.fetch_all_metadata, False)  # No categories
             message = "Full metadata update started (no categories)"
 
-        return {"success": True, "message": message, "timestamp": datetime.now(UTC).isoformat()}
+        return APIResponse(success=True, data={"status": "started"}, message=message)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error starting metadata update: {str(e)}")
-
-
-@router.get("/stats/metadata")
-async def get_metadata_stats(db: Session = Depends(get_db)):
-    """Get metadata completion statistics"""
-    try:
-        coingecko_service = CoinGeckoService(db)
-        stats = coingecko_service.get_metadata_stats()
-
-        return APIResponse(success=True, data=stats, message="Metadata statistics retrieved")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching metadata stats: {str(e)}")
-
-    # ==================== BACKGROUND TASKS ====================
-
-
-async def update_prices_task(exchange_service: ExchangeService, price_service: PriceService):
-    """Background task for updating prices"""
-    try:
-        # Fetch from all exchanges
-        exchange_data = await exchange_service.fetch_all_exchange_data()
-
-        # Process and store
-        results = price_service.process_exchange_data(exchange_data)
-
-        print(f"Price update completed: {results}")
-
-    except Exception as e:
-        print(f"Error in price update task: {e}")
 
 
 # ==================== SEARCH ENDPOINTS ====================

@@ -302,13 +302,104 @@ class PriceService:
 
     # ==================== MAIN PROCESSING FUNCTION ====================
 
-    def process_exchange_data(self, exchange_data: Dict[str, List[Dict[str, Any]]]) -> Dict[str, int]:
+    async def update_prices_and_rankings(self, exchange_data: Dict[str, List[Dict[str, Any]]]) -> Dict[str, int]:
         """
-        Main function to process all exchange data:
+        Enhanced main function to process all exchange data including rankings:
         1. Store price history
         2. Update exchange pairs
         3. Aggregate and store coin data
         4. Calculate price changes
+        5. Update market cap rankings
+        """
+        results = {}
+
+        try:
+            # 1. Store individual and average price history
+            results["price_history"] = self.store_price_history(exchange_data)
+
+            # 2. Update exchange pairs
+            results["exchange_pairs"] = self.store_exchange_pairs(exchange_data)
+
+            # 3. Aggregate and store/update main coin data
+            aggregated_coins = self.aggregate_exchange_data(exchange_data)
+            results["coins_updated"] = self.coin_service.bulk_upsert_coins(aggregated_coins)
+
+            # 4. Update price changes based on historical data
+            results["price_changes_updated"] = self.update_all_price_changes()
+
+            # 5. Update market cap rankings (NEW)
+            results["rankings_updated"] = await self.update_market_cap_rankings()
+
+            logger.info(f"Successfully processed exchange data with rankings: {results}")
+            return results
+
+        except Exception as e:
+            logger.error(f"Error processing exchange data: {e}")
+            self.db.rollback()
+            raise
+
+    async def update_market_cap_rankings(self) -> int:
+        """
+        Recalculate market cap rankings for all coins
+        Called after price updates to keep rankings current
+        """
+        try:
+            from sqlalchemy import desc
+
+            from app.models.coin import Coin
+
+            # Get all coins with market cap, ordered by market cap descending
+            coins_with_market_cap = (
+                self.db.query(Coin)
+                .filter(Coin.market_cap.isnot(None))
+                .filter(Coin.market_cap > 0)  # Exclude zero/negative market caps
+                .order_by(desc(Coin.market_cap))
+                .all()
+            )
+
+            # Update ranks
+            updated_count = 0
+            for rank, coin in enumerate(coins_with_market_cap, start=1):
+                if coin.market_cap_rank != rank:
+                    coin.market_cap_rank = rank
+                    updated_count += 1
+
+            # Coins without market cap get null rank
+            coins_without_market_cap = (
+                self.db.query(Coin).filter((Coin.market_cap.is_(None)) | (Coin.market_cap <= 0)).all()
+            )
+
+            for coin in coins_without_market_cap:
+                if coin.market_cap_rank is not None:
+                    coin.market_cap_rank = None
+                    updated_count += 1
+
+            self.db.commit()
+
+            if updated_count > 0:
+                logger.info(
+                    f"Updated market cap rankings: {updated_count} changes, top coin: {coins_with_market_cap[0].symbol if coins_with_market_cap else 'None'}"
+                )
+            else:
+                logger.debug("No ranking changes needed")
+
+            return updated_count
+
+        except Exception as e:
+            logger.error(f"Error updating market cap rankings: {e}")
+            self.db.rollback()
+            return 0
+
+    def process_exchange_data(self, exchange_data: Dict[str, List[Dict[str, Any]]]) -> Dict[str, int]:
+        """
+        Original main function to process all exchange data (without rankings):
+        1. Store price history
+        2. Update exchange pairs
+        3. Aggregate and store coin data
+        4. Calculate price changes
+
+        Note: This method kept for backward compatibility
+        Use update_prices_and_rankings() for production
         """
         results = {}
 

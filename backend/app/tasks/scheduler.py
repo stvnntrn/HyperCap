@@ -206,7 +206,25 @@ def start_scheduler():
             max_instances=1,
         )
 
-        # Note: No cleanup job - we keep ALL price history for charts
+        # Add aggregation job (every 5 minutes) - ADD THIS
+        scheduler.add_job(
+            aggregate_price_data_job,
+            trigger=IntervalTrigger(minutes=5),
+            id="aggregate_data",
+            name="Aggregate raw data into OHLC intervals",
+            replace_existing=True,
+            max_instances=1,
+        )
+
+        # Add cleanup job (daily) - ADD THIS
+        scheduler.add_job(
+            cleanup_old_data_job,
+            trigger=IntervalTrigger(hours=24),
+            id="cleanup_data",
+            name="Clean up old time-series data",
+            replace_existing=True,
+            max_instances=1,
+        )
 
         # Start the scheduler
         scheduler.start()
@@ -215,6 +233,8 @@ def start_scheduler():
         logger.info("Background scheduler started successfully")
         logger.info("Schedule:")
         logger.info("  - Price updates + rankings: Every 30 seconds")
+        logger.info("  - Data aggregation (OHLC): Every 5 minutes")
+        logger.info("  - Data cleanup: Daily")
         logger.info("  - New coin discovery: Every 6 hours")
         logger.info("  - Health monitoring: Every hour")
         logger.info("  - Data retention: ALL price history kept permanently")

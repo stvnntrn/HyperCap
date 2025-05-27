@@ -1,8 +1,9 @@
 import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Dict
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models.price_history import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
@@ -466,3 +467,82 @@ class AggregationService:
             return 0
 
     # Note: 1-week data is kept forever (no cleanup)
+
+    # ==================== MAIN PROCESSING FUNCTIONS ====================
+
+    def process_all_aggregations(self) -> Dict[str, int]:
+        """
+        Run all aggregation processes in correct order
+        Called by scheduler every 5 minutes
+        """
+        results = {}
+
+        try:
+            # Process in order: 5m -> 1h -> 1d -> 1w
+            results["aggregates_5m"] = self.create_5m_aggregates()
+            results["aggregates_1h"] = self.create_1h_aggregates()
+            results["aggregates_1d"] = self.create_1d_aggregates()
+            results["aggregates_1w"] = self.create_1w_aggregates()
+
+            logger.info(f"Aggregation completed: {results}")
+            return results
+
+        except Exception as e:
+            logger.error(f"Error in aggregation process: {e}")
+            return {"error": str(e)}
+
+    def process_all_cleanup(self) -> Dict[str, int]:
+        """
+        Run all cleanup processes
+        Called by scheduler daily
+        """
+        results = {}
+
+        try:
+            results["raw_cleaned"] = self.cleanup_old_raw_data(24)  # Keep 24h
+            results["5m_cleaned"] = self.cleanup_old_5m_data(7)  # Keep 1 week
+            results["1h_cleaned"] = self.cleanup_old_1h_data(30)  # Keep 1 month
+            results["1d_cleaned"] = self.cleanup_old_1d_data(365)  # Keep 1 year
+            # 1w data kept forever
+
+            logger.info(f"Cleanup completed: {results}")
+            return results
+
+        except Exception as e:
+            logger.error(f"Error in cleanup process: {e}")
+            return {"error": str(e)}
+
+    # ==================== UTILITY FUNCTIONS ====================
+
+    def get_aggregation_stats(self) -> Dict[str, int]:
+        """
+        Get statistics about aggregated data
+        Useful for monitoring and debugging
+        """
+        try:
+            stats = {
+                "raw_records": self.db.query(PriceHistoryRaw).count(),
+                "5m_records": self.db.query(PriceHistory5m).count(),
+                "1h_records": self.db.query(PriceHistory1h).count(),
+                "1d_records": self.db.query(PriceHistory1d).count(),
+                "1w_records": self.db.query(PriceHistory1w).count(),
+            }
+
+            # Get latest timestamps
+            latest_raw = self.db.query(func.max(PriceHistoryRaw.timestamp)).scalar()
+            latest_5m = self.db.query(func.max(PriceHistory5m.timestamp)).scalar()
+            latest_1h = self.db.query(func.max(PriceHistory1h.timestamp)).scalar()
+            latest_1d = self.db.query(func.max(PriceHistory1d.timestamp)).scalar()
+            latest_1w = self.db.query(func.max(PriceHistory1w.timestamp)).scalar()
+
+            stats["latest_raw"] = latest_raw.isoformat() if latest_raw else None
+            stats["latest_5m"] = latest_5m.isoformat() if latest_5m else None
+            stats["latest_1h"] = latest_1h.isoformat() if latest_1h else None
+            stats["latest_1d"] = latest_1d.isoformat() if latest_1d else None
+            stats["latest_1w"] = latest_1w.isoformat() if latest_1w else None
+
+            return stats
+
+        except Exception as e:
+            logger.error(f"Error getting aggregation stats: {e}")
+            return {"error": str(e)}

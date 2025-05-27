@@ -386,3 +386,83 @@ class AggregationService:
             logger.error(f"Error creating 1w aggregates: {e}")
             self.db.rollback()
             return 0
+
+    # ==================== DATA CLEANUP ====================
+
+    def cleanup_old_raw_data(self, hours_to_keep: int = 24) -> int:
+        """
+        Remove raw price data older than specified hours
+        Default: Keep 24 hours of raw data
+        """
+        try:
+            cutoff_time = datetime.now(UTC) - timedelta(hours=hours_to_keep)
+
+            deleted_count = self.db.query(PriceHistoryRaw).filter(PriceHistoryRaw.timestamp < cutoff_time).delete()
+
+            self.db.commit()
+            logger.info(f"Cleaned up {deleted_count} old raw price records (older than {hours_to_keep}h)")
+            return deleted_count
+
+        except Exception as e:
+            logger.error(f"Error cleaning up raw data: {e}")
+            self.db.rollback()
+            return 0
+
+    def cleanup_old_5m_data(self, days_to_keep: int = 7) -> int:
+        """
+        Remove 5-minute data older than specified days
+        Default: Keep 1 week of 5-minute data
+        """
+        try:
+            cutoff_time = datetime.now(UTC) - timedelta(days=days_to_keep)
+
+            deleted_count = self.db.query(PriceHistory5m).filter(PriceHistory5m.timestamp < cutoff_time).delete()
+
+            self.db.commit()
+            logger.info(f"Cleaned up {deleted_count} old 5m price records (older than {days_to_keep}d)")
+            return deleted_count
+
+        except Exception as e:
+            logger.error(f"Error cleaning up 5m data: {e}")
+            self.db.rollback()
+            return 0
+
+    def cleanup_old_1h_data(self, days_to_keep: int = 30) -> int:
+        """
+        Remove 1-hour data older than specified days
+        Default: Keep 1 month of 1-hour data
+        """
+        try:
+            cutoff_time = datetime.now(UTC) - timedelta(days=days_to_keep)
+
+            deleted_count = self.db.query(PriceHistory1h).filter(PriceHistory1h.timestamp < cutoff_time).delete()
+
+            self.db.commit()
+            logger.info(f"Cleaned up {deleted_count} old 1h price records (older than {days_to_keep}d)")
+            return deleted_count
+
+        except Exception as e:
+            logger.error(f"Error cleaning up 1h data: {e}")
+            self.db.rollback()
+            return 0
+
+    def cleanup_old_1d_data(self, days_to_keep: int = 365) -> int:
+        """
+        Remove 1-day data older than specified days
+        Default: Keep 1 year of 1-day data
+        """
+        try:
+            cutoff_time = datetime.now(UTC) - timedelta(days=days_to_keep)
+
+            deleted_count = self.db.query(PriceHistory1d).filter(PriceHistory1d.timestamp < cutoff_time).delete()
+
+            self.db.commit()
+            logger.info(f"Cleaned up {deleted_count} old 1d price records (older than {days_to_keep}d)")
+            return deleted_count
+
+        except Exception as e:
+            logger.error(f"Error cleaning up 1d data: {e}")
+            self.db.rollback()
+            return 0
+
+    # Note: 1-week data is kept forever (no cleanup)

@@ -2,6 +2,7 @@ import logging
 from datetime import UTC, datetime
 
 from app.database import get_db
+from app.services.aggregation_service import AggregationService
 from app.services.coingecko_service import CoinGeckoService
 from app.services.exchange_service import ExchangeService
 from app.services.price_service import PriceService
@@ -108,6 +109,52 @@ async def health_monitoring_job():
 
     except Exception as e:
         logger.error(f"Error in health monitoring: {e}")
+    finally:
+        db.close()
+
+
+async def aggregate_price_data_job():
+    """
+    Scheduled job to aggregate raw price data into OHLC intervals
+    Creates professional time-series data for charts
+    """
+    db: Session = next(get_db())
+
+    try:
+        logger.info(f"Starting price data aggregation at {datetime.now(UTC)}")
+
+        aggregation_service = AggregationService(db)
+
+        # Process all aggregations (5m, 1h, 1d, 1w)
+        results = aggregation_service.process_all_aggregations()
+
+        logger.info(f"Aggregation completed: {results}")
+
+    except Exception as e:
+        logger.error(f"Error in aggregation job: {e}")
+    finally:
+        db.close()
+
+
+async def cleanup_old_data_job():
+    """
+    Scheduled job to clean up old time-series data
+    Maintains retention policies for each interval
+    """
+    db: Session = next(get_db())
+
+    try:
+        logger.info(f"Starting data cleanup at {datetime.now(UTC)}")
+
+        aggregation_service = AggregationService(db)
+
+        # Clean up old data according to retention policies
+        results = aggregation_service.process_all_cleanup()
+
+        logger.info(f"Cleanup completed: {results}")
+
+    except Exception as e:
+        logger.error(f"Error in cleanup job: {e}")
     finally:
         db.close()
 

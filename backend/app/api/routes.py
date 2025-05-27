@@ -1,14 +1,16 @@
 from datetime import UTC, datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
 from app.services.coin_service import CoinService
+from app.services.coingecko_service import CoinGeckoService
 from app.services.exchange_service import ExchangeService
+from app.services.price_service import PriceService
 
 router = APIRouter()
 
@@ -246,3 +248,80 @@ async def get_real_time_price(exchange: str, symbol: str, db: Session = Depends(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching price: {str(e)}")
+
+
+# ==================== DATA UPDATE ENDPOINTS ====================
+
+
+@router.post("/update/prices")
+async def update_prices(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Trigger price data update"""
+    try:
+        exchange_service = ExchangeService(db)
+        price_service = PriceService(db)
+
+        # Run in background
+        background_tasks.add_task(update_prices_task, exchange_service, price_service)
+
+        return {
+            "success": True,
+            "message": "Price update started in background",
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting price update: {str(e)}")
+
+
+@router.post("/update/metadata")
+async def update_metadata(
+    background_tasks: BackgroundTasks,
+    new_coins_only: bool = Query(True, description="Only update new coins (faster)"),
+    db: Session = Depends(get_db),
+):
+    """Trigger metadata update"""
+    try:
+        coingecko_service = CoinGeckoService(db)
+
+        # Run in background
+        if new_coins_only:
+            background_tasks.add_task(coingecko_service.enrich_new_coins_only)
+            message = "New coins metadata update started"
+        else:
+            background_tasks.add_task(coingecko_service.fetch_all_metadata, False)  # No categories
+            message = "Full metadata update started (no categories)"
+
+        return {"success": True, "message": message, "timestamp": datetime.now(UTC).isoformat()}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting metadata update: {str(e)}")
+
+
+@router.get("/stats/metadata")
+async def get_metadata_stats(db: Session = Depends(get_db)):
+    """Get metadata completion statistics"""
+    try:
+        coingecko_service = CoinGeckoService(db)
+        stats = coingecko_service.get_metadata_stats()
+
+        return APIResponse(success=True, data=stats, message="Metadata statistics retrieved")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching metadata stats: {str(e)}")
+
+    # ==================== BACKGROUND TASKS ====================
+
+
+async def update_prices_task(exchange_service: ExchangeService, price_service: PriceService):
+    """Background task for updating prices"""
+    try:
+        # Fetch from all exchanges
+        exchange_data = await exchange_service.fetch_all_exchange_data()
+
+        # Process and store
+        results = price_service.process_exchange_data(exchange_data)
+
+        print(f"Price update completed: {results}")
+
+    except Exception as e:
+        print(f"Error in price update task: {e}")

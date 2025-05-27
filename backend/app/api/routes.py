@@ -1,11 +1,11 @@
 from datetime import UTC, datetime
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.coin import CoinResponse
+from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
 from app.services.coin_service import CoinService
 
@@ -97,3 +97,123 @@ async def get_coin(symbol: str, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching coin: {str(e)}")
+
+
+# ==================== MARKET DATA ENDPOINTS ====================
+
+
+@router.get("/market-cap", response_model=PaginatedResponse[MarketCapResponse])
+async def get_market_cap_rankings(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(100, ge=1, le=500, description="Items per page"),
+    db: Session = Depends(get_db),
+):
+    """Get market cap rankings"""
+    coin_service = CoinService(db)
+
+    skip = (page - 1) * size
+
+    try:
+        coins = coin_service.get_top_coins_by_market_cap(limit=skip + size)
+
+        # Slice for pagination
+        paginated_coins = coins[skip : skip + size]
+
+        # Convert to market cap response format
+        market_cap_responses = []
+        for coin in paginated_coins:
+            if coin.market_cap:
+                market_cap_responses.append(
+                    MarketCapResponse(
+                        rank=coin.market_cap_rank or 0,
+                        symbol=coin.symbol,
+                        name=coin.name or coin.symbol,
+                        price_usd=coin.price_usd or 0,
+                        price_change_24h=coin.price_change_24h,
+                        market_cap=coin.market_cap,
+                        volume_24h_usd=coin.volume_24h_usd,
+                    )
+                )
+
+        total_pages = (len(coins) + size - 1) // size
+
+        return PaginatedResponse(
+            items=market_cap_responses,
+            total=len(coins),
+            page=page,
+            size=size,
+            pages=total_pages,
+            has_next=page < total_pages,
+            has_previous=page > 1,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching market cap data: {str(e)}")
+
+
+@router.get("/trending", response_model=APIResponse[List[CoinResponse]])
+async def get_trending_coins(
+    limit: int = Query(10, ge=1, le=50, description="Number of trending coins"), db: Session = Depends(get_db)
+):
+    """Get trending coins by volume"""
+    coin_service = CoinService(db)
+
+    try:
+        trending_coins = coin_service.get_trending_coins(limit=limit)
+
+        coin_responses = []
+        for coin in trending_coins:
+            coin_dict = coin_service.get_coin_with_exchange_pairs(coin.symbol)
+            if coin_dict:
+                coin_responses.append(CoinResponse(**coin_dict))
+
+        return APIResponse(success=True, data=coin_responses, message=f"Retrieved {len(coin_responses)} trending coins")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching trending coins: {str(e)}")
+
+
+@router.get("/gainers", response_model=APIResponse[List[CoinResponse]])
+async def get_biggest_gainers(
+    limit: int = Query(10, ge=1, le=50, description="Number of gainers"), db: Session = Depends(get_db)
+):
+    """Get biggest price gainers in 24h"""
+    coin_service = CoinService(db)
+
+    try:
+        gainers = coin_service.get_biggest_gainers(limit=limit)
+
+        coin_responses = []
+        for coin in gainers:
+            coin_dict = coin_service.get_coin_with_exchange_pairs(coin.symbol)
+            if coin_dict:
+                coin_responses.append(CoinResponse(**coin_dict))
+
+        return APIResponse(
+            success=True, data=coin_responses, message=f"Retrieved {len(coin_responses)} biggest gainers"
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching gainers: {str(e)}")
+
+
+@router.get("/losers", response_model=APIResponse[List[CoinResponse]])
+async def get_biggest_losers(
+    limit: int = Query(10, ge=1, le=50, description="Number of losers"), db: Session = Depends(get_db)
+):
+    """Get biggest price losers in 24h"""
+    coin_service = CoinService(db)
+
+    try:
+        losers = coin_service.get_biggest_losers(limit=limit)
+
+        coin_responses = []
+        for coin in losers:
+            coin_dict = coin_service.get_coin_with_exchange_pairs(coin.symbol)
+            if coin_dict:
+                coin_responses.append(CoinResponse(**coin_dict))
+
+        return APIResponse(success=True, data=coin_responses, message=f"Retrieved {len(coin_responses)} biggest losers")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching losers: {str(e)}")

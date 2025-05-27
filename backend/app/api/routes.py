@@ -8,6 +8,7 @@ from app.database import get_db
 from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
 from app.services.coin_service import CoinService
+from app.services.exchange_service import ExchangeService
 
 router = APIRouter()
 
@@ -217,3 +218,31 @@ async def get_biggest_losers(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching losers: {str(e)}")
+
+
+# ==================== REAL-TIME PRICE ENDPOINTS ====================
+
+
+@router.get("/price/{exchange}/{symbol}")
+async def get_real_time_price(exchange: str, symbol: str, db: Session = Depends(get_db)):
+    """Get real-time price from specific exchange"""
+    exchange_service = ExchangeService(db)
+
+    try:
+        price = await exchange_service.get_single_price(exchange.lower(), symbol.upper())
+
+        if price is None:
+            raise HTTPException(status_code=404, detail=f"Price not found for {symbol.upper()} on {exchange.lower()}")
+
+        return {
+            "success": True,
+            "exchange": exchange.lower(),
+            "symbol": symbol.upper(),
+            "price": price,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching price: {str(e)}")

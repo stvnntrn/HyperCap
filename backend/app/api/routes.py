@@ -6,6 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.price_history import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
 from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
 from app.schemas.price_history import PriceChartResponse, PricePoint
@@ -234,60 +235,115 @@ async def get_biggest_losers(
 @router.get("/coins/{symbol}/chart", response_model=APIResponse[PriceChartResponse])
 async def get_price_chart(
     symbol: str,
-    timeframe: str = Query("7d", description="Timeframe: 1h, 24h, 7d, 30d, 1y"),
+    timeframe: str = Query("7d", description="Timeframe: 5m, 1h, 4h, 1d, 7d, 30d, 1y"),
+    exchange: str = Query("average", description="Exchange or 'average'"),
     db: Session = Depends(get_db),
 ):
-    """Get price chart data for a coin"""
+    """Get price chart data for a coin using optimized time-series tables"""
     try:
-        # Calculate time range
+        symbol = symbol.upper()
+
+        # Calculate time range and select appropriate table
         now = datetime.now(UTC)
-        if timeframe == "1h":
+
+        if timeframe == "5m":
+            # Last 5 minutes using raw data
+            start_time = now - timedelta(minutes=5)
+            table = PriceHistoryRaw
+            interval_minutes = None  # Use all raw data points
+        elif timeframe == "1h":
+            # Last 1 hour using 5-minute data
             start_time = now - timedelta(hours=1)
-        elif timeframe == "24h":
+            table = PriceHistory5m
+            interval_minutes = 5
+        elif timeframe == "4h":
+            # Last 4 hours using 5-minute data
+            start_time = now - timedelta(hours=4)
+            table = PriceHistory5m
+            interval_minutes = 5
+        elif timeframe == "1d":
+            # Last 1 day using 1-hour data
             start_time = now - timedelta(days=1)
+            table = PriceHistory1h
+            interval_minutes = 60
         elif timeframe == "7d":
+            # Last 7 days using 1-hour data
             start_time = now - timedelta(days=7)
+            table = PriceHistory1h
+            interval_minutes = 60
         elif timeframe == "30d":
+            # Last 30 days using 1-day data
             start_time = now - timedelta(days=30)
+            table = PriceHistory1d
+            interval_minutes = 1440  # 24 hours
         elif timeframe == "1y":
+            # Last 1 year using 1-week data
             start_time = now - timedelta(days=365)
+            table = PriceHistory1w
+            interval_minutes = 10080  # 7 days
         else:
             raise HTTPException(status_code=400, detail="Invalid timeframe")
 
-        # Query price history
-        from app.models.price_history import PriceHistory
-
-        price_data = (
-            db.query(PriceHistory)
-            .filter(
-                PriceHistory.symbol == symbol.upper(),
-                PriceHistory.exchange == "average",
-                PriceHistory.timestamp >= start_time,
-            )
-            .order_by(PriceHistory.timestamp.asc())
-            .all()
-        )
-
-        if not price_data:
-            raise HTTPException(status_code=404, detail=f"No price history found for {symbol.upper()}")
-
-        # Convert to chart format
-        chart_data = []
-        for price_point in price_data:
-            chart_data.append(
-                PricePoint(
-                    timestamp=price_point.timestamp,
-                    price=float(price_point.price_usd),
-                    volume=float(price_point.volume_24h_usd) if price_point.volume_24h_usd else None,
+        # Query the appropriate table
+        if table == PriceHistoryRaw:
+            # Raw data - use simple price field
+            price_data = (
+                db.query(table)
+                .filter(
+                    table.symbol == symbol,
+                    table.exchange == exchange,
+                    table.timestamp >= start_time,
                 )
+                .order_by(table.timestamp.asc())
+                .all()
             )
 
-        chart_response = PriceChartResponse(
-            symbol=symbol.upper(), exchange="average", timeframe=timeframe, data=chart_data
-        )
+            if not price_data:
+                raise HTTPException(status_code=404, detail=f"No price history found for {symbol}")
+
+            # Convert raw data to chart format
+            chart_data = []
+            for price_point in price_data:
+                chart_data.append(
+                    PricePoint(
+                        timestamp=price_point.timestamp,
+                        price=float(price_point.price_usd),
+                        volume=float(price_point.volume_24h_usd) if price_point.volume_24h_usd else None,
+                    )
+                )
+        else:
+            # OHLC data - use close price for charts
+            price_data = (
+                db.query(table)
+                .filter(
+                    table.symbol == symbol,
+                    table.exchange == exchange,
+                    table.timestamp >= start_time,
+                )
+                .order_by(table.timestamp.asc())
+                .all()
+            )
+
+            if not price_data:
+                raise HTTPException(status_code=404, detail=f"No price history found for {symbol}")
+
+            # Convert OHLC data to chart format (using close price)
+            chart_data = []
+            for price_point in price_data:
+                chart_data.append(
+                    PricePoint(
+                        timestamp=price_point.timestamp,
+                        price=float(price_point.price_close),
+                        volume=float(price_point.volume_sum) if price_point.volume_sum else None,
+                    )
+                )
+
+        chart_response = PriceChartResponse(symbol=symbol, exchange=exchange, timeframe=timeframe, data=chart_data)
 
         return APIResponse(
-            success=True, data=chart_response, message=f"Retrieved {len(chart_data)} price points for {symbol.upper()}"
+            success=True,
+            data=chart_response,
+            message=f"Retrieved {len(chart_data)} price points for {symbol} ({timeframe})",
         )
 
     except HTTPException:

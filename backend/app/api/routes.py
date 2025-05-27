@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
+from app.schemas.price_history import PriceChartResponse, PricePoint
 from app.services.coin_service import CoinService
 from app.services.coingecko_service import CoinGeckoService
 from app.services.exchange_service import ExchangeService
@@ -27,7 +28,8 @@ async def health_check(db: Session = Depends(get_db)):
     except Exception as e:
         return HealthResponse(status="unhealthy", timestamp=datetime.now(UTC).isoformat(), database=f"error: {str(e)}")
 
-    # ==================== COIN ENDPOINTS ====================
+
+# ==================== COIN ENDPOINTS ====================
 
 
 @router.get("/coins", response_model=PaginatedResponse[CoinResponse])
@@ -220,6 +222,74 @@ async def get_biggest_losers(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching losers: {str(e)}")
+
+
+# ==================== PRICE HISTORY ENDPOINTS ====================
+
+
+@router.get("/coins/{symbol}/chart", response_model=APIResponse[PriceChartResponse])
+async def get_price_chart(
+    symbol: str,
+    timeframe: str = Query("7d", description="Timeframe: 1h, 24h, 7d, 30d, 1y"),
+    db: Session = Depends(get_db),
+):
+    """Get price chart data for a coin"""
+    try:
+        # Calculate time range
+        now = datetime.now(UTC)
+        if timeframe == "1h":
+            start_time = now - timedelta(hours=1)
+        elif timeframe == "24h":
+            start_time = now - timedelta(days=1)
+        elif timeframe == "7d":
+            start_time = now - timedelta(days=7)
+        elif timeframe == "30d":
+            start_time = now - timedelta(days=30)
+        elif timeframe == "1y":
+            start_time = now - timedelta(days=365)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid timeframe")
+
+        # Query price history
+        from app.models.price_history import PriceHistory
+
+        price_data = (
+            db.query(PriceHistory)
+            .filter(
+                PriceHistory.symbol == symbol.upper(),
+                PriceHistory.exchange == "average",
+                PriceHistory.timestamp >= start_time,
+            )
+            .order_by(PriceHistory.timestamp.asc())
+            .all()
+        )
+
+        if not price_data:
+            raise HTTPException(status_code=404, detail=f"No price history found for {symbol.upper()}")
+
+        # Convert to chart format
+        chart_data = []
+        for price_point in price_data:
+            chart_data.append(
+                PricePoint(
+                    timestamp=price_point.timestamp,
+                    price=float(price_point.price_usd),
+                    volume=float(price_point.volume_24h_usd) if price_point.volume_24h_usd else None,
+                )
+            )
+
+        chart_response = PriceChartResponse(
+            symbol=symbol.upper(), exchange="average", timeframe=timeframe, data=chart_data
+        )
+
+        return APIResponse(
+            success=True, data=chart_response, message=f"Retrieved {len(chart_data)} price points for {symbol.upper()}"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching chart data: {str(e)}")
 
 
 # ==================== REAL-TIME PRICE ENDPOINTS ====================

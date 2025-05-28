@@ -1,6 +1,6 @@
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -250,37 +250,30 @@ async def get_price_chart(
             # Last 5 minutes using raw data
             start_time = now - timedelta(minutes=5)
             table = PriceHistoryRaw
-            interval_minutes = None  # Use all raw data points
         elif timeframe == "1h":
             # Last 1 hour using 5-minute data
             start_time = now - timedelta(hours=1)
             table = PriceHistory5m
-            interval_minutes = 5
         elif timeframe == "4h":
             # Last 4 hours using 5-minute data
             start_time = now - timedelta(hours=4)
             table = PriceHistory5m
-            interval_minutes = 5
         elif timeframe == "1d":
             # Last 1 day using 1-hour data
             start_time = now - timedelta(days=1)
             table = PriceHistory1h
-            interval_minutes = 60
         elif timeframe == "7d":
             # Last 7 days using 1-hour data
             start_time = now - timedelta(days=7)
             table = PriceHistory1h
-            interval_minutes = 60
         elif timeframe == "30d":
             # Last 30 days using 1-day data
             start_time = now - timedelta(days=30)
             table = PriceHistory1d
-            interval_minutes = 1440  # 24 hours
         elif timeframe == "1y":
             # Last 1 year using 1-week data
             start_time = now - timedelta(days=365)
             table = PriceHistory1w
-            interval_minutes = 10080  # 7 days
         else:
             raise HTTPException(status_code=400, detail="Invalid timeframe")
 
@@ -350,6 +343,78 @@ async def get_price_chart(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching chart data: {str(e)}")
+
+
+@router.get("/coins/{symbol}/ohlc", response_model=APIResponse[List[Dict]])
+async def get_ohlc_chart(
+    symbol: str,
+    timeframe: str = Query("1d", description="Timeframe: 5m, 1h, 1d, 1w"),
+    exchange: str = Query("average", description="Exchange or 'average'"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of candles"),
+    db: Session = Depends(get_db),
+):
+    """Get OHLC candlestick data for trading charts"""
+    try:
+        symbol = symbol.upper()
+
+        # Select appropriate table based on timeframe
+        if timeframe == "5m":
+            table = PriceHistory5m
+            start_time = datetime.now(UTC) - timedelta(hours=8)  # 8 hours of 5m data
+        elif timeframe == "1h":
+            table = PriceHistory1h
+            start_time = datetime.now(UTC) - timedelta(days=4)  # 4 days of 1h data
+        elif timeframe == "1d":
+            table = PriceHistory1d
+            start_time = datetime.now(UTC) - timedelta(days=100)  # 100 days of 1d data
+        elif timeframe == "1w":
+            table = PriceHistory1w
+            start_time = datetime.now(UTC) - timedelta(days=700)  # 700 days of 1w data
+        else:
+            raise HTTPException(status_code=400, detail="Invalid timeframe for OHLC")
+
+        # Query OHLC data
+        ohlc_data = (
+            db.query(table)
+            .filter(
+                table.symbol == symbol,
+                table.exchange == exchange,
+                table.timestamp >= start_time,
+            )
+            .order_by(table.timestamp.desc())
+            .limit(limit)
+            .all()
+        )
+
+        if not ohlc_data:
+            raise HTTPException(status_code=404, detail=f"No OHLC data found for {symbol}")
+
+        # Convert to chart format (reverse to get chronological order)
+        ohlc_data.reverse()
+
+        chart_data = []
+        for candle in ohlc_data:
+            chart_data.append(
+                {
+                    "timestamp": candle.timestamp.isoformat(),
+                    "open": float(candle.price_open),
+                    "high": float(candle.price_high),
+                    "low": float(candle.price_low),
+                    "close": float(candle.price_close),
+                    "volume": float(candle.volume_sum) if candle.volume_sum else 0,
+                }
+            )
+
+        return APIResponse(
+            success=True,
+            data=chart_data,
+            message=f"Retrieved {len(chart_data)} OHLC candles for {symbol} ({timeframe})",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching OHLC data: {str(e)}")
 
 
 # ==================== REAL-TIME PRICE ENDPOINTS ====================
@@ -538,6 +603,21 @@ async def cleanup_old_data(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during cleanup: {str(e)}")
+
+
+@router.get("/admin/aggregation-stats", response_model=APIResponse[Dict])
+async def get_aggregation_stats(db: Session = Depends(get_db)):
+    """Get statistics about time-series data aggregation"""
+    try:
+        from app.services.aggregation_service import AggregationService
+
+        aggregation_service = AggregationService(db)
+        stats = aggregation_service.get_aggregation_stats()
+
+        return APIResponse(success=True, data=stats, message="Aggregation statistics retrieved successfully")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting aggregation stats: {str(e)}")
 
 
 # ==================== BACKGROUND TASKS ====================

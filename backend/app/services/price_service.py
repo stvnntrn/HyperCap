@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.models.coin import Coin
 from app.models.exchange_pairs import ExchangePair
-from app.models.price_history import PriceHistory
+from app.models.price_history import PriceHistoryRaw
 from app.services.coin_service import CoinService
 
 logger = logging.getLogger(__name__)
@@ -115,11 +115,11 @@ class PriceService:
     # ==================== HISTORICAL PRICE MANAGEMENT ====================
 
     def store_price_history(self, exchange_data: Dict[str, List[Dict[str, Any]]]) -> int:
-        """Store individual exchange prices and calculated averages in price history"""
+        """Store individual exchange prices and calculated averages in RAW price history"""
         stored_count = 0
         current_time = datetime.now(UTC)
 
-        # Store individual exchange prices
+        # Store individual exchange prices in RAW table
         for exchange, pairs_data in exchange_data.items():
             for pair_data in pairs_data:
                 symbol = pair_data["symbol"]
@@ -128,7 +128,8 @@ class PriceService:
 
                 if price_usd and price_usd > 0:
                     try:
-                        price_history = PriceHistory(
+                        # Store to PriceHistoryRaw
+                        price_history = PriceHistoryRaw(
                             symbol=symbol,
                             exchange=exchange,
                             price_usd=Decimal(str(price_usd)),
@@ -138,15 +139,16 @@ class PriceService:
                         self.db.add(price_history)
                         stored_count += 1
                     except Exception as e:
-                        logger.warning(f"Error storing price history for {symbol} on {exchange}: {e}")
+                        logger.warning(f"Error storing raw price history for {symbol} on {exchange}: {e}")
 
-        # Store aggregated averages
+        # Store aggregated averages in RAW table with exchange="average"
         aggregated_data = self.aggregate_exchange_data(exchange_data)
         for coin_data in aggregated_data:
             try:
-                avg_price_history = PriceHistory(
+                # Store average to PriceHistoryRaw
+                avg_price_history = PriceHistoryRaw(
                     symbol=coin_data["symbol"],
-                    exchange="average",
+                    exchange="average",  # Special exchange name for averages
                     price_usd=Decimal(str(coin_data["price_usd"])),
                     volume_24h_usd=Decimal(str(coin_data["volume_24h_usd"])),
                     timestamp=current_time,
@@ -157,7 +159,7 @@ class PriceService:
                 logger.warning(f"Error storing average price history for {coin_data['symbol']}: {e}")
 
         self.db.commit()
-        logger.info(f"Stored {stored_count} price history records")
+        logger.info(f"Stored {stored_count} RAW price history records")
         return stored_count
 
     def store_exchange_pairs(self, exchange_data: Dict[str, List[Dict[str, Any]]]) -> int:
@@ -232,17 +234,17 @@ class PriceService:
 
         for period, time_threshold in time_periods.items():
             try:
-                # Get the closest historical price to the time threshold
+                # Use PriceHistoryRaw
                 historical_price = (
-                    self.db.query(PriceHistory)
+                    self.db.query(PriceHistoryRaw)
                     .filter(
                         and_(
-                            PriceHistory.symbol == symbol.upper(),
-                            PriceHistory.exchange == "average",
-                            PriceHistory.timestamp >= time_threshold,
+                            PriceHistoryRaw.symbol == symbol.upper(),
+                            PriceHistoryRaw.exchange == "average",
+                            PriceHistoryRaw.timestamp >= time_threshold,
                         )
                     )
-                    .order_by(PriceHistory.timestamp.asc())
+                    .order_by(PriceHistoryRaw.timestamp.asc())
                     .first()
                 )
 
@@ -290,14 +292,15 @@ class PriceService:
 
     # ==================== DATA CLEANUP ====================
 
-    def cleanup_old_price_history(self, days_to_keep: int = 30) -> int:
-        """Remove old price history data to manage database size"""
+    def cleanup_old_price_history(self, days_to_keep: int = 1) -> int:
+        """Remove old RAW price history data (keep only 1 day by default)"""
         cutoff_date = datetime.now(UTC) - timedelta(days=days_to_keep)
 
-        deleted_count = self.db.query(PriceHistory).filter(PriceHistory.timestamp < cutoff_date).delete()
+        # Clean PriceHistoryRaw
+        deleted_count = self.db.query(PriceHistoryRaw).filter(PriceHistoryRaw.timestamp < cutoff_date).delete()
 
         self.db.commit()
-        logger.info(f"Cleaned up {deleted_count} old price history records")
+        logger.info(f"Cleaned up {deleted_count} old RAW price history records")
         return deleted_count
 
     # ==================== MAIN PROCESSING FUNCTION ====================

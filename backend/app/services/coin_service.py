@@ -5,7 +5,7 @@ from sqlalchemy import and_, asc, desc, or_
 from sqlalchemy.orm import Session
 
 from app.models import Coin, ExchangePair, PriceHistoryRaw
-from app.schemas.coin import CoinCreate, CoinUpdate, ExchangePairInfo
+from app.schemas import CoinCreate, CoinUpdate, ExchangePairInfo
 
 
 class CoinService:

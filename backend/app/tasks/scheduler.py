@@ -3,10 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.database import get_db
 from app.models import Coin
-from app.services.aggregation_service import AggregationService
-from app.services.coingecko_service import CoinGeckoService
-from app.services.exchange_service import ExchangeService
-from app.services.price_service import PriceService
+from app.services import AggregationService, CoinGeckoService, ExchangeService, PriceService
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.orm import Session

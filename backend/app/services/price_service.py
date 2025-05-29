@@ -6,9 +6,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.models.coin import Coin
-from app.models.exchange_pairs import ExchangePair
-from app.models.price_history import PriceHistoryRaw
+from app.models import Coin, ExchangePair, PriceHistoryRaw
 from app.services.coin_service import CoinService
 
 logger = logging.getLogger(__name__)

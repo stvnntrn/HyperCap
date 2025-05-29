@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import JSON, Column, DateTime, Float, Index, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from app.database import Base
 
 
 class Coin(Base):

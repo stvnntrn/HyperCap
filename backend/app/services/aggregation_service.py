@@ -6,7 +6,7 @@ from typing import Dict
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from app.models.price_history import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
+from app.models import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
 
 logger = logging.getLogger(__name__)
 

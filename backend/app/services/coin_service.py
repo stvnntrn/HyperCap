@@ -4,9 +4,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, asc, desc, or_
 from sqlalchemy.orm import Session
 
-from app.models.coin import Coin
-from app.models.exchange_pairs import ExchangePair
-from app.models.price_history import PriceHistory
+from app.models import Coin, ExchangePair, PriceHistoryRaw
 from app.schemas.coin import CoinCreate, CoinUpdate, ExchangePairInfo
 
 
@@ -205,15 +203,15 @@ class CoinService:
 
         for period, time_threshold in time_ranges.items():
             historical_price = (
-                self.db.query(PriceHistory)
+                self.db.query(PriceHistoryRaw)
                 .filter(
                     and_(
-                        PriceHistory.symbol == symbol.upper(),
-                        PriceHistory.exchange == "average",
-                        PriceHistory.timestamp >= time_threshold,
+                        PriceHistoryRaw.symbol == symbol.upper(),
+                        PriceHistoryRaw.exchange == "average",
+                        PriceHistoryRaw.timestamp >= time_threshold,
                     )
                 )
-                .order_by(PriceHistory.timestamp.asc())
+                .order_by(PriceHistoryRaw.timestamp.asc())
                 .first()
             )
 

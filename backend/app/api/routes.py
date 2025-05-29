@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.price_history import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
+from app.models import PriceHistory1d, PriceHistory1h, PriceHistory1w, PriceHistory5m, PriceHistoryRaw
 from app.schemas.coin import CoinResponse, MarketCapResponse
 from app.schemas.common import APIResponse, HealthResponse, PaginatedResponse
 from app.schemas.price_history import PriceChartResponse, PricePoint

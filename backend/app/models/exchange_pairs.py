@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Index, String
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from app.database import Base
 
 
 class ExchangePair(Base):

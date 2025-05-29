@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DECIMAL, BigInteger, Column, DateTime, Index, String
-from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()
+from app.database import Base
 
 
 class PriceHistoryRaw(Base):
@@ -120,26 +119,4 @@ class PriceHistory1w(Base):
     __table_args__ = (
         Index("idx_price_1w_symbol_time", "symbol", "timestamp"),
         Index("idx_price_1w_exchange_time", "symbol", "exchange", "timestamp"),
-    )
-
-
-# Keep original model for backward compatibility (will be migrated)
-class PriceHistory(Base):
-    """
-    DEPRECATED: Use PriceHistoryRaw instead
-    This will be migrated to the new time-series structure
-    """
-
-    __tablename__ = "price_history"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    symbol = Column(String(20), nullable=False)
-    exchange = Column(String(20))
-    price_usd = Column(DECIMAL(20, 8), nullable=False)
-    volume_24h_usd = Column(DECIMAL(20, 2))
-    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
-
-    __table_args__ = (
-        Index("idx_price_history_symbol_timestamp", "symbol", "timestamp"),
-        Index("idx_price_history_symbol_exchange_timestamp", "symbol", "exchange", "timestamp"),
     )

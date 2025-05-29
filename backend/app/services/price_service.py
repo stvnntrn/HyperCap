@@ -7,7 +7,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models import Coin, ExchangePair, PriceHistoryRaw
-from app.services.coin_service import CoinService
+from app.services import CoinService
 
 logger = logging.getLogger(__name__)
 

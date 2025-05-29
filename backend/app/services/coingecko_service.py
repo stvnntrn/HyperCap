@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional
 import httpx
 from sqlalchemy.orm import Session
 
-from app.models.coin import Coin
-from app.services.coin_service import CoinService
+from app.models import Coin
+from app.services import CoinService
 
 logger = logging.getLogger(__name__)
 

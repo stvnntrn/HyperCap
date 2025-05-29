@@ -1,7 +1,8 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from app.database import get_db
+from app.models import Coin
 from app.services.aggregation_service import AggregationService
 from app.services.coingecko_service import CoinGeckoService
 from app.services.exchange_service import ExchangeService
@@ -86,11 +87,6 @@ async def health_monitoring_job():
 
     try:
         logger.info(f"Running health check at {datetime.now(UTC)}")
-
-        # Check for stale price data
-        from datetime import timedelta
-
-        from app.models.coin import Coin
 
         stale_threshold = datetime.now(UTC) - timedelta(minutes=5)
         stale_coins = db.query(Coin).filter(Coin.last_updated < stale_threshold).count()

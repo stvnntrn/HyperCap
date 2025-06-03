@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router as crypto_router
-from .scheduler import scheduler, start_scheduler  # Import scheduler
+from .tasks import scheduler, start_scheduler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

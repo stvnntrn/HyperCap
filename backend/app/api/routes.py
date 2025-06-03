@@ -645,6 +645,40 @@ async def detect_data_gaps(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error detecting gaps: {str(e)}")
 
 
+@router.post("/admin/historical/backfill-all")
+async def backfill_all_historical_data(
+    days_back: int = Query(365, ge=1, le=2000, description="Days of historical data to fetch"),
+    pause_real_time: bool = Query(True, description="Pause real-time fetching during operation"),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+):
+    """
+    ⚠️ BULK OPERATION: Fetch complete historical data for ALL coins
+    This will take several hours and pause real-time fetching!
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+
+        # Run in background due to long execution time
+        background_tasks.add_task(bulk_backfill_task, historical_service, days_back, pause_real_time)
+
+        return APIResponse(
+            success=True,
+            data={
+                "operation": "bulk_backfill_started",
+                "days_back": days_back,
+                "pause_real_time": pause_real_time,
+                "estimated_duration_hours": "2-6 hours",
+            },
+            message=f"⚠️ Bulk historical backfill started for {days_back} days. Check logs for progress.",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting bulk backfill: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

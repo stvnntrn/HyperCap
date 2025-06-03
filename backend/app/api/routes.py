@@ -748,6 +748,53 @@ async def get_data_coverage_stats(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error getting coverage stats: {str(e)}")
 
 
+@router.get("/admin/historical/single-coin/{symbol}")
+async def get_coin_data_status(symbol: str, db: Session = Depends(get_db)):
+    """
+    Check historical data status for a specific coin
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+
+        # Get latest data for this coin
+        latest_data = (
+            db.query(PriceHistoryRaw)
+            .filter(and_(PriceHistoryRaw.symbol == symbol.upper(), PriceHistoryRaw.exchange == "average"))
+            .order_by(desc(PriceHistoryRaw.timestamp))
+            .first()
+        )
+
+        if not latest_data:
+            status = {
+                "symbol": symbol.upper(),
+                "has_data": False,
+                "latest_data": None,
+                "data_age_hours": None,
+                "status": "no_data",
+                "needs_backfill": True,
+            }
+        else:
+            data_age = datetime.now(UTC) - latest_data.timestamp
+            data_age_hours = data_age.total_seconds() / 3600
+
+            status = {
+                "symbol": symbol.upper(),
+                "has_data": True,
+                "latest_data": latest_data.timestamp.isoformat(),
+                "latest_price": float(latest_data.price_usd),
+                "data_age_hours": round(data_age_hours, 1),
+                "status": "current" if data_age_hours < 2 else "stale" if data_age_hours < 24 else "very_stale",
+                "needs_backfill": data_age_hours > 2,
+            }
+
+        return APIResponse(success=True, data=status, message=f"Data status for {symbol.upper()}: {status['status']}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error checking coin status: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

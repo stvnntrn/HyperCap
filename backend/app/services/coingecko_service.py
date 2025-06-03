@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 from sqlalchemy.orm import Session
 
-from app.models import Coin
+from app.models import Coin, PriceHistoryRaw
 from app.services import CoinService
 
 logger = logging.getLogger(__name__)
@@ -454,3 +454,33 @@ async def _fetch_historical_prices(self, coin_id: str, days_back: int) -> List[D
         except Exception as e:
             logger.error(f"Error fetching historical data for {coin_id}: {e}")
             return []
+
+
+async def _store_historical_data(self, symbol: str, historical_data: List[Dict[str, Any]]) -> int:
+    """Store historical data in PriceHistoryRaw"""
+    from decimal import Decimal
+
+    stored_count = 0
+
+    for data_point in historical_data:
+        try:
+            # Store as "average" exchange with historical timestamp
+            historical_record = PriceHistoryRaw(
+                symbol=symbol.upper(),
+                exchange="average",
+                price_usd=Decimal(str(data_point["price_usd"])),
+                volume_24h_usd=Decimal(str(data_point["volume_24h_usd"])) if data_point["volume_24h_usd"] else None,
+                timestamp=data_point["timestamp"],
+            )
+
+            self.db.add(historical_record)
+            stored_count += 1
+
+        except Exception as e:
+            logger.warning(f"Error storing historical point for {symbol}: {e}")
+            continue
+
+    if stored_count > 0:
+        self.db.commit()
+
+    return stored_count

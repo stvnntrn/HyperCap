@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any, Dict, List
 
 import httpx
-from sqlalchemy import and_, desc, func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models import Coin, PriceHistoryRaw
@@ -55,7 +55,7 @@ class HistoricalDataService:
                         PriceHistoryRaw.exchange == "average",  # Use average prices for gap detection
                     )
                 )
-                .order_by(desc(PriceHistoryRaw.timestamp))
+                .order_by(PriceHistoryRaw.timestamp.desc())
                 .first()
             )
 
@@ -66,7 +66,7 @@ class HistoricalDataService:
                     "last_data": None,
                     "gap_days": None,
                     "needs_backfill": True,
-                    "recommended_days": 365,  # Get 1 year of data for new coins
+                    "recommended_days": "max",  # Fetch all available data
                 }
             else:
                 # Check how old the latest data is
@@ -82,7 +82,7 @@ class HistoricalDataService:
                         "gap_hours": round(gap_hours, 1),
                         "gap_days": round(gap_days, 1),
                         "needs_backfill": True,
-                        "recommended_days": min(int(gap_days) + 1, 365),  # Backfill gap + buffer, max 1 year
+                        "recommended_days": "max",  # Always fetch max available data, no limits
                     }
 
         total_gaps = len(gaps_detected)
@@ -101,10 +101,11 @@ class HistoricalDataService:
     # ==================== HISTORICAL DATA FETCHING ====================
 
     async def fetch_historical_prices_for_coin(
-        self, symbol: str, days_back: int = 365, interval: str = "hourly"
+        self, symbol: str, days_back: str | int = "max", interval: str = "hourly"
     ) -> List[Dict[str, Any]]:
         """
         Fetch historical price data for a single coin from CoinGecko
+        days_back: "max" for all available data, or integer for specific days
         """
         # Get CoinGecko ID for this symbol
         symbol_to_id = await self.coingecko_service.get_symbol_to_id_mapping()
@@ -117,11 +118,20 @@ class HistoricalDataService:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 url = f"{self.base_url}/coins/{coin_id}/market_chart"
-                params = {
-                    "vs_currency": "usd",
-                    "days": days_back,
-                    "interval": interval,  # "hourly" or "daily"
-                }
+
+                # Set parameters based on days_back
+                if days_back == "max":
+                    # Use "max" to get all available data
+                    params = {
+                        "vs_currency": "usd",
+                        "days": "max",
+                        "interval": "daily",  # For max data, use daily to avoid hitting limits
+                    }
+                    logger.info(f"Fetching ALL available historical data for {symbol}")
+                else:
+                    # Use specific number of days
+                    params = {"vs_currency": "usd", "days": days_back, "interval": interval}
+                    logger.info(f"Fetching {days_back} days of historical data for {symbol}")
 
                 response = await client.get(url, params=params)
                 response.raise_for_status()
@@ -145,7 +155,18 @@ class HistoricalDataService:
                         }
                     )
 
-                logger.info(f"Fetched {len(historical_points)} historical points for {symbol}")
+                # Calculate how far back the data goes
+                if historical_points:
+                    oldest_date = min(point["timestamp"] for point in historical_points)
+                    newest_date = max(point["timestamp"] for point in historical_points)
+                    total_days = (newest_date - oldest_date).days
+
+                    logger.info(
+                        f"✅ {symbol}: {len(historical_points)} points spanning {total_days} days ({oldest_date.strftime('%Y-%m-%d')} to {newest_date.strftime('%Y-%m-%d')})"
+                    )
+                else:
+                    logger.warning(f"❌ {symbol}: No historical data received")
+
                 return historical_points
 
             except Exception as e:
@@ -212,10 +233,11 @@ class HistoricalDataService:
     # ==================== BULK OPERATIONS ====================
 
     async def backfill_all_coins(
-        self, days_back: int = 365, pause_real_time: bool = True, batch_size: int = 50
+        self, days_back: str | int = "max", pause_real_time: bool = True, batch_size: int = 50
     ) -> Dict[str, Any]:
         """
         Backfill historical data for ALL coins
+        days_back: "max" for all available data, or integer for specific days
         Pauses real-time fetching during operation to avoid rate limits
         """
         logger.info(f"Starting bulk historical backfill for all coins ({days_back} days)")
@@ -317,7 +339,13 @@ class HistoricalDataService:
             for symbol, gap_info in gaps.items():
                 try:
                     days_to_fetch = gap_info["recommended_days"]
-                    logger.info(f"Backfilling {symbol}: {days_to_fetch} days")
+
+                    # Handle "max" case for complete missing data
+                    if days_to_fetch == "max":
+                        logger.info(f"Backfilling {symbol}: ALL available historical data")
+                        days_to_fetch = "max"
+                    else:
+                        logger.info(f"Backfilling {symbol}: {days_to_fetch} days")
 
                     # Fetch historical data for this specific gap
                     historical_data = await self.fetch_historical_prices_for_coin(symbol, days_back=days_to_fetch)

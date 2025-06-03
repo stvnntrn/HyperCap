@@ -208,3 +208,82 @@ class HistoricalDataService:
 
         logger.info(f"Stored {stored_count} new historical points, skipped {skipped_count} duplicates")
         return stored_count
+
+    # ==================== BULK OPERATIONS ====================
+
+    async def backfill_all_coins(
+        self, days_back: int = 365, pause_real_time: bool = True, batch_size: int = 50
+    ) -> Dict[str, Any]:
+        """
+        Backfill historical data for ALL coins
+        Pauses real-time fetching during operation to avoid rate limits
+        """
+        logger.info(f"Starting bulk historical backfill for all coins ({days_back} days)")
+
+        if pause_real_time:
+            logger.info("Pausing real-time data fetching...")
+            pause_scheduler()
+
+        try:
+            # Get all coins
+            all_coins = self.db.query(Coin).all()
+            symbols = [coin.symbol for coin in all_coins]
+
+            total_coins = len(symbols)
+            processed_count = 0
+            success_count = 0
+
+            # Process in batches to manage rate limits
+            for i in range(0, total_coins, batch_size):
+                batch_symbols = symbols[i : i + batch_size]
+                logger.info(
+                    f"Processing batch {i // batch_size + 1}: symbols {i + 1}-{min(i + batch_size, total_coins)}"
+                )
+
+                for symbol in batch_symbols:
+                    try:
+                        # Fetch historical data
+                        historical_data = await self.fetch_historical_prices_for_coin(symbol, days_back=days_back)
+
+                        if historical_data:
+                            # Store the data
+                            stored_count = self.store_historical_data(historical_data)
+                            if stored_count > 0:
+                                success_count += 1
+                                logger.info(f"✓ {symbol}: {stored_count} points stored")
+                            else:
+                                logger.info(f"○ {symbol}: no new data (already exists)")
+                        else:
+                            logger.warning(f"✗ {symbol}: no data received")
+
+                        processed_count += 1
+
+                        # Rate limiting delay
+                        await asyncio.sleep(self.rate_limit_delay)
+
+                    except Exception as e:
+                        logger.error(f"Error processing {symbol}: {e}")
+                        processed_count += 1
+                        continue
+
+                # Longer delay between batches
+                if i + batch_size < total_coins:
+                    logger.info("Batch complete. Waiting 10 seconds before next batch...")
+                    await asyncio.sleep(10)
+
+            result = {
+                "total_coins": total_coins,
+                "processed": processed_count,
+                "successful": success_count,
+                "failed": processed_count - success_count,
+                "days_backfilled": days_back,
+                "completion_time": datetime.now(UTC).isoformat(),
+            }
+
+            logger.info(f"Bulk backfill complete: {success_count}/{total_coins} coins successful")
+            return result
+
+        finally:
+            if pause_real_time:
+                logger.info("Resuming real-time data fetching...")
+                resume_scheduler()

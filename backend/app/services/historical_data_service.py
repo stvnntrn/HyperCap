@@ -354,3 +354,43 @@ class HistoricalDataService:
 
         finally:
             resume_scheduler()
+
+    # ==================== STARTUP GAP CHECK ====================
+
+    async def startup_gap_check_and_fill(self, max_gap_hours: int = 2) -> Dict[str, Any]:
+        """
+        Check for gaps on startup and automatically backfill if needed
+        Call this when your API starts up after being offline
+        """
+        logger.info("Running startup gap check...")
+
+        gap_analysis = self.detect_data_gaps()
+
+        # Check if we have any significant gaps
+        significant_gaps = {}
+        for symbol, gap_info in gap_analysis["gaps"].items():
+            if gap_info["type"] == "complete_missing":
+                significant_gaps[symbol] = gap_info
+            elif gap_info["type"] == "gap_detected" and gap_info.get("gap_hours", 0) > max_gap_hours:
+                significant_gaps[symbol] = gap_info
+
+        if not significant_gaps:
+            logger.info("No significant gaps detected on startup")
+            return {
+                "status": "no_action_needed",
+                "message": "All data is current",
+                "total_coins": gap_analysis["total_coins"],
+                "scan_result": gap_analysis,
+            }
+
+        logger.info(f"Found {len(significant_gaps)} coins with significant gaps - starting automatic backfill")
+
+        # Automatically backfill the gaps
+        backfill_result = await self.backfill_missing_data_gaps()
+
+        return {
+            "status": "gaps_filled",
+            "message": f"Automatically backfilled {len(significant_gaps)} coins with data gaps",
+            "gap_analysis": gap_analysis,
+            "backfill_result": backfill_result,
+        }

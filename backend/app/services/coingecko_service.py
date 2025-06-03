@@ -330,3 +330,49 @@ class CoinGeckoService:
             "categories_percentage": round((coins_with_categories / total_coins * 100), 1) if total_coins else 0,
             "supply_percentage": round((coins_with_supply / total_coins * 100), 1) if total_coins else 0,
         }
+
+
+# ==================== HISTORICAL DATA BACKFILL ====================
+
+
+async def backfill_historical_data_for_new_coins(self, coin_symbols: List[str], days_back: int = 7) -> int:
+    """
+    Backfill historical data for newly discovered coins
+    Uses CoinGecko's historical data API
+    """
+    if not coin_symbols:
+        return 0
+
+    logger.info(f"Starting historical backfill for {len(coin_symbols)} new coins ({days_back} days)")
+
+    backfilled_count = 0
+
+    for symbol in coin_symbols:
+        try:
+            # Get CoinGecko ID for this symbol
+            symbol_to_id = await self.get_symbol_to_id_mapping()
+            coin_id = symbol_to_id.get(symbol.upper())
+
+            if not coin_id:
+                logger.warning(f"No CoinGecko ID found for {symbol}")
+                continue
+
+            # Fetch historical data from CoinGecko
+            historical_data = await self._fetch_historical_prices(coin_id, days_back)
+
+            if historical_data:
+                # Store historical data in PriceHistoryRaw with past timestamps
+                stored_count = await self._store_historical_data(symbol, historical_data)
+                if stored_count > 0:
+                    backfilled_count += 1
+                    logger.info(f"Backfilled {stored_count} data points for {symbol}")
+
+            # Rate limiting
+            await asyncio.sleep(self.rate_limit_delay)
+
+        except Exception as e:
+            logger.error(f"Error backfilling data for {symbol}: {e}")
+            continue
+
+    logger.info(f"Historical backfill completed: {backfilled_count} coins processed")
+    return backfilled_count

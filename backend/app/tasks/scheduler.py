@@ -1,12 +1,13 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
-from app.database import get_db
-from app.models import Coin
-from app.services import AggregationService, CoinGeckoService, ExchangeService, PriceService
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Coin
+from app.services import AggregationService, CoinGeckoService, ExchangeService, PriceService
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ async def update_prices_job():
 async def discover_new_coins_job():
     """
     Scheduled job to check for new coins and enrich them
-    Only runs when new coins are actually found
+    Now includes historical data backfill for new coins
     """
     db: Session = next(get_db())
 
@@ -64,8 +65,28 @@ async def discover_new_coins_job():
         if updated_count > 0:
             logger.info(f"Found and enriched {updated_count} new coins with metadata")
 
-            # TODO: Add historical data backfill for new coins here
-            # await backfill_historical_data_for_new_coins(new_coin_symbols)
+            # Get the newly discovered coin symbols (coins updated in the last hour with metadata)
+            recent_threshold = datetime.now(UTC) - timedelta(hours=1)
+            new_coins = (
+                db.query(Coin)
+                .filter(
+                    Coin.last_updated >= recent_threshold,
+                    Coin.name.isnot(None),  # Only coins with metadata (newly enriched)
+                )
+                .all()
+            )
+
+            new_coin_symbols = [coin.symbol for coin in new_coins]
+
+            if new_coin_symbols:
+                # Backfill 7 days of historical data for new coins
+                logger.info(f"Starting historical backfill for {len(new_coin_symbols)} new coins")
+                backfilled_count = await coingecko_service.backfill_historical_data_for_new_coins(
+                    new_coin_symbols, days_back=7
+                )
+                logger.info(f"Historical backfill completed: {backfilled_count} coins processed")
+            else:
+                logger.info("No new coins found requiring historical backfill")
 
         else:
             logger.debug("No new coins found needing metadata")

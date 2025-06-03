@@ -376,3 +376,81 @@ async def backfill_historical_data_for_new_coins(self, coin_symbols: List[str], 
 
     logger.info(f"Historical backfill completed: {backfilled_count} coins processed")
     return backfilled_count
+
+
+async def _fetch_historical_prices(self, coin_id: str, days_back: int) -> List[Dict[str, Any]]:
+    """Fetch historical prices from CoinGecko"""
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
+        try:
+            url = f"{self.base_url}/coins/{coin_id}/market_chart"
+            params = {
+                "vs_currency": "usd",
+                "days": days_back,
+                "interval": "hourly",  # Get hourly data
+            }
+
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+
+            data = response.json()
+            prices = data.get("prices", [])
+            volumes = data.get("total_volumes", [])
+
+            # Convert to our format
+            historical_points = []
+            for i, price_point in enumerate(prices):
+                timestamp_ms, price = price_point
+                volume = volumes[i][1] if i < len(volumes) else 0
+
+                historical_points.append(
+                    {
+                        "timestamp": datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC),
+                        "price_usd": price,
+                        "volume_24h_usd": volume,
+                    }
+                )
+
+            return historical_points
+
+        except Exception as e:
+            logger.error(f"Error fetching historical data for {coin_id}: {e}")
+            return []
+
+
+async def _fetch_historical_prices(self, coin_id: str, days_back: int) -> List[Dict[str, Any]]:
+    """Fetch historical prices from CoinGecko"""
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
+        try:
+            url = f"{self.base_url}/coins/{coin_id}/market_chart"
+            params = {
+                "vs_currency": "usd",
+                "days": days_back,
+                "interval": "hourly",  # Get hourly data
+            }
+
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+
+            data = response.json()
+            prices = data.get("prices", [])
+            volumes = data.get("total_volumes", [])
+
+            # Convert to our format
+            historical_points = []
+            for i, price_point in enumerate(prices):
+                timestamp_ms, price = price_point
+                volume = volumes[i][1] if i < len(volumes) else 0
+
+                historical_points.append(
+                    {
+                        "timestamp": datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC),
+                        "price_usd": price,
+                        "volume_24h_usd": volume,
+                    }
+                )
+
+            return historical_points
+
+        except Exception as e:
+            logger.error(f"Error fetching historical data for {coin_id}: {e}")
+            return []

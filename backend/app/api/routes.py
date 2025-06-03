@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from sqlalchemy import text
+from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -17,7 +17,7 @@ from app.schemas import (
     PriceChartResponse,
     PricePoint,
 )
-from app.services import CoinGeckoService, CoinService, ExchangeService, PriceService
+from app.services import CoinGeckoService, CoinService, ExchangeService, HistoricalDataService, PriceService
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -632,8 +632,8 @@ async def detect_data_gaps(db: Session = Depends(get_db)):
     try:
         from app.services.historical_data_service import HistoricalDataService
 
-        historical_service = HistoricalDataService(db)
-        gap_analysis = historical_service.detect_data_gaps()
+        service = HistoricalDataService(db)
+        gap_analysis = service.detect_data_gaps()
 
         return APIResponse(
             success=True,
@@ -659,10 +659,10 @@ async def backfill_all_historical_data(
     try:
         from app.services.historical_data_service import HistoricalDataService
 
-        historical_service = HistoricalDataService(db)
+        service = HistoricalDataService(db)
 
         # Run in background due to long execution time
-        background_tasks.add_task(bulk_backfill_task, historical_service, days_back, pause_real_time)
+        background_tasks.add_task(bulk_backfill_task, service, days_back, pause_real_time)
 
         return APIResponse(
             success=True,
@@ -689,12 +689,10 @@ async def fill_missing_gaps(
     Much faster than full backfill - only fetches what's missing
     """
     try:
-        from app.services.historical_data_service import HistoricalDataService
-
-        historical_service = HistoricalDataService(db)
+        service = HistoricalDataService(db)
 
         # Run in background
-        background_tasks.add_task(gap_fill_task, historical_service)
+        background_tasks.add_task(gap_fill_task, service)
 
         return APIResponse(
             success=True,
@@ -718,8 +716,8 @@ async def startup_gap_check(
     try:
         from app.services.historical_data_service import HistoricalDataService
 
-        historical_service = HistoricalDataService(db)
-        result = await historical_service.startup_gap_check_and_fill(max_gap_hours)
+        service = HistoricalDataService(db)
+        result = await service.startup_gap_check_and_fill(max_gap_hours)
 
         return APIResponse(success=True, data=result, message=result["message"])
 
@@ -735,8 +733,8 @@ async def get_data_coverage_stats(db: Session = Depends(get_db)):
     try:
         from app.services.historical_data_service import HistoricalDataService
 
-        historical_service = HistoricalDataService(db)
-        stats = historical_service.get_data_coverage_stats()
+        service = HistoricalDataService(db)
+        stats = service.get_data_coverage_stats()
 
         return APIResponse(
             success=True,
@@ -754,15 +752,11 @@ async def get_coin_data_status(symbol: str, db: Session = Depends(get_db)):
     Check historical data status for a specific coin
     """
     try:
-        from app.services.historical_data_service import HistoricalDataService
-
-        historical_service = HistoricalDataService(db)
-
         # Get latest data for this coin
         latest_data = (
             db.query(PriceHistoryRaw)
             .filter(and_(PriceHistoryRaw.symbol == symbol.upper(), PriceHistoryRaw.exchange == "average"))
-            .order_by(desc(PriceHistoryRaw.timestamp))
+            .order_by(PriceHistoryRaw.timestamp.desc())
             .first()
         )
 
@@ -824,22 +818,22 @@ async def fetch_all_metadata_task(coingecko_service: CoinGeckoService, include_c
         logger.error(f"Error in metadata fetch task: {e}")
 
 
-async def bulk_backfill_task(historical_service, days_back: int, pause_real_time: bool):
+async def bulk_backfill_task(service, days_back: int, pause_real_time: bool):
     """Background task for bulk historical data backfill"""
     try:
         logger.info(f"Starting bulk backfill background task: {days_back} days")
-        result = await historical_service.backfill_all_coins(days_back=days_back, pause_real_time=pause_real_time)
+        result = await service.backfill_all_coins(days_back=days_back, pause_real_time=pause_real_time)
         logger.info(f"Bulk backfill completed: {result}")
 
     except Exception as e:
         logger.error(f"Error in bulk backfill background task: {e}")
 
 
-async def gap_fill_task(historical_service):
+async def gap_fill_task(service):
     """Background task for smart gap filling"""
     try:
         logger.info("Starting gap fill background task")
-        result = await historical_service.backfill_missing_data_gaps()
+        result = await service.backfill_missing_data_gaps()
         logger.info(f"Gap fill completed: {result}")
 
     except Exception as e:

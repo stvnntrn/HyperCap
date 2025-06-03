@@ -706,6 +706,27 @@ async def fill_missing_gaps(
         raise HTTPException(status_code=500, detail=f"Error starting gap fill: {str(e)}")
 
 
+@router.post("/admin/historical/startup-check")
+async def startup_gap_check(
+    max_gap_hours: int = Query(2, ge=1, le=48, description="Maximum gap hours before triggering backfill"),
+    db: Session = Depends(get_db),
+):
+    """
+    Run startup gap check and automatic backfill
+    Use this when restarting your API after being offline
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+        result = await historical_service.startup_gap_check_and_fill(max_gap_hours)
+
+        return APIResponse(success=True, data=result, message=result["message"])
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error in startup check: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

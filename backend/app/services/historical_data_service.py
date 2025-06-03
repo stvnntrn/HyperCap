@@ -287,3 +287,70 @@ class HistoricalDataService:
             if pause_real_time:
                 logger.info("Resuming real-time data fetching...")
                 resume_scheduler()
+
+    async def backfill_missing_data_gaps(self) -> Dict[str, Any]:
+        """
+        Detect and backfill only the missing data gaps
+        More efficient than full backfill
+        """
+        logger.info("Starting intelligent gap backfill...")
+
+        # Pause real-time fetching
+        pause_scheduler()
+
+        try:
+            # Detect gaps
+            gap_analysis = self.detect_data_gaps()
+            gaps = gap_analysis["gaps"]
+
+            if not gaps:
+                logger.info("No gaps detected - all data is up to date")
+                return {
+                    "status": "no_gaps",
+                    "message": "All coins have current data",
+                    "total_coins": gap_analysis["total_coins"],
+                }
+
+            processed_count = 0
+            success_count = 0
+
+            for symbol, gap_info in gaps.items():
+                try:
+                    days_to_fetch = gap_info["recommended_days"]
+                    logger.info(f"Backfilling {symbol}: {days_to_fetch} days")
+
+                    # Fetch historical data for this specific gap
+                    historical_data = await self.fetch_historical_prices_for_coin(symbol, days_back=days_to_fetch)
+
+                    if historical_data:
+                        stored_count = self.store_historical_data(historical_data)
+                        if stored_count > 0:
+                            success_count += 1
+                            logger.info(f"✓ {symbol}: {stored_count} points backfilled")
+                        else:
+                            logger.info(f"○ {symbol}: gap already filled")
+
+                    processed_count += 1
+
+                    # Rate limiting
+                    await asyncio.sleep(self.rate_limit_delay)
+
+                except Exception as e:
+                    logger.error(f"Error backfilling {symbol}: {e}")
+                    processed_count += 1
+                    continue
+
+            result = {
+                "status": "completed",
+                "gaps_detected": len(gaps),
+                "processed": processed_count,
+                "successful": success_count,
+                "failed": processed_count - success_count,
+                "completion_time": datetime.now(UTC).isoformat(),
+            }
+
+            logger.info(f"Gap backfill complete: {success_count}/{len(gaps)} gaps filled")
+            return result
+
+        finally:
+            resume_scheduler()

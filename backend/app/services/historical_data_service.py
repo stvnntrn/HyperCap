@@ -97,3 +97,57 @@ class HistoricalDataService:
             "gaps": gaps_detected,
             "scan_timestamp": now.isoformat(),
         }
+
+    # ==================== HISTORICAL DATA FETCHING ====================
+
+    async def fetch_historical_prices_for_coin(
+        self, symbol: str, days_back: int = 365, interval: str = "hourly"
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch historical price data for a single coin from CoinGecko
+        """
+        # Get CoinGecko ID for this symbol
+        symbol_to_id = await self.coingecko_service.get_symbol_to_id_mapping()
+        coin_id = symbol_to_id.get(symbol.upper())
+
+        if not coin_id:
+            logger.warning(f"No CoinGecko ID found for symbol {symbol}")
+            return []
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            try:
+                url = f"{self.base_url}/coins/{coin_id}/market_chart"
+                params = {
+                    "vs_currency": "usd",
+                    "days": days_back,
+                    "interval": interval,  # "hourly" or "daily"
+                }
+
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+
+                data = response.json()
+                prices = data.get("prices", [])
+                volumes = data.get("total_volumes", [])
+
+                # Convert to our format
+                historical_points = []
+                for i, price_point in enumerate(prices):
+                    timestamp_ms, price = price_point
+                    volume = volumes[i][1] if i < len(volumes) else 0
+
+                    historical_points.append(
+                        {
+                            "timestamp": datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC),
+                            "price_usd": price,
+                            "volume_24h_usd": volume,
+                            "symbol": symbol.upper(),
+                        }
+                    )
+
+                logger.info(f"Fetched {len(historical_points)} historical points for {symbol}")
+                return historical_points
+
+            except Exception as e:
+                logger.error(f"Error fetching historical data for {symbol}: {e}")
+                return []

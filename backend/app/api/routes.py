@@ -17,7 +17,14 @@ from app.schemas import (
     PriceChartResponse,
     PricePoint,
 )
-from app.services import CoinGeckoService, CoinService, ExchangeService, HistoricalDataService, PriceService
+from app.services import (
+    AggregationService,
+    CoinGeckoService,
+    CoinService,
+    ExchangeService,
+    HistoricalDataService,
+    PriceService,
+)
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -613,8 +620,6 @@ async def cleanup_old_data(
 async def get_aggregation_stats(db: Session = Depends(get_db)):
     """Get statistics about time-series data aggregation"""
     try:
-        from app.services.aggregation_service import AggregationService
-
         aggregation_service = AggregationService(db)
         stats = aggregation_service.get_aggregation_stats()
 
@@ -630,8 +635,6 @@ async def detect_data_gaps(db: Session = Depends(get_db)):
     Scan all coins for missing historical data gaps
     """
     try:
-        from app.services.historical_data_service import HistoricalDataService
-
         service = HistoricalDataService(db)
         gap_analysis = service.detect_data_gaps()
 
@@ -647,13 +650,17 @@ async def detect_data_gaps(db: Session = Depends(get_db)):
 
 @router.post("/admin/historical/backfill-all")
 async def backfill_all_historical_data(
-    days_back: int = Query(365, ge=1, le=2000, description="Days of historical data to fetch"),
+    days_back: str = Query(
+        "max",
+        description="Days of historical data to fetch ('max' for ALL available data from coin inception, or number like '365')",
+    ),
     pause_real_time: bool = Query(True, description="Pause real-time fetching during operation"),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),
 ):
     """
-    ⚠️ BULK OPERATION: Fetch complete historical data for ALL coins
+    ⚠️ BULK OPERATION: Fetch historical data for ALL coins from their very inception
+    Use days_back="max" to get ALL available data (NO LIMITS - could be 10+ years for Bitcoin)
     This will take several hours and pause real-time fetching!
     """
     try:
@@ -661,8 +668,21 @@ async def backfill_all_historical_data(
 
         service = HistoricalDataService(db)
 
+        # Convert days_back parameter
+        if days_back.lower() == "max":
+            days_param = "max"
+            estimated_duration = "4-12 hours (fetching ALL available data from coin inception - NO LIMITS)"
+        else:
+            try:
+                days_param = int(days_back)
+                if days_param < 1:
+                    raise HTTPException(status_code=400, detail="days_back must be positive number or 'max'")
+                estimated_duration = f"{max(2, days_param // 200)}-{max(6, days_param // 100)} hours"
+            except ValueError:
+                raise HTTPException(status_code=400, detail="days_back must be 'max' or a valid number")
+
         # Run in background due to long execution time
-        background_tasks.add_task(bulk_backfill_task, service, days_back, pause_real_time)
+        background_tasks.add_task(bulk_backfill_task, service, days_param, pause_real_time)
 
         return APIResponse(
             success=True,
@@ -670,9 +690,10 @@ async def backfill_all_historical_data(
                 "operation": "bulk_backfill_started",
                 "days_back": days_back,
                 "pause_real_time": pause_real_time,
-                "estimated_duration_hours": "2-6 hours",
+                "estimated_duration": estimated_duration,
+                "note": "Fetches ALL available data from coin inception (Bitcoin: 2009, Ethereum: 2015, etc.) - NO LIMITS",
             },
-            message=f"⚠️ Bulk historical backfill started for {days_back} days. Check logs for progress.",
+            message=f"⚠️ Bulk historical backfill started ({days_back}). Fetching from coin inception with NO limits!",
         )
 
     except Exception as e:
@@ -689,6 +710,8 @@ async def fill_missing_gaps(
     Much faster than full backfill - only fetches what's missing
     """
     try:
+        from app.services.historical_data_service import HistoricalDataService
+
         service = HistoricalDataService(db)
 
         # Run in background
@@ -818,7 +841,7 @@ async def fetch_all_metadata_task(coingecko_service: CoinGeckoService, include_c
         logger.error(f"Error in metadata fetch task: {e}")
 
 
-async def bulk_backfill_task(service, days_back: int, pause_real_time: bool):
+async def bulk_backfill_task(service, days_back: str | int, pause_real_time: bool):
     """Background task for bulk historical data backfill"""
     try:
         logger.info(f"Starting bulk backfill background task: {days_back} days")

@@ -824,6 +824,28 @@ async def fetch_all_metadata_task(coingecko_service: CoinGeckoService, include_c
         logger.error(f"Error in metadata fetch task: {e}")
 
 
+async def bulk_backfill_task(historical_service, days_back: int, pause_real_time: bool):
+    """Background task for bulk historical data backfill"""
+    try:
+        logger.info(f"Starting bulk backfill background task: {days_back} days")
+        result = await historical_service.backfill_all_coins(days_back=days_back, pause_real_time=pause_real_time)
+        logger.info(f"Bulk backfill completed: {result}")
+
+    except Exception as e:
+        logger.error(f"Error in bulk backfill background task: {e}")
+
+
+async def gap_fill_task(historical_service):
+    """Background task for smart gap filling"""
+    try:
+        logger.info("Starting gap fill background task")
+        result = await historical_service.backfill_missing_data_gaps()
+        logger.info(f"Gap fill completed: {result}")
+
+    except Exception as e:
+        logger.error(f"Error in gap fill background task: {e}")
+
+
 # ==================== DATA UPDATE ENDPOINTS (Updated) ====================
 
 

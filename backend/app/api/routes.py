@@ -679,6 +679,33 @@ async def backfill_all_historical_data(
         raise HTTPException(status_code=500, detail=f"Error starting bulk backfill: {str(e)}")
 
 
+@router.post("/admin/historical/fill-gaps")
+async def fill_missing_gaps(
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+):
+    """
+    Intelligently detect and fill only missing data gaps
+    Much faster than full backfill - only fetches what's missing
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+
+        # Run in background
+        background_tasks.add_task(gap_fill_task, historical_service)
+
+        return APIResponse(
+            success=True,
+            data={"operation": "gap_fill_started"},
+            message="Smart gap filling started - only missing data will be fetched",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting gap fill: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

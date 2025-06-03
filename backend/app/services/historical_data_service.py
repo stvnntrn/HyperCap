@@ -394,3 +394,47 @@ class HistoricalDataService:
             "gap_analysis": gap_analysis,
             "backfill_result": backfill_result,
         }
+
+    # ==================== UTILITY FUNCTIONS ====================
+
+    def get_data_coverage_stats(self) -> Dict[str, Any]:
+        """
+        Get statistics about data coverage for monitoring
+        """
+        total_coins = self.db.query(Coin).count()
+
+        # Count coins with recent data (last 2 hours)
+        recent_threshold = datetime.now(UTC) - timedelta(hours=2)
+        coins_with_recent_data = (
+            self.db.query(PriceHistoryRaw.symbol)
+            .filter(and_(PriceHistoryRaw.exchange == "average", PriceHistoryRaw.timestamp >= recent_threshold))
+            .distinct()
+            .count()
+        )
+
+        # Get oldest and newest data points
+        oldest_data = (
+            self.db.query(func.min(PriceHistoryRaw.timestamp)).filter(PriceHistoryRaw.exchange == "average").scalar()
+        )
+
+        newest_data = (
+            self.db.query(func.max(PriceHistoryRaw.timestamp)).filter(PriceHistoryRaw.exchange == "average").scalar()
+        )
+
+        # Calculate coverage
+        data_age_hours = 0
+        if newest_data:
+            data_age_hours = (datetime.now(UTC) - newest_data).total_seconds() / 3600
+
+        coverage_percentage = (coins_with_recent_data / total_coins * 100) if total_coins > 0 else 0
+
+        return {
+            "total_coins": total_coins,
+            "coins_with_recent_data": coins_with_recent_data,
+            "coverage_percentage": round(coverage_percentage, 1),
+            "data_age_hours": round(data_age_hours, 1),
+            "oldest_data": oldest_data.isoformat() if oldest_data else None,
+            "newest_data": newest_data.isoformat() if newest_data else None,
+            "is_current": data_age_hours < 2,
+            "status": "current" if data_age_hours < 2 else "stale" if data_age_hours < 24 else "very_stale",
+        }

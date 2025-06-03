@@ -107,7 +107,7 @@ class PriceService:
             "price_change_24h": round(avg_price_change, 4),
             "volume_24h_usd": round(total_volume_24h, 2),
             "exchange_count": len(symbol_data["exchanges"]),
-            "timestamp": symbol_data["timestamp"],
+            "last_updated": symbol_data["timestamp"],
         }
 
     # ==================== HISTORICAL PRICE MANAGEMENT ====================

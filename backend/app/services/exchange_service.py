@@ -26,7 +26,7 @@ class ExchangeService:
         self.binance_api_url = os.getenv("BINANCE_API_URL", "https://api.binance.com/api/v3")
         self.binance_24hr_url = os.getenv("BINANCE_24HR_URL", "https://api.binance.com/api/v3/ticker/24hr")
         self.kraken_api_url = os.getenv("KRAKEN_API_URL", "https://api.kraken.com")
-        self.mexc_api_url = os.getenv("MEXC_API_URL", "https://www.mexc.com/open/api/v2")
+        self.mexc_api_url = os.getenv("MEXC_API_URL", "https://www.mexc.com/open/api/v3")
         self.coingecko_api_url = os.getenv("COINGECKO_API_URL", "https://api.coingecko.com/api/v3")
 
     # ==================== BINANCE API ====================
@@ -208,8 +208,8 @@ class ExchangeService:
 
     async def fetch_mexc_data(self) -> List[Dict[str, Any]]:
         """Fetch ticker data from MEXC - ALL pairs"""
-        # MEXC v2 API endpoint for tickers
-        url = f"{self.mexc_api_url}/market/ticker"
+        # MEXC v3 API endpoint for tickers
+        url = f"{self.mexc_api_url}/ticker/24hr"
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
@@ -217,9 +217,12 @@ class ExchangeService:
                 response.raise_for_status()
                 data = response.json()
 
-                # MEXC v2 returns different structure
-                ticker_data = data.get("data", [])
-                if not ticker_data:
+                # MEXC v3 returns a direct list, not nested in "data"
+                if not isinstance(data, list):
+                    logger.warning(f"MEXC returned unexpected format: {type(data)}")
+                    return []
+
+                if not data:
                     logger.warning("MEXC returned empty ticker data")
                     return []
 
@@ -227,36 +230,38 @@ class ExchangeService:
                 usd_reference_prices = {}
 
                 # First pass: collect USDT prices for conversion
-                for ticker in ticker_data:
+                for ticker in data:
                     symbol = ticker.get("symbol", "")
                     if symbol.endswith("USDT"):
                         base_symbol, _ = self._parse_mexc_symbol(symbol)
                         if base_symbol:
-                            usd_reference_prices[base_symbol] = float(ticker.get("last", 0))
+                            last_price = ticker.get("lastPrice", "0")
+                            if last_price and float(last_price) > 0:
+                                usd_reference_prices[base_symbol] = float(last_price)
 
                 # Second pass: process all pairs
-                for ticker in ticker_data:
+                for ticker in data:
                     try:
                         symbol = ticker.get("symbol", "")
 
                         # Skip very low volume pairs
                         volume = float(ticker.get("volume", 0))
-                        if volume < 1000:  # Lower threshold for MEXC v2
+                        if volume < 1000:  # Lower threshold for MEXC
                             continue
 
                         base_symbol, quote_currency = self._parse_mexc_symbol(symbol)
                         if not base_symbol or not quote_currency:
                             continue
 
-                        last_price = float(ticker.get("last", 0))
+                        last_price = float(ticker.get("lastPrice", 0))
                         if last_price <= 0:
                             continue
 
                         # Convert to USD
                         price_usd = self._convert_to_usd(last_price, quote_currency, usd_reference_prices)
 
-                        # Calculate 24h change (MEXC v2 provides change directly)
-                        price_change_24h = float(ticker.get("change_rate", 0)) * 100  # Convert to percentage
+                        # Calculate 24h change - MEXC v3 provides priceChangePercent
+                        price_change_24h = float(ticker.get("priceChangePercent", 0))
 
                         processed_data.append(
                             {
@@ -265,8 +270,8 @@ class ExchangeService:
                                 "pair": symbol,
                                 "quote_currency": quote_currency,
                                 "price_usd": price_usd,
-                                "price_24h_high": float(ticker.get("high", last_price)),
-                                "price_24h_low": float(ticker.get("low", last_price)),
+                                "price_24h_high": float(ticker.get("highPrice", last_price)),
+                                "price_24h_low": float(ticker.get("lowPrice", last_price)),
                                 "price_change_24h": price_change_24h,
                                 "volume_24h_base": volume,
                                 "volume_24h_usd": volume * last_price if price_usd else None,

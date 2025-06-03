@@ -151,3 +151,60 @@ class HistoricalDataService:
             except Exception as e:
                 logger.error(f"Error fetching historical data for {symbol}: {e}")
                 return []
+
+    def store_historical_data(self, historical_data: List[Dict[str, Any]]) -> int:
+        """
+        Store historical data points in PriceHistoryRaw
+        Avoids duplicates by checking existing timestamps
+        """
+        stored_count = 0
+        skipped_count = 0
+
+        for data_point in historical_data:
+            try:
+                symbol = data_point["symbol"]
+                timestamp = data_point["timestamp"]
+
+                # Check if this data point already exists
+                existing = (
+                    self.db.query(PriceHistoryRaw)
+                    .filter(
+                        and_(
+                            PriceHistoryRaw.symbol == symbol,
+                            PriceHistoryRaw.exchange == "average",
+                            PriceHistoryRaw.timestamp == timestamp,
+                        )
+                    )
+                    .first()
+                )
+
+                if existing:
+                    skipped_count += 1
+                    continue
+
+                # Store new data point
+                historical_record = PriceHistoryRaw(
+                    symbol=symbol,
+                    exchange="average",  # Mark as average/historical data
+                    price_usd=Decimal(str(data_point["price_usd"])),
+                    volume_24h_usd=Decimal(str(data_point["volume_24h_usd"])) if data_point["volume_24h_usd"] else None,
+                    timestamp=timestamp,
+                )
+
+                self.db.add(historical_record)
+                stored_count += 1
+
+                # Commit in batches to avoid memory issues
+                if stored_count % 100 == 0:
+                    self.db.commit()
+
+            except Exception as e:
+                logger.warning(f"Error storing historical point: {e}")
+                continue
+
+        # Final commit
+        if stored_count > 0:
+            self.db.commit()
+
+        logger.info(f"Stored {stored_count} new historical points, skipped {skipped_count} duplicates")
+        return stored_count

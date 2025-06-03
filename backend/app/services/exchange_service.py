@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 from sqlalchemy.orm import Session
 
-from app.models.exchange_pairs import ExchangePair
+from app.models import ExchangePair
 
 logger = logging.getLogger(__name__)
 

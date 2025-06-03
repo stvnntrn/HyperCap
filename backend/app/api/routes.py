@@ -508,9 +508,9 @@ async def get_system_status(db: Session = Depends(get_db)):
         recent_updates = db.query(Coin).filter(Coin.last_updated >= recent_threshold).count()
 
         # Check price history
-        from app.models.price_history import PriceHistory
+        from app.models import PriceHistoryRaw
 
-        total_price_records = db.query(PriceHistory).count()
+        total_price_records = db.query(PriceHistoryRaw).count()
 
         # Determine system health
         is_initialized = total_coins > 0

@@ -727,6 +727,27 @@ async def startup_gap_check(
         raise HTTPException(status_code=500, detail=f"Error in startup check: {str(e)}")
 
 
+@router.get("/admin/historical/coverage-stats")
+async def get_data_coverage_stats(db: Session = Depends(get_db)):
+    """
+    Get statistics about historical data coverage
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+        stats = historical_service.get_data_coverage_stats()
+
+        return APIResponse(
+            success=True,
+            data=stats,
+            message=f"Data coverage: {stats['coverage_percentage']}% of coins have recent data",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting coverage stats: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

@@ -624,6 +624,27 @@ async def get_aggregation_stats(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error getting aggregation stats: {str(e)}")
 
 
+@router.post("/admin/historical/detect-gaps")
+async def detect_data_gaps(db: Session = Depends(get_db)):
+    """
+    Scan all coins for missing historical data gaps
+    """
+    try:
+        from app.services.historical_data_service import HistoricalDataService
+
+        historical_service = HistoricalDataService(db)
+        gap_analysis = historical_service.detect_data_gaps()
+
+        return APIResponse(
+            success=True,
+            data=gap_analysis,
+            message=f"Gap analysis complete: {gap_analysis['coins_with_gaps']} coins need backfill",
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error detecting gaps: {str(e)}")
+
+
 # ==================== BACKGROUND TASKS ====================
 
 

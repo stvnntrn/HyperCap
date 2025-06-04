@@ -247,3 +247,10 @@ class SystemStatus(BaseModel):
     metadata_stats: Dict[str, Any]
     recommendations: List[str]
     last_check: str
+
+
+class BackfillRequest(BaseModel):
+    """Request schema for historical data backfill"""
+
+    days_back: str = Field("max", description="'max' for all data or number of days")
+    pause_real_time: bool = Field(True, description="Pause real-time fetching during backfill")

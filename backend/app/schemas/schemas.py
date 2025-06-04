@@ -180,3 +180,9 @@ class PriceHistoryBase(BaseModel):
     exchange: Optional[str] = Field(None, max_length=20, description="Exchange name or 'average'")
     price_usd: Decimal = Field(..., description="Price in USD")
     volume_24h_usd: Optional[Decimal] = Field(None, description="24h volume in USD")
+
+
+class PriceHistoryCreate(PriceHistoryBase):
+    """Schema for creating price history entry"""
+
+    pass

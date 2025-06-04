@@ -51,3 +51,22 @@ class HealthResponse(BaseModel):
 
     class Config:
         schema_extra = {"example": {"status": "healthy", "timestamp": "2024-01-01T12:00:00Z", "database": "connected"}}
+
+
+class ErrorResponse(BaseModel):
+    """Error response schema"""
+
+    success: bool = False
+    error: str
+    message: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "success": False,
+                "error": "NOT_FOUND",
+                "message": "Coin not found",
+                "details": {"symbol": "INVALID"},
+            }
+        }

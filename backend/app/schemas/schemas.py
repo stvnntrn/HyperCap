@@ -28,3 +28,11 @@ class PaginatedResponse(BaseModel, Generic[T]):
     pages: int
     has_next: bool
     has_previous: bool
+
+
+class HealthResponse(BaseModel):
+    """Health check response"""
+
+    status: str = "healthy"
+    timestamp: str
+    database: str = "connected"

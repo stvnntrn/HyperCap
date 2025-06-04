@@ -280,3 +280,16 @@ class PriceUpdate(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class MarketUpdate(BaseModel):
+    """Market-wide update for WebSocket"""
+
+    total_market_cap: float
+    total_volume_24h: float
+    top_gainers: List[str]
+    top_losers: List[str]
+    timestamp: datetime
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

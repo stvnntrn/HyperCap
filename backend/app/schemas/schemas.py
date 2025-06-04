@@ -95,3 +95,9 @@ class CoinBase(BaseModel):
     categories: Optional[List[str]] = Field(None, description="Coin categories")
     market_cap_rank: Optional[int] = Field(None, description="Market cap ranking")
     exchange_count: Optional[int] = Field(None, description="Number of exchanges")
+
+
+class CoinCreate(CoinBase):
+    """Schema for creating a new coin"""
+
+    symbol: str = Field(..., description="Coin symbol is required")

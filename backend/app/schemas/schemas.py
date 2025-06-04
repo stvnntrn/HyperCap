@@ -101,3 +101,24 @@ class CoinCreate(CoinBase):
     """Schema for creating a new coin"""
 
     symbol: str = Field(..., description="Coin symbol is required")
+
+
+class CoinUpdate(BaseModel):
+    """Schema for updating coin data (all fields optional)"""
+
+    name: Optional[str] = None
+    price_usd: Optional[Decimal] = None
+    price_24h_high: Optional[Decimal] = None
+    price_24h_low: Optional[Decimal] = None
+    price_change_1h: Optional[Decimal] = None
+    price_change_24h: Optional[Decimal] = None
+    price_change_7d: Optional[Decimal] = None
+    volume_24h_usd: Optional[Decimal] = None
+    volume_24h_base: Optional[Decimal] = None
+    market_cap: Optional[Decimal] = None
+    circulating_supply: Optional[Decimal] = None
+    total_supply: Optional[Decimal] = None
+    max_supply: Optional[Decimal] = None
+    categories: Optional[List[str]] = None
+    market_cap_rank: Optional[int] = None
+    exchange_count: Optional[int] = None

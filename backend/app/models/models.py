@@ -94,3 +94,27 @@ class PriceHistoryRaw(Base):
         Index("idx_price_raw_symbol_time", "symbol", "timestamp"),
         Index("idx_price_raw_exchange_time", "symbol", "exchange", "timestamp"),
     )
+
+
+class PriceHistory5m(Base):
+    """
+    5-minute OHLC aggregates
+    Retention: 1 week
+    """
+
+    __tablename__ = "price_history_5m"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    symbol = Column(String(20), nullable=False)
+    exchange = Column(String(20), nullable=False)
+    price_open = Column(DECIMAL(20, 8), nullable=False)
+    price_close = Column(DECIMAL(20, 8), nullable=False)
+    price_high = Column(DECIMAL(20, 8), nullable=False)
+    price_low = Column(DECIMAL(20, 8), nullable=False)
+    volume_sum = Column(DECIMAL(20, 2))
+    timestamp = Column(DateTime, nullable=False)  # Window start time
+
+    __table_args__ = (
+        Index("idx_price_5m_symbol_time", "symbol", "timestamp"),
+        Index("idx_price_5m_exchange_time", "symbol", "exchange", "timestamp"),
+    )

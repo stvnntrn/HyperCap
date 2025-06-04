@@ -217,3 +217,17 @@ class PriceChartResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class PriceChangeResponse(BaseModel):
+    """Schema for price change calculations"""
+
+    symbol: str
+    current_price: float
+    price_change_1h: Optional[float] = None
+    price_change_24h: Optional[float] = None
+    price_change_7d: Optional[float] = None
+    price_change_30d: Optional[float] = None
+
+    class Config:
+        json_encoders = {Decimal: lambda v: float(v) if v is not None else None}

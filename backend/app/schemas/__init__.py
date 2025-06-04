@@ -2,35 +2,64 @@
 Schemas package initialization
 """
 
-from .coin import CoinBase, CoinCreate, CoinResponse, CoinUpdate, ExchangePairInfo, MarketCapResponse
-from .common import APIResponse, ErrorResponse, HealthResponse, PaginatedResponse
-from .price_history import (
+from .schemas import (
+    # Common schemas
+    APIResponse,
+    BackfillRequest,
+    BackfillResponse,
+    # Coin schemas
+    CoinBase,
+    CoinCreate,
+    CoinListResponse,
+    CoinResponse,
+    CoinUpdate,
+    ErrorResponse,
+    ExchangePairInfo,
+    HealthResponse,
+    MarketCapResponse,
+    MarketUpdate,
+    PaginatedResponse,
+    PaginationParams,
     PriceChangeResponse,
     PriceChartResponse,
+    # Price history schemas
     PriceHistoryBase,
     PriceHistoryCreate,
     PriceHistoryResponse,
     PricePoint,
+    # WebSocket schemas
+    PriceUpdate,
+    # Admin schemas
+    SystemStatus,
 )
 
 __all__ = [
-    # Coin schemas
+    # Common
+    "APIResponse",
+    "PaginationParams",
+    "PaginatedResponse",
+    "HealthResponse",
+    "ErrorResponse",
+    # Coins
     "CoinBase",
     "CoinCreate",
     "CoinUpdate",
     "CoinResponse",
+    "CoinListResponse",
     "ExchangePairInfo",
     "MarketCapResponse",
-    # Common schemas
-    "APIResponse",
-    "PaginatedResponse",
-    "HealthResponse",
-    "ErrorResponse",
-    # Price history schemas
+    # Price history
     "PriceHistoryBase",
     "PriceHistoryCreate",
     "PriceHistoryResponse",
     "PricePoint",
     "PriceChartResponse",
     "PriceChangeResponse",
+    # Admin
+    "SystemStatus",
+    "BackfillRequest",
+    "BackfillResponse",
+    # WebSocket
+    "PriceUpdate",
+    "MarketUpdate",
 ]

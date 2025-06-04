@@ -142,3 +142,14 @@ class CoinResponse(CoinBase):
     class Config:
         from_attributes = True
         json_encoders = {Decimal: lambda v: float(v) if v is not None else None}
+
+
+class CoinListResponse(BaseModel):
+    """Schema for paginated coin list responses"""
+
+    coins: List[CoinResponse]
+    total: int
+    page: int
+    size: int
+    has_next: bool
+    has_previous: bool

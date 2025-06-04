@@ -142,3 +142,27 @@ class PriceHistory1h(Base):
         Index("idx_price_1h_symbol_time", "symbol", "timestamp"),
         Index("idx_price_1h_exchange_time", "symbol", "exchange", "timestamp"),
     )
+
+
+class PriceHistory1d(Base):
+    """
+    1-day OHLC aggregates
+    Retention: 1 year
+    """
+
+    __tablename__ = "price_history_1d"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    symbol = Column(String(20), nullable=False)
+    exchange = Column(String(20), nullable=False)
+    price_open = Column(DECIMAL(20, 8), nullable=False)
+    price_close = Column(DECIMAL(20, 8), nullable=False)
+    price_high = Column(DECIMAL(20, 8), nullable=False)
+    price_low = Column(DECIMAL(20, 8), nullable=False)
+    volume_sum = Column(DECIMAL(20, 2))
+    timestamp = Column(DateTime, nullable=False)
+
+    __table_args__ = (
+        Index("idx_price_1d_symbol_time", "symbol", "timestamp"),
+        Index("idx_price_1d_exchange_time", "symbol", "exchange", "timestamp"),
+    )

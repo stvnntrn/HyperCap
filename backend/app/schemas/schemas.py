@@ -197,3 +197,11 @@ class PriceHistoryResponse(PriceHistoryBase):
     class Config:
         from_attributes = True
         json_encoders = {Decimal: lambda v: float(v) if v is not None else None}
+
+
+class PricePoint(BaseModel):
+    """Simple price point for charts"""
+
+    timestamp: datetime
+    price: float
+    volume: Optional[float] = None

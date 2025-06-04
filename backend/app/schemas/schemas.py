@@ -231,3 +231,19 @@ class PriceChangeResponse(BaseModel):
 
     class Config:
         json_encoders = {Decimal: lambda v: float(v) if v is not None else None}
+
+
+# ==================== ADMIN SCHEMAS ====================
+
+
+class SystemStatus(BaseModel):
+    """System status schema for admin endpoints"""
+
+    system_health: str
+    database_initialized: bool
+    total_coins: int
+    recent_price_updates: int
+    total_price_records: int
+    metadata_stats: Dict[str, Any]
+    recommendations: List[str]
+    last_check: str

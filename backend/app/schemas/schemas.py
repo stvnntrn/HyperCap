@@ -131,3 +131,14 @@ class ExchangePairInfo(BaseModel):
     pair: str
     quote_currency: str
     is_active: bool = True
+
+
+class CoinResponse(CoinBase):
+    """Schema for coin API responses"""
+
+    last_updated: Optional[datetime] = None
+    exchange_pairs: Optional[List[ExchangePairInfo]] = Field(None, description="Available trading pairs")
+
+    class Config:
+        from_attributes = True
+        json_encoders = {Decimal: lambda v: float(v) if v is not None else None}

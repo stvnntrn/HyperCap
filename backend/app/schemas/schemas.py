@@ -254,3 +254,14 @@ class BackfillRequest(BaseModel):
 
     days_back: str = Field("max", description="'max' for all data or number of days")
     pause_real_time: bool = Field(True, description="Pause real-time fetching during backfill")
+
+
+class BackfillResponse(BaseModel):
+    """Response schema for backfill operations"""
+
+    operation: str
+    total_coins: int
+    processed: int
+    successful: int
+    failed: int
+    completion_time: str

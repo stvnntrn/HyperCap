@@ -122,3 +122,12 @@ class CoinUpdate(BaseModel):
     categories: Optional[List[str]] = None
     market_cap_rank: Optional[int] = None
     exchange_count: Optional[int] = None
+
+
+class ExchangePairInfo(BaseModel):
+    """Exchange pair information for coin details"""
+
+    exchange: str
+    pair: str
+    quote_currency: str
+    is_active: bool = True

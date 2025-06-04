@@ -265,3 +265,18 @@ class BackfillResponse(BaseModel):
     successful: int
     failed: int
     completion_time: str
+
+    # ==================== WEBSOCKET SCHEMAS ====================
+
+
+class PriceUpdate(BaseModel):
+    """Real-time price update for WebSocket"""
+
+    symbol: str
+    price: float
+    change_24h: Optional[float] = None
+    volume_24h: Optional[float] = None
+    timestamp: datetime
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

@@ -153,3 +153,18 @@ class CoinListResponse(BaseModel):
     size: int
     has_next: bool
     has_previous: bool
+
+
+class MarketCapResponse(BaseModel):
+    """Schema for market cap rankings"""
+
+    rank: int
+    symbol: str
+    name: str
+    price_usd: Decimal
+    price_change_24h: Optional[Decimal]
+    market_cap: Decimal
+    volume_24h_usd: Optional[Decimal]
+
+    class Config:
+        json_encoders = {Decimal: lambda v: float(v) if v is not None else None}

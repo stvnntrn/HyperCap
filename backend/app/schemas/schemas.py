@@ -168,3 +168,15 @@ class MarketCapResponse(BaseModel):
 
     class Config:
         json_encoders = {Decimal: lambda v: float(v) if v is not None else None}
+
+
+# ==================== PRICE HISTORY SCHEMAS ====================
+
+
+class PriceHistoryBase(BaseModel):
+    """Base price history schema"""
+
+    symbol: str = Field(..., max_length=20, description="Coin symbol")
+    exchange: Optional[str] = Field(None, max_length=20, description="Exchange name or 'average'")
+    price_usd: Decimal = Field(..., description="Price in USD")
+    volume_24h_usd: Optional[Decimal] = Field(None, description="24h volume in USD")

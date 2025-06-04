@@ -18,6 +18,18 @@ class APIResponse(BaseModel, Generic[T]):
     error: Optional[str] = None
 
 
+class PaginationParams(BaseModel):
+    """Pagination parameters for list endpoints"""
+
+    page: int = 1
+    size: int = 100
+    sort_by: str = "market_cap_rank"
+    sort_desc: bool = False
+
+    class Config:
+        schema_extra = {"example": {"page": 1, "size": 100, "sort_by": "market_cap_rank", "sort_desc": False}}
+
+
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response wrapper"""
 
@@ -36,3 +48,6 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     timestamp: str
     database: str = "connected"
+
+    class Config:
+        schema_extra = {"example": {"status": "healthy", "timestamp": "2024-01-01T12:00:00Z", "database": "connected"}}

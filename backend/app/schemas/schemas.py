@@ -205,3 +205,15 @@ class PricePoint(BaseModel):
     timestamp: datetime
     price: float
     volume: Optional[float] = None
+
+
+class PriceChartResponse(BaseModel):
+    """Schema for price chart data"""
+
+    symbol: str
+    exchange: str
+    timeframe: str  # "1h", "24h", "7d", "30d", "1y"
+    data: List[PricePoint]
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

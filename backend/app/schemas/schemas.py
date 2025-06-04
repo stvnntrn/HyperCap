@@ -186,3 +186,14 @@ class PriceHistoryCreate(PriceHistoryBase):
     """Schema for creating price history entry"""
 
     pass
+
+
+class PriceHistoryResponse(PriceHistoryBase):
+    """Schema for price history API responses"""
+
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+        json_encoders = {Decimal: lambda v: float(v) if v is not None else None}

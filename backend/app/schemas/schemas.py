@@ -70,3 +70,28 @@ class ErrorResponse(BaseModel):
                 "details": {"symbol": "INVALID"},
             }
         }
+
+
+# ==================== COIN SCHEMAS ====================
+
+
+class CoinBase(BaseModel):
+    """Base coin schema with common fields"""
+
+    symbol: str = Field(..., max_length=20, description="Coin symbol (e.g., BTC)")
+    name: Optional[str] = Field(None, max_length=100, description="Coin name (e.g., Bitcoin)")
+    price_usd: Optional[Decimal] = Field(None, description="Current price in USD")
+    price_24h_high: Optional[Decimal] = Field(None, description="24h highest price")
+    price_24h_low: Optional[Decimal] = Field(None, description="24h lowest price")
+    price_change_1h: Optional[Decimal] = Field(None, description="1h price change %")
+    price_change_24h: Optional[Decimal] = Field(None, description="24h price change %")
+    price_change_7d: Optional[Decimal] = Field(None, description="7d price change %")
+    volume_24h_usd: Optional[Decimal] = Field(None, description="24h volume in USD")
+    volume_24h_base: Optional[Decimal] = Field(None, description="24h base volume")
+    market_cap: Optional[Decimal] = Field(None, description="Market capitalization")
+    circulating_supply: Optional[Decimal] = Field(None, description="Circulating supply")
+    total_supply: Optional[Decimal] = Field(None, description="Total supply")
+    max_supply: Optional[Decimal] = Field(None, description="Maximum supply")
+    categories: Optional[List[str]] = Field(None, description="Coin categories")
+    market_cap_rank: Optional[int] = Field(None, description="Market cap ranking")
+    exchange_count: Optional[int] = Field(None, description="Number of exchanges")

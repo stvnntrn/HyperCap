@@ -73,3 +73,24 @@ class ExchangePair(Base):
         Index("idx_exchange_pairs_exchange", "exchange"),
         Index("idx_exchange_pairs_active", "is_active"),
     )
+
+
+class PriceHistoryRaw(Base):
+    """
+    Raw price data from exchanges (30-second intervals)
+    Retention: 24 hours
+    """
+
+    __tablename__ = "price_history_raw"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    symbol = Column(String(20), nullable=False)  # e.g., "BTC", "ETH"
+    exchange = Column(String(20), nullable=False)  # "binance", "kraken", "mexc", "average"
+    price_usd = Column(DECIMAL(20, 8), nullable=False)
+    volume_24h_usd = Column(DECIMAL(20, 2))
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
+
+    __table_args__ = (
+        Index("idx_price_raw_symbol_time", "symbol", "timestamp"),
+        Index("idx_price_raw_exchange_time", "symbol", "exchange", "timestamp"),
+    )
